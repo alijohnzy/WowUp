@@ -1,7 +1,18 @@
-# Builds the Svelte renderer AppImage. Manual only, on whichever branch you select.
+# Builds the Svelte renderer for Linux, Windows and macOS. Manual only, on whichever branch you
+# select.
 #
-# Mirrors what electron-ow-all-build.yml does for the Angular CF build, reduced to the one
-# platform this branch is exercised on, plus the checks this migration turned out to need.
+# Mirrors electron-ow-all-build.yml's platform matrix, minus everything to do with signing,
+# notarisation and publishing — these are test builds, not releases:
+#
+#   Linux    AppImage
+#   Windows  NSIS installer + portable exe   (unsigned)
+#   macOS    dmg + zip, x64 and arm64        (unsigned, not notarised)
+#
+# Unsigned means Windows SmartScreen will warn, and macOS will refuse to open the app until you
+# clear the quarantine attribute:
+#   xattr -dr com.apple.quarantine /Applications/WowUp-CF-Svelte.app
+# Signing needs the certificate secrets the upstream release workflow uses; wire those in if you
+# ever want distributable builds.
 #
 # SECRET SETUP
 #   Settings → Secrets and variables → Actions → Repository secrets → New repository secret
@@ -9,43 +20,85 @@
 #     Value:  the key, unquoted
 #
 #   A *repository* secret, not an *environment* secret. Environment secrets are only readable by
-#   a job that declares `environment: <name>`; without that, ${{ secrets.X }} resolves to an
-#   empty string and the build happily ships a dead key. If you would rather keep an environment,
-#   add `environment: <name>` under `runs-on` below instead.
+#   a job that declares `environment: <name>`; without that, ${{ secrets.X }} is an empty string
+#   and the build happily ships a dead key. To keep an environment instead, add
+#   `environment: <name>` under `runs-on` below.
 #
 #   The key is passed as an env var, so it is masked in logs and never written to the repo. It is
-#   deliberately not echoed anywhere — inject-token.js prints it on the Angular path, which
-#   Actions masks but is not worth relying on.
+#   deliberately not echoed — inject-token.js prints it on the Angular path, which Actions masks
+#   but is not worth relying on.
 #
-# ARTIFACT
+# ARTIFACTS
 #   The key is baked into the built renderer. Artifacts on a public repository are downloadable
-#   by anyone with the run URL, so the AppImage is not uploaded unless you tick the box.
+#   by anyone with the run URL, so nothing is uploaded unless you tick the box.
 
-name: Build Svelte AppImage
+name: Build Svelte App
 
 on:
   workflow_dispatch:
     inputs:
-      upload_appimage:
-        description: 'Upload the AppImage. It contains the CurseForge key — on a public repo anyone can download it.'
+      platforms:
+        description: 'Which platforms to build'
+        type: choice
+        default: 'all'
+        options: ['all', 'linux', 'windows', 'macos']
+      upload_artifacts:
+        description: 'Upload the built apps. They contain the CurseForge key — on a public repo anyone can download them.'
         type: boolean
         default: false
       run_e2e:
-        description: 'Run the Playwright end-to-end suite (adds a few minutes).'
+        description: 'Run the Playwright end-to-end suite (Linux only, adds a few minutes).'
         type: boolean
         default: true
 
 jobs:
   build:
-    name: Build and verify
-    runs-on: ubuntu-latest
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+
+    # bash on every runner, so the shell steps below do not need a Windows variant.
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      # One platform failing should not cancel the others — usually the interesting result.
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: Linux (AppImage)
+            key: linux
+            artifacts: |
+              wowup-electron/release-svelte/*.AppImage
+          # Pinned to match the upstream release workflow.
+          - os: windows-2022
+            label: Windows (NSIS + portable)
+            key: windows
+            artifacts: |
+              wowup-electron/release-svelte/*.exe
+          - os: macos-latest
+            label: macOS (dmg + zip)
+            key: macos
+            artifacts: |
+              wowup-electron/release-svelte/*.dmg
+              wowup-electron/release-svelte/*.zip
 
     steps:
-      # Fails immediately and says why, rather than building for ten minutes and shipping an
-      # AppImage whose every CurseForge request 403s. That failure is invisible otherwise: the
-      # key substitutes cleanly, the build passes, and it only shows up at runtime as "an error
-      # occurred checking for updates from Curse".
+      - name: Skip platforms not requested
+        id: gate
+        run: |
+          if [ "${{ inputs.platforms }}" = "all" ] || [ "${{ inputs.platforms }}" = "${{ matrix.key }}" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Not requested — skipping ${{ matrix.label }}."
+          fi
+
+      # Fails immediately and says why, rather than building for ten minutes and producing an app
+      # whose every CurseForge request 403s.
       - name: Check the secret is readable
+        if: steps.gate.outputs.run == 'true'
         env:
           CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
         run: |
@@ -53,16 +106,17 @@ jobs:
             echo "::error::CURSEFORGE_API_KEY is empty."
             echo "Set it as a REPOSITORY secret: Settings → Secrets and variables → Actions →"
             echo "Repository secrets → New repository secret."
-            echo "An *environment* secret will not work here unless this job declares"
-            echo "'environment: <name>' — see the comment at the top of this workflow."
+            echo "An *environment* secret will not work unless this job declares 'environment: <name>'."
             exit 1
           fi
           echo "Secret is present (${#CURSEFORGE_API_KEY} characters)."
 
       - name: Checkout
+        if: steps.gate.outputs.run == 'true'
         uses: actions/checkout@v4
 
       - name: Use Node.js
+        if: steps.gate.outputs.run == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 24.x
@@ -70,37 +124,52 @@ jobs:
       # wowup-electron depends on the local wowup-lib-core package, so the library is compiled
       # before the app installs.
       - name: Build wowup-lib
+        if: steps.gate.outputs.run == 'true'
         run: |
           cd ./wowup-lib
           npm ci
           npm run build
 
       - name: Install app dependencies
+        if: steps.gate.outputs.run == 'true'
         run: |
           cd ./wowup-electron
           npm ci
 
+      # electron-builder needs this to produce a dmg. Upstream installs it the same way.
+      - name: dmg-license
+        if: steps.gate.outputs.run == 'true' && matrix.key == 'macos'
+        run: |
+          cd ./wowup-electron
+          npm i dmg-license
+
       - name: Install renderer dependencies
+        if: steps.gate.outputs.run == 'true'
         run: |
           cd ./wowup-electron/renderer-svelte
           npm ci
 
+      # The renderer is platform-independent, so checking it once is enough.
       - name: Typecheck
+        if: steps.gate.outputs.run == 'true' && matrix.key == 'linux'
         run: |
           cd ./wowup-electron/renderer-svelte
           npm run check
 
       - name: Lint
+        if: steps.gate.outputs.run == 'true' && matrix.key == 'linux'
         run: |
           cd ./wowup-electron/renderer-svelte
           npm run lint
 
       - name: Unit tests
+        if: steps.gate.outputs.run == 'true' && matrix.key == 'linux'
         run: |
           cd ./wowup-electron/renderer-svelte
           npx vitest run
 
-      - name: Build AppImage
+      - name: Build app
+        if: steps.gate.outputs.run == 'true'
         env:
           # Read by renderer-svelte/vite.config.ts. Passed as an env var rather than sourced from
           # a file: a key of the form "$2a$10$…" loses its $-segments to shell expansion if it is
@@ -108,78 +177,66 @@ jobs:
           CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
         run: |
           cd ./wowup-electron
-          npm run svelte:appimage
+          npm run svelte:package
 
       - name: Verify the key was baked into the bundle
+        if: steps.gate.outputs.run == 'true'
         run: |
           cd ./wowup-electron
-          node -e '
-            const { readdirSync, readFileSync } = require("fs");
-            const dir = "renderer-svelte/build/_app/immutable/chunks";
-            let key = null, placeholder = false;
-            for (const f of readdirSync(dir).filter((f) => f.endsWith(".js"))) {
-              const s = readFileSync(dir + "/" + f, "utf8");
-              if (s.includes("{{CURSEFORGE_API_KEY}}")) placeholder = true;
-              const m = s.match(/\$2[aby]\$\d{2}\$[A-Za-z0-9./]{40,}/);
-              if (m && !key) key = m[0];
-            }
-            if (placeholder) {
-              console.error("::error::CURSEFORGE_API_KEY was never substituted into the bundle.");
-              process.exit(1);
-            }
-            if (!key || key.length !== 60) {
-              console.error("::error::The substituted key is not well formed (length " + (key ? key.length : 0) + ", expected 60).");
-              process.exit(1);
-            }
-            console.log("CurseForge key present and well formed.");
-          '
+          npm run svelte:verify:key
 
+      # Linux only: the runner has no display, so this needs xvfb. The Windows and macOS runners
+      # would need a different harness, and the renderer is identical on all three anyway.
       - name: Verify the renderer boots
+        if: steps.gate.outputs.run == 'true' && matrix.key == 'linux'
         run: |
           cd ./wowup-electron
           xvfb-run --auto-servernum node scripts/verify-boot.mjs
 
       - name: End-to-end tests
-        if: inputs.run_e2e
+        if: steps.gate.outputs.run == 'true' && matrix.key == 'linux' && inputs.run_e2e
         run: |
           cd ./wowup-electron/renderer-svelte
           npx playwright install --with-deps chromium
           npx playwright test
 
-      - name: Summarise the build
-        if: always()
+      - name: Summarise
+        if: steps.gate.outputs.run == 'true' && always()
         run: |
           cd ./wowup-electron
           {
-            echo "### Svelte AppImage"
+            echo "### ${{ matrix.label }}"
             echo
-            echo '| | |'
-            echo '|---|---|'
-            echo "| branch | \`${GITHUB_REF_NAME}\` |"
-            echo "| commit | \`${GITHUB_SHA::8}\` |"
-            if ls release-svelte/*.AppImage >/dev/null 2>&1; then
-              echo "| artifact | \`$(basename release-svelte/*.AppImage)\` |"
-              echo "| size | $(( $(stat -c%s release-svelte/*.AppImage) / 1048576 )) MB |"
-              echo "| renderer JS | $(find renderer-svelte/build/_app -name '*.js' | wc -l) files, $(find renderer-svelte/build/_app -name '*.js' -exec du -ch {} + | tail -1 | cut -f1) |"
-              echo "| uploaded | ${{ inputs.upload_appimage && 'yes' || 'no — tick “Upload the AppImage” to get it' }} |"
+            echo "\`${GITHUB_REF_NAME}\` @ \`${GITHUB_SHA::8}\`"
+            echo
+            if ls release-svelte/* >/dev/null 2>&1; then
+              echo '| file | size |'
+              echo '|---|---:|'
+              for f in release-svelte/*.AppImage release-svelte/*.exe release-svelte/*.dmg release-svelte/*.zip; do
+                [ -f "$f" ] || continue
+                echo "| \`$(basename "$f")\` | $(( $(stat -c%s "$f" 2>/dev/null || stat -f%z "$f") / 1048576 )) MB |"
+              done
+              echo
+              echo "Uploaded: ${{ inputs.upload_artifacts && 'yes' || 'no — tick “Upload the built apps” to get them' }}"
             else
-              echo "| result | build did not produce an AppImage |"
+              echo 'No artifacts produced.'
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # Off unless you ask for it: the AppImage contains the CurseForge key, and artifacts on a
-      # public repository can be downloaded by anyone with the run URL.
-      - name: Upload AppImage
-        if: inputs.upload_appimage
+      # Off unless asked for: these contain the CurseForge key, and artifacts on a public
+      # repository can be downloaded by anyone with the run URL.
+      - name: Upload apps
+        if: steps.gate.outputs.run == 'true' && inputs.upload_artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: WowUp-CF-Svelte-${{ github.ref_name }}
-          path: wowup-electron/release-svelte/*.AppImage
+          name: WowUp-CF-Svelte-${{ matrix.key }}-${{ github.ref_name }}
+          path: ${{ matrix.artifacts }}
           retention-days: 7
+          if-no-files-found: error
 
       # Screenshots and traces only — no key.
       - name: Upload test artifacts on failure
-        if: failure()
+        if: failure() && matrix.key == 'linux'
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
