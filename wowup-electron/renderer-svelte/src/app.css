@@ -1,0 +1,163 @@
+/* Global stylesheet for the Svelte renderer.
+ *
+ * The Angular app loaded src/styles.scss, which pulled in markdown.scss and custom-theme.scss.
+ * None of that was ported when the components were written, so every `wu-btn`, `text-1` and
+ * `bg-secondary-4` reference in the component tree resolved to nothing and the app rendered
+ * unstyled. This file is the replacement.
+ *
+ * Import order matters: Tailwind's preflight resets base elements, so it goes first and the
+ * ported rules layer on top.
+ */
+
+/* Order is load-bearing, and it mirrors styles.scss: markdown first, theme second.
+ *
+ * markdown.css is github-markdown-css and sets `.markdown-body { color: #24292e }` — GitHub's
+ * light-theme near-black. The addon description element carries both `markdown-body` and
+ * `text-1`, which are equal specificity, so whichever sheet comes last wins. With markdown
+ * last, every addon description and changelog rendered near-black on the dark surface. The
+ * same applies to its link, heading and code colours, which theme.css re-points at the
+ * theme's own variables. */
+@import 'tailwindcss';
+@import './styles/markdown.css';
+@import './styles/theme.css';
+@import './styles/controls.css';
+
+/* Expose the theme's custom properties as Tailwind tokens, so `bg-secondary-4` (ours) and
+ * `text-control` (Tailwind's, generated from here) both track the active theme. The values are
+ * indirections rather than literals — the six theme blocks in theme.css set the real colours,
+ * and switching theme swaps them all at once. */
+@theme inline {
+	--color-primary: var(--background-primary);
+	--color-primary-2: var(--background-primary-2);
+	--color-primary-3: var(--background-primary-3);
+	--color-secondary-1: var(--background-secondary-1);
+	--color-secondary-2: var(--background-secondary-2);
+	--color-secondary-3: var(--background-secondary-3);
+	--color-secondary-4: var(--background-secondary-4);
+	--color-secondary-5: var(--background-secondary-5);
+	--color-control: var(--control-color);
+	--color-warn: var(--warn-color);
+	--color-epic: var(--epic-color);
+	--color-rare: var(--rare-color);
+	--color-divider: var(--divider-color);
+	--color-text-1: var(--text-1);
+	--color-text-2: var(--text-2);
+	--color-text-3: var(--text-3);
+	--color-text-4: var(--text-4);
+
+	--font-sans: Roboto, 'Helvetica Neue', system-ui, sans-serif;
+}
+
+/* ---- base ------------------------------------------------------------------------------
+ * From styles.scss. This is a desktop app in a chrome-less window: text is not selectable by
+ * default (only .selectable opts in), nothing is draggable, and the document never scrolls —
+ * individual panes do.
+ */
+
+html,
+body {
+	height: 100%;
+	margin: 0;
+	overflow: hidden;
+	-webkit-app-region: no-drag;
+}
+
+body {
+	font-family: var(--font-sans);
+	/* The theme class is mirrored onto <body> so portalled popups can resolve var(--…). That is
+	   only half of it: `color` is inherited, not looked up, and .app-root is where the app tree
+	   gets it from. A popup portalled into <body> is not inside .app-root, so without this it
+	   renders black-on-dark. Anything portalled inherits from here. */
+	color: var(--text-1);
+}
+
+:not(input):not(textarea),
+:not(input):not(textarea)::after,
+:not(input):not(textarea)::before {
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+input,
+button,
+textarea,
+:focus {
+	outline: none;
+}
+
+a,
+img {
+	-webkit-app-region: no-drag;
+}
+
+a:not([draggable='true']),
+img:not([draggable='true']) {
+	-webkit-user-drag: none;
+}
+
+a[href^='http://'],
+a[href^='https://'],
+a[href^='ftp://'] {
+	-webkit-user-drag: auto;
+}
+
+[hidden] {
+	display: none !important;
+}
+
+/* ---- typography ------------------------------------------------------------------------
+ * Angular Material supplied the heading scale via `mat.all-component-typographies()`. That
+ * mixin was dropped along with the rest of Material, and Tailwind's preflight then resets
+ * headings to `font-size: inherit; font-weight: inherit` — so every h1–h6 in the app rendered
+ * at 16px/400, indistinguishable from a <p>. Measured, not assumed:
+ *
+ *     h1: font-size=16px weight=400   h2: font-size=16px weight=400   …
+ *
+ * These restore the UA scale. Margins are deliberately NOT restored: components set their own
+ * spacing and already assume the preflight `margin: 0`.
+ */
+h1 {
+	font-size: 2em;
+	font-weight: bold;
+}
+h2 {
+	font-size: 1.5em;
+	font-weight: bold;
+}
+h3 {
+	font-size: 1.17em;
+	font-weight: bold;
+}
+h4 {
+	font-size: 1em;
+	font-weight: bold;
+}
+h5 {
+	font-size: 0.83em;
+	font-weight: bold;
+}
+h6 {
+	font-size: 0.67em;
+	font-weight: bold;
+}
+
+/* ---- Tailwind preflight compatibility --------------------------------------------------
+ * markdown.css is github-markdown-css: it styles `.markdown-body` assuming UA defaults for
+ * list markers and indentation are present. Preflight sets `list-style: none` and zeroes
+ * padding, so without this addon descriptions and changelogs render as unindented,
+ * bullet-less runs of text. Scoped to .markdown-body; the rest of the app keeps the reset.
+ */
+.markdown-body ul {
+	list-style: disc outside;
+	padding-left: 2em;
+}
+
+.markdown-body ol {
+	list-style: decimal outside;
+	padding-left: 2em;
+}
+
+.markdown-body ul ul,
+.markdown-body ol ul {
+	list-style-type: circle;
+}

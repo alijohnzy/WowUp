@@ -52,3 +52,10 @@ testem.log
 Thumbs.db
 electron-build/code_signer
 **/*.log
+# Svelte migration build output
+/release-svelte
+/release-angular
+/test-results
+# tsc output from electron:serve-tsc — app/ is TypeScript, the .js beside it is generated
+/app/**/*.js
+/app/**/*.js.map

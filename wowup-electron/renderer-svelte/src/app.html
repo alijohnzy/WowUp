@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="text-scale" content="scale" />
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<!--
+		  The app's key art, behind everything. Ported from src/index.html, which carries the same
+		  element with these exact inline styles. It is not decoration that was overlooked: every
+		  --background-secondary-* token in the theme is rgba rather than a solid colour precisely
+		  so this shows through the app chrome. Without it the translucency has nothing behind it
+		  and the whole UI reads flat.
+
+		  Inline rather than in app.css so it paints before the first stylesheet resolves, exactly
+		  as the original does.
+		-->
+		<div
+			id="wow-background"
+			style="
+				background-image: url('./assets/images/wow-war-within-background.jpg');
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background-size: cover;
+				background-position: center;
+				z-index: -10;
+				opacity: 0.1;
+				transition: opacity 400ms ease;
+			"
+		></div>
+		<div style="display: contents">%sveltekit.body%</div>
+		<script>
+			// The base colour the art sits on. main.ts picks it from the saved theme and passes
+			// --base-bg-color; preload.ts exposes it as window.baseBgColor. src/index.html applies
+			// it the same way — before any stylesheet loads, so the window does not flash white.
+			try {
+				document.body.style.backgroundColor = window.baseBgColor || '#444444';
+			} catch (e) {
+				console.error(e);
+			}
+		</script>
+	</body>
+</html>

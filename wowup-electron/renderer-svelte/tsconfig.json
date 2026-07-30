@@ -1,0 +1,26 @@
+{
+	"extends": "./.svelte-kit/tsconfig.json",
+	"compilerOptions": {
+		// `rewriteRelativeImportExtensions` was here from the `sv create` scaffold and did
+		// nothing: it rewrites explicit `.ts` extensions in relative imports at emit time, and
+		// this project has no such imports and sets `noEmit`. It is also TypeScript 5.7+, while
+		// the surrounding wowup-electron workspace pins 5.2.2 (Angular 17's compiler-cli requires
+		// <5.5), so an editor resolving that install reported
+		// "Unknown compiler option 'rewriteRelativeImportExtensions'" for the whole file —
+		// which takes every other option in it down too.
+		"allowJs": true,
+		"checkJs": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"moduleResolution": "bundler"
+	}
+	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
+	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
+	//
+	// To make changes to top-level options such as include and exclude, we recommend extending
+	// the generated config; see https://svelte.dev/docs/kit/configuration#typescript
+}

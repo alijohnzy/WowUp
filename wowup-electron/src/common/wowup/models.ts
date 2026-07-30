@@ -24,6 +24,11 @@ export interface AppOptions {
   serve?: boolean;
   hidden?: boolean;
   quit?: boolean;
+  /**
+   * Which renderer to load. Defaults to "angular"; "svelte" loads the SvelteKit build from
+   * renderer-svelte/ instead. Also settable with WOWUP_RENDERER=svelte.
+   */
+  renderer?: "angular" | "svelte";
 }
 
 export interface MenuConfig {

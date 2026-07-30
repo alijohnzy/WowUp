@@ -1,0 +1,53 @@
+EMITTED-BYTE ATTRIBUTION  (3 chunks, 4394.3 KB raw JS)
+package                                        raw KB  ~gzip KB   % raw
+(app code)                                     1413.3     325.2    32.2
+ag-grid-community                               980.4     225.6    22.3
+@angular/material                               585.0     134.6    13.3
+rxjs                                            149.8      34.5     3.4
+lodash                                          144.5      33.2     3.3
+@angular/core                                   131.4      30.2     3.0
+@angular/cdk                                    112.4      25.9     2.6
+ng-gallery                                       74.7      17.2     1.7
+@messageformat/core                              74.3      17.1     1.7
+@angular/router                                  70.4      16.2     1.6
+zone.js                                          69.5      16.0     1.6
+@angular/animations                              62.5      14.4     1.4
+@angular/common                                  51.0      11.7     1.2
+markdown-it                                      49.7      11.4     1.1
+@microsoft/applicationinsights-core-js           38.6       8.9     0.9
+axios                                            37.7       8.7     0.9
+object-hash                                      36.2       8.3     0.8
+ag-grid-angular                                  33.1       7.6     0.8
+@angular/forms                                   31.7       7.3     0.7
+@microsoft/applicationinsights-common            21.8       5.0     0.5
+@microsoft/applicationinsights-channel-js        21.6       5.0     0.5
+@microsoft/applicationinsights-dependencies-js     16.4       3.8     0.4
+@fortawesome/free-solid-svg-icons                15.6       3.6     0.4
+@angular/platform-browser                        14.0       3.2     0.3
+@ngx-translate/core                              13.8       3.2     0.3
+reflect-metadata                                 13.4       3.1     0.3
+@microsoft/applicationinsights-analytics-js      13.3       3.1     0.3
+@nevware21/ts-utils                              11.3       2.6     0.3
+uuid                                             10.9       2.5     0.2
+slug                                             10.8       2.5     0.2
+curseforge-v2                                    10.1       2.3     0.2
+opossum                                           9.4       2.2     0.2
+linkify-it                                        9.3       2.1     0.2
+@microsoft/applicationinsights-properties-js      7.2       1.7     0.2
+node-cache                                        6.3       1.5     0.1
+@microsoft/applicationinsights-web                5.2       1.2     0.1
+mdurl                                             4.8       1.1     0.1
+@microsoft/applicationinsights-cfgsync-js         4.0       0.9     0.1
+@babel/runtime                                    3.7       0.9     0.1
+minimist                                          3.4       0.8     0.1
+@nevware21/ts-async                               3.3       0.8     0.1
+@fortawesome/free-brands-svg-icons                2.9       0.7     0.1
+@microsoft/dynamicproto-js                        2.7       0.6     0.1
+uc.micro                                          2.5       0.6     0.1
+clone                                             2.4       0.6     0.1
+ts-custom-error                                   2.3       0.5     0.1
+@fortawesome/free-regular-svg-icons               2.2       0.5     0.0
+ngx-translate-messageformat-compiler              1.6       0.4     0.0
+
+Note: raw figures are exact emitted spans. ~gzip applies the whole-payload gzip ratio
+(23.0%) uniformly and is therefore approximate per package.

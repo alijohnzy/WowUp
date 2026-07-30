@@ -249,7 +249,11 @@
     "SEARCH": {
       "NO_ADDONS": "No addons found"
     },
-    "WOW_EXE_SELECTION_NAME": "WoW Executable"
+    "WOW_EXE_SELECTION_NAME": "WoW Executable",
+    "CLOSE": "Close",
+    "PREVIOUS": "Previous",
+    "NEXT": "Next",
+    "MORE_ACTIONS": "More actions"
   },
   "DIALOGS": {
     "ADDON_DETAILS": {

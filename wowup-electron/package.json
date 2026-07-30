@@ -28,6 +28,14 @@
     "build:dev": "npm run build -- -c dev",
     "build:prod": "npm run build -- -c production",
     "ng:serve": "npm run build:lib && ng serve -c dev",
+    "svelte:dev": "cd renderer-svelte && npm run dev",
+    "svelte:build": "cd renderer-svelte && cross-env BUILD_FLAVOR=wago NODE_ENV=production npm run build",
+    "svelte:check": "cd renderer-svelte && npm run check",
+    "svelte:test": "cd renderer-svelte && npx vitest run",
+    "svelte:e2e": "cd renderer-svelte && npx playwright test",
+    "svelte:start": "npm-run-all -p svelte:electron:serve svelte:dev",
+    "svelte:electron:serve": "cross-env BUILD_FLAVOR=wago npm run build:injectenv && wait-on tcp:5173 && npm run electron:serve-tsc && npx electron . --serve --renderer=svelte",
+    "svelte:electron:local": "npm run svelte:build && npm run electron:serve-tsc && npx electron . --renderer=svelte",
     "electron:serve-tsc": "cross-env BUILD_FLAVOR=wago npm run build:injectenv && tsc -p tsconfig.serve.json",
     "electron:serve": "cross-env BUILD_FLAVOR=wago npm run build:injectenv && wait-on tcp:4200 && npm run electron:serve-tsc && npx electron . --serve",
     "electron:local": "npm run build:prod && npx electron .",
@@ -65,7 +73,16 @@
     "find-broken-test": "node ./test-fixer.js --find-break",
     "restore-tests": "node ./test-fixer.js --repair",
     "package:prod": "npx gulp package",
-    "package:local": "npx gulp packageLocal"
+    "package:local": "npx gulp packageLocal",
+    "svelte:ow:build": "cd renderer-svelte && cross-env BUILD_FLAVOR=ow NODE_ENV=production npm run build",
+    "svelte:ow:dev": "cd renderer-svelte && cross-env BUILD_FLAVOR=ow npm run dev",
+    "svelte:ow:electron:local": "npm run ow:electron:serve-tsc && npm run svelte:ow:build && npx ow-electron . --renderer=svelte",
+    "svelte:ow:electron:serve": "npm run ow:electron:serve-tsc && wait-on tcp:5173 && npx ow-electron . --serve --renderer=svelte",
+    "svelte:ow:start": "npm-run-all -p svelte:ow:electron:serve svelte:ow:dev",
+    "svelte:verify:boot": "node scripts/verify-boot.mjs",
+    "svelte:ow:verify:boot": "node scripts/verify-boot.mjs --ow",
+    "svelte:appimage": "cross-env BUILD_FLAVOR=ow BUILD_RENDERER=svelte npm run build:injectenv && cross-env BUILD_FLAVOR=ow npm run svelte:ow:build && tsc -p tsconfig.serve.json && npx electron-builder build -c electron-build/electron-builder-svelte.json --publish never",
+    "angular:appimage": "cross-env BUILD_FLAVOR=ow BUILD_RENDERER=angular npm run build:injectenv && tsc -p tsconfig.serve.json && ng build -c ow-production --base-href ./ && npx electron-builder build -c electron-build/electron-builder-angular.json --publish never"
   },
   "browserslist": [
     "chrome 98"

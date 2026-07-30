@@ -88,8 +88,16 @@ validateGpuCache(app);
 const startedAt = Date.now();
 const argv = minimist(process.argv.slice(1), {
   boolean: ["serve", "hidden"],
+  string: ["renderer"],
+  default: { renderer: process.env.WOWUP_RENDERER ?? AppEnv.renderer },
 }) as AppOptions;
 log.info("ARGV", argv);
+
+// Selects between the Angular renderer in dist/ and the Svelte one in renderer-svelte/build/.
+// Precedence: --renderer= flag, then WOWUP_RENDERER, then whatever the build baked in
+// (app-env/inject-env.js writes AppEnv.renderer from BUILD_RENDERER). Packaged builds have
+// neither a flag nor the env var, so the baked-in value is what decides there.
+const useSvelteRenderer = argv.renderer === "svelte";
 const isPortable = !!process.env.PORTABLE_EXECUTABLE_DIR;
 const USER_AGENT = getUserAgent();
 log.info("USER_AGENT", USER_AGENT);
@@ -527,7 +535,9 @@ function createWindow(): BrowserWindow {
     require("electron-reload")(__dirname, {
       electron: require(join(app.getAppPath(), "node_modules", "electron")),
     });
-    win.loadURL("http://localhost:4200").catch((e) => log.error(e));
+    // Vite's dev server for the Svelte renderer, Angular's for the original.
+    const devUrl = useSvelteRenderer ? "http://localhost:5173" : "http://localhost:4200";
+    win.loadURL(devUrl).catch((e) => log.error(e));
   } else {
     loadMainUrl(win).catch((e) => log.error(e));
   }
@@ -540,7 +550,9 @@ async function loadMainUrl(window: BrowserWindow | null): Promise<void> {
     return;
   }
 
-  const url = pathToFileURL(join(app.getAppPath(), "dist", "index.html"));
+  const rendererDir = useSvelteRenderer ? join("renderer-svelte", "build") : "dist";
+  const url = pathToFileURL(join(app.getAppPath(), rendererDir, "index.html"));
+  log.info(`Loading renderer: ${url.toString()}`);
   return await window?.loadURL(url.toString());
 }
 

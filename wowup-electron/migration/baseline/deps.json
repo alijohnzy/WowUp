@@ -1,0 +1,1521 @@
+{
+  "generatedFor": "/home/can/Documents/frw/javascript/WowUp/wowup-electron",
+  "project": {
+    "name": "wowup",
+    "packageManager": null,
+    "scripts": [
+      "postinstall",
+      "install:prod",
+      "ng",
+      "start",
+      "build",
+      "build:injectenv",
+      "build:dev",
+      "build:prod",
+      "ng:serve",
+      "electron:serve-tsc",
+      "electron:serve",
+      "electron:local",
+      "electron:build",
+      "electron:build:local",
+      "electron:publish",
+      "electron:publish:never",
+      "electron:publish:local",
+      "build:lib",
+      "ow:start",
+      "ow:build",
+      "ow:build:dev",
+      "ow:build:prod",
+      "ow:ng:serve",
+      "ow:electron:serve-tsc",
+      "ow:electron:serve",
+      "ow:electron:local",
+      "ow:electron:build",
+      "ow:electron:build:local",
+      "ow:electron:publish",
+      "ow:electron:publish:vanilla",
+      "ow:electron:publish:never",
+      "ow:electron:publish:local",
+      "test",
+      "test:watch",
+      "test:locales",
+      "test:customprotocol:",
+      "ow:test:customprotocol:",
+      "e2e",
+      "version",
+      "lint",
+      "i18n",
+      "check-i18n",
+      "pretty",
+      "find-broken-test",
+      "restore-tests",
+      "package:prod",
+      "package:local"
+    ]
+  },
+  "framework": {
+    "id": "angular",
+    "label": "Angular",
+    "pkg": "@angular/core",
+    "version": "17.3.4"
+  },
+  "routes": null,
+  "source": {
+    "files": 269,
+    "loc": 32217,
+    "byExt": {
+      ".ts": 239,
+      ".js": 30
+    },
+    "hooks": 0,
+    "hookBreakdown": {},
+    "patterns": {
+      "classComponent": 0,
+      "forwardRef": 0,
+      "memo": 0,
+      "portal": 0,
+      "dangerousHTML": 0,
+      "lazy": 0,
+      "suspense": 0,
+      "contextProvider": 0,
+      "serverComponentClient": 0,
+      "serverAction": 0,
+      "reactRoute": 0,
+      "vueSetup": 0,
+      "vueOptionsApi": 0,
+      "ngDecorator": 104,
+      "globalCss": 49
+    },
+    "testFiles": 47,
+    "styleImports": 49,
+    "componentCount": 12
+  },
+  "componentSample": [
+    {
+      "file": "app/ipc-events.ts",
+      "loc": 792,
+      "hooks": 0,
+      "tier": "complex",
+      "isClass": false
+    },
+    {
+      "file": "app/file.utils.ts",
+      "loc": 258,
+      "hooks": 0,
+      "tier": "complex",
+      "isClass": false
+    },
+    {
+      "file": "app/app-menu.ts",
+      "loc": 193,
+      "hooks": 0,
+      "tier": "medium",
+      "isClass": false
+    },
+    {
+      "file": "app/wago-handler.ts",
+      "loc": 121,
+      "hooks": 0,
+      "tier": "medium",
+      "isClass": false
+    },
+    {
+      "file": "app/app-updater.ts",
+      "loc": 114,
+      "hooks": 0,
+      "tier": "medium",
+      "isClass": false
+    },
+    {
+      "file": "src/app/app.module.ts",
+      "loc": 107,
+      "hooks": 0,
+      "tier": "medium",
+      "isClass": false
+    },
+    {
+      "file": "src/app/addon-providers/wowup-companion-addon-provider.ts",
+      "loc": 85,
+      "hooks": 0,
+      "tier": "medium",
+      "isClass": false
+    },
+    {
+      "file": "app/push.ts",
+      "loc": 65,
+      "hooks": 0,
+      "tier": "simple",
+      "isClass": false
+    },
+    {
+      "file": "src/app/utils/test.utils.ts",
+      "loc": 28,
+      "hooks": 0,
+      "tier": "simple",
+      "isClass": false
+    },
+    {
+      "file": "src/app/business-objects/mem-cache.ts",
+      "loc": 27,
+      "hooks": 0,
+      "tier": "simple",
+      "isClass": false
+    },
+    {
+      "file": "src/app/utils/array.utils.ts",
+      "loc": 20,
+      "hooks": 0,
+      "tier": "simple",
+      "isClass": false
+    },
+    {
+      "file": "src/app/utils/time.utils.ts",
+      "loc": 8,
+      "hooks": 0,
+      "tier": "simple",
+      "isClass": false
+    }
+  ],
+  "dependencies": {
+    "runtime": [
+      {
+        "name": "@angular/core",
+        "range": "17.3.4",
+        "dev": true,
+        "bytes": 28789146,
+        "installed": true,
+        "class": "runtime",
+        "replacement": "Svelte 5 compiler output",
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@angular/common",
+        "range": "17.3.4",
+        "dev": true,
+        "bytes": 11408997,
+        "installed": true,
+        "class": "runtime",
+        "replacement": "Svelte 5 compiler output",
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "zone.js",
+        "range": "0.14.2",
+        "dev": true,
+        "bytes": 1954950,
+        "installed": true,
+        "class": "runtime",
+        "replacement": "n/a",
+        "note": "Angular change detection. Runes are fine-grained; nothing equivalent is needed.",
+        "docs": null
+      },
+      {
+        "name": "@angular/platform-browser",
+        "range": "17.3.4",
+        "dev": true,
+        "bytes": 758150,
+        "installed": true,
+        "class": "runtime",
+        "replacement": "Svelte 5 compiler output",
+        "note": null,
+        "docs": null
+      }
+    ],
+    "native": [
+      {
+        "name": "@angular/router",
+        "range": "17.3.4",
+        "dev": true,
+        "bytes": 2329796,
+        "installed": true,
+        "class": "native",
+        "replacement": "SvelteKit filesystem routing",
+        "note": null,
+        "docs": null
+      }
+    ],
+    "partial": [
+      {
+        "name": "rxjs",
+        "range": "7.8.1",
+        "dev": false,
+        "bytes": 4501327,
+        "installed": true,
+        "class": "partial",
+        "replacement": "$state / $derived / $effect",
+        "note": "UI-level streams map to runes. Genuine stream algebra (retry/backoff/merge over time) does not — keep RxJS for those, or reach for it deliberately.",
+        "docs": null
+      },
+      {
+        "name": "lodash",
+        "range": "4.17.21",
+        "dev": false,
+        "bytes": 1412415,
+        "installed": true,
+        "class": "partial",
+        "replacement": "native JS",
+        "note": "Unrelated to the framework, but migrations are a natural moment to drop it. Do not attribute the saving to Svelte.",
+        "docs": null
+      }
+    ],
+    "swap": [],
+    "keep": [
+      {
+        "name": "typescript",
+        "range": "5.2.2",
+        "dev": true,
+        "bytes": 40607327,
+        "installed": true,
+        "class": "keep",
+        "replacement": "n/a",
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "prettier",
+        "range": "3.2.5",
+        "dev": true,
+        "bytes": 8387958,
+        "installed": true,
+        "class": "keep",
+        "replacement": "n/a",
+        "note": "Add prettier-plugin-svelte.",
+        "docs": null
+      },
+      {
+        "name": "eslint",
+        "range": "^8.57.0",
+        "dev": true,
+        "bytes": 3042582,
+        "installed": true,
+        "class": "keep",
+        "replacement": "n/a",
+        "note": null,
+        "docs": null
+      }
+    ],
+    "unknown": [
+      {
+        "name": "electron",
+        "range": "43.1.1",
+        "dev": true,
+        "bytes": 327204550,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@microsoft/applicationinsights-web",
+        "range": "3.0.5",
+        "dev": true,
+        "bytes": 26366789,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@angular/material",
+        "range": "17.3.4",
+        "dev": true,
+        "bytes": 19741326,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "ag-grid-community",
+        "range": "31.2.1",
+        "dev": true,
+        "bytes": 17250289,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@angular/compiler",
+        "range": "17.3.4",
+        "dev": true,
+        "bytes": 10111525,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@angular/cdk",
+        "range": "17.3.4",
+        "dev": true,
+        "bytes": 8037557,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@fortawesome/free-solid-svg-icons",
+        "range": "6.4.2",
+        "dev": true,
+        "bytes": 5092617,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "wowup-lib-core",
+        "range": "file:../wowup-lib",
+        "dev": false,
+        "bytes": 4477578,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@typescript-eslint/eslint-plugin",
+        "range": "^7.2.0",
+        "dev": true,
+        "bytes": 2831258,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "handlebars",
+        "range": "4.7.8",
+        "dev": false,
+        "bytes": 2783601,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "protobufjs",
+        "range": "7.2.6",
+        "dev": false,
+        "bytes": 2767951,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@angular/compiler-cli",
+        "range": "17.3.4",
+        "dev": true,
+        "bytes": 2496465,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@types/node",
+        "range": "22.15.34",
+        "dev": true,
+        "bytes": 2367290,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@fortawesome/free-brands-svg-icons",
+        "range": "6.4.2",
+        "dev": true,
+        "bytes": 2102987,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "mocha",
+        "range": "10.2.0",
+        "dev": true,
+        "bytes": 2086789,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@angular/forms",
+        "range": "17.3.4",
+        "dev": true,
+        "bytes": 1913023,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "node-gyp",
+        "range": "11.2.0",
+        "dev": true,
+        "bytes": 1856250,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@angular/animations",
+        "range": "17.3.4",
+        "dev": true,
+        "bytes": 1734811,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@angular-devkit/build-angular",
+        "range": "17.3.4",
+        "dev": true,
+        "bytes": 1435886,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "eslint-plugin-jsdoc",
+        "range": "46.5.1",
+        "dev": true,
+        "bytes": 1374861,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "core-js",
+        "range": "3.38.1",
+        "dev": true,
+        "bytes": 1240796,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "eslint-plugin-import",
+        "range": "2.28.1",
+        "dev": true,
+        "bytes": 1206778,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "ag-grid-angular",
+        "range": "31.2.1",
+        "dev": true,
+        "bytes": 1124726,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@overwolf/ow-electron",
+        "range": "39.8.10",
+        "dev": true,
+        "bytes": 1097407,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "ng-gallery",
+        "range": "11.0.0",
+        "dev": true,
+        "bytes": 980916,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@types/lodash",
+        "range": "4.14.198",
+        "dev": true,
+        "bytes": 863128,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "chai",
+        "range": "4.3.8",
+        "dev": true,
+        "bytes": 751282,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "ts-node",
+        "range": "10.9.1",
+        "dev": true,
+        "bytes": 746842,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@ngx-translate/core",
+        "range": "15.0.0",
+        "dev": true,
+        "bytes": 696377,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@fortawesome/free-regular-svg-icons",
+        "range": "6.4.2",
+        "dev": true,
+        "bytes": 684249,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@angular/cli",
+        "range": "17.3.4",
+        "dev": true,
+        "bytes": 613418,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "markdown-it",
+        "range": "13.0.1",
+        "dev": true,
+        "bytes": 565394,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "electron-updater",
+        "range": "6.8.9",
+        "dev": false,
+        "bytes": 565021,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "karma",
+        "range": "6.4.2",
+        "dev": true,
+        "bytes": 532065,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "node-addon-api",
+        "range": "8.3.1",
+        "dev": true,
+        "bytes": 403298,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@fortawesome/fontawesome-svg-core",
+        "range": "6.4.2",
+        "dev": true,
+        "bytes": 397078,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "jasmine-core",
+        "range": "5.1.1",
+        "dev": true,
+        "bytes": 392711,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "win-ca",
+        "range": "3.5.1",
+        "dev": false,
+        "bytes": 328838,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "messageformat",
+        "range": "2.3.0",
+        "dev": true,
+        "bytes": 315473,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "opossum",
+        "range": "7.1.0",
+        "dev": true,
+        "bytes": 305904,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@messageformat/core",
+        "range": "3.2.0",
+        "dev": true,
+        "bytes": 297704,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "node-disk-info",
+        "range": "1.3.0",
+        "dev": false,
+        "bytes": 273764,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@fortawesome/angular-fontawesome",
+        "range": "0.14.0",
+        "dev": true,
+        "bytes": 226959,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "jasmine-spec-reporter",
+        "range": "7.0.0",
+        "dev": true,
+        "bytes": 219848,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "spectron",
+        "range": "19.0.0",
+        "dev": true,
+        "bytes": 184940,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@angular-eslint/eslint-plugin-template",
+        "range": "17.3.0",
+        "dev": true,
+        "bytes": 172822,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@angular-eslint/eslint-plugin",
+        "range": "17.3.0",
+        "dev": true,
+        "bytes": 136261,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "uuid",
+        "range": "9.0.0",
+        "dev": true,
+        "bytes": 122687,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "yauzl",
+        "range": "3.4.0",
+        "dev": false,
+        "bytes": 109901,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "adm-zip",
+        "range": "0.5.12",
+        "dev": false,
+        "bytes": 103697,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@angular-builders/custom-webpack",
+        "range": "17.0.2",
+        "dev": true,
+        "bytes": 103142,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@types/mocha",
+        "range": "10.0.1",
+        "dev": true,
+        "bytes": 96284,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "electron-log",
+        "range": "5.4.4",
+        "dev": false,
+        "bytes": 95562,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "npm-run-all",
+        "range": "4.1.5",
+        "dev": true,
+        "bytes": 92529,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@angular/platform-browser-dynamic",
+        "range": "17.3.4",
+        "dev": true,
+        "bytes": 87595,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "pushy-electron",
+        "range": "1.0.11",
+        "dev": false,
+        "bytes": 86349,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "electron-builder",
+        "range": "26.15.3",
+        "dev": true,
+        "bytes": 84535,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@overwolf/ow-electron-builder",
+        "range": "26.9.0",
+        "dev": true,
+        "bytes": 81594,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "dotenv",
+        "range": "16.4.5",
+        "dev": true,
+        "bytes": 79078,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@angular-eslint/schematics",
+        "range": "17.3.0",
+        "dev": true,
+        "bytes": 71556,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "karma-electron",
+        "range": "7.3.0",
+        "dev": true,
+        "bytes": 69347,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "i18next-json-sync",
+        "range": "3.1.2",
+        "dev": true,
+        "bytes": 66456,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "object-hash",
+        "range": "3.0.0",
+        "dev": true,
+        "bytes": 58857,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "ts-custom-error",
+        "range": "3.3.1",
+        "dev": true,
+        "bytes": 58111,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@types/jasmine",
+        "range": "4.3.5",
+        "dev": true,
+        "bytes": 57007,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "node-cache",
+        "range": "5.1.2",
+        "dev": true,
+        "bytes": 56567,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "minimist",
+        "range": "1.2.8",
+        "dev": false,
+        "bytes": 54477,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@ngx-translate/http-loader",
+        "range": "8.0.0",
+        "dev": true,
+        "bytes": 53476,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "ngx-translate-messageformat-compiler",
+        "range": "7.0.0",
+        "dev": true,
+        "bytes": 51662,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "ignore",
+        "range": "5.2.4",
+        "dev": true,
+        "bytes": 51223,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "electron-notarize",
+        "range": "1.2.2",
+        "dev": true,
+        "bytes": 49627,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@electron/notarize",
+        "range": "3.1.1",
+        "dev": true,
+        "bytes": 42293,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "tslib",
+        "range": "2.3.0",
+        "dev": true,
+        "bytes": 39032,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "curseforge-v2",
+        "range": "1.5.0",
+        "dev": true,
+        "bytes": 35769,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "wait-on",
+        "range": "7.2.0",
+        "dev": true,
+        "bytes": 35668,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "slug",
+        "range": "8.2.3",
+        "dev": true,
+        "bytes": 34718,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "karma-coverage-istanbul-reporter",
+        "range": "3.0.3",
+        "dev": true,
+        "bytes": 30556,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "cross-env",
+        "range": "7.0.3",
+        "dev": true,
+        "bytes": 29080,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "eslint-plugin-prefer-arrow",
+        "range": "1.2.3",
+        "dev": true,
+        "bytes": 28719,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "flat",
+        "range": "5.0.2",
+        "dev": true,
+        "bytes": 26578,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "karma-jasmine",
+        "range": "5.1.0",
+        "dev": true,
+        "bytes": 26554,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "gulp-run",
+        "range": "1.7.1",
+        "dev": true,
+        "bytes": 26074,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@types/adm-zip",
+        "range": "0.5.1",
+        "dev": true,
+        "bytes": 25160,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "nanoid",
+        "range": "3.3.4",
+        "dev": false,
+        "bytes": 21583,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "auto-launch",
+        "range": "5.0.6",
+        "dev": false,
+        "bytes": 20881,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "gulp",
+        "range": "4.0.2",
+        "dev": true,
+        "bytes": 20855,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "eslint-config-prettier",
+        "range": "9.1.0",
+        "dev": true,
+        "bytes": 20795,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "electron-store",
+        "range": "8.2.0",
+        "dev": false,
+        "bytes": 19876,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@typescript-eslint/parser",
+        "range": "^7.2.0",
+        "dev": true,
+        "bytes": 18193,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@angular-eslint/builder",
+        "range": "17.3.0",
+        "dev": true,
+        "bytes": 16242,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@angular-eslint/template-parser",
+        "range": "17.3.0",
+        "dev": true,
+        "bytes": 15987,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@typescript-eslint/eslint-plugin-tslint",
+        "range": "7.0.2",
+        "dev": true,
+        "bytes": 14819,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "globrex",
+        "range": "0.1.2",
+        "dev": false,
+        "bytes": 14164,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "del",
+        "range": "7.1.0",
+        "dev": true,
+        "bytes": 13698,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@types/opossum",
+        "range": "6.2.2",
+        "dev": true,
+        "bytes": 13411,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "electron-reload",
+        "range": "2.0.0-alpha.1",
+        "dev": true,
+        "bytes": 11382,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "karma-jasmine-html-reporter",
+        "range": "2.1.0",
+        "dev": true,
+        "bytes": 8842,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@types/uuid",
+        "range": "9.0.3",
+        "dev": true,
+        "bytes": 7138,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@types/object-hash",
+        "range": "3.0.4",
+        "dev": true,
+        "bytes": 7081,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@types/jasminewd2",
+        "range": "2.0.10",
+        "dev": true,
+        "bytes": 7056,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@types/minimist",
+        "range": "1.2.5",
+        "dev": true,
+        "bytes": 6267,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@types/globrex",
+        "range": "0.1.2",
+        "dev": true,
+        "bytes": 5665,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@types/slug",
+        "range": "5.0.4",
+        "dev": true,
+        "bytes": 5061,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      },
+      {
+        "name": "@types/flat",
+        "range": "5.0.2",
+        "dev": true,
+        "bytes": 5027,
+        "installed": true,
+        "class": "unknown",
+        "replacement": null,
+        "note": null,
+        "docs": null
+      }
+    ]
+  },
+  "dependencyDelta": {
+    "measurable": true,
+    "aggressive": false,
+    "direct": {
+      "before": 17,
+      "kept": 17,
+      "svelteAdds": 5
+    },
+    "transitive": {
+      "before": 101,
+      "kept": 101
+    },
+    "packagesCut": 0,
+    "bytesFreed": 0,
+    "installBytesBefore": 29445348,
+    "cutList": [],
+    "svelteAdds": [
+      "svelte",
+      "@sveltejs/kit",
+      "@sveltejs/vite-plugin-svelte",
+      "@sveltejs/adapter-auto",
+      "svelte-check"
+    ],
+    "svelteSide": null,
+    "net": null,
+    "caveats": [
+      "The \"survive\" figures count ONLY surviving packages. SvelteKit's own footprint is not included because it is not installed here, so any net saving read off this is an UPPER BOUND. Re-run with --svelte-ref <scaffolded-kit-app> after Phase 1 for the true net.",
+      "Install size is a DEV-TIME number and is not the win. Most of node_modules never reaches the browser. The number that matters to users is shipped bytes — run attribute.mjs against a real build."
+    ]
+  },
+  "hazards": [],
+  "effort": {
+    "componentTiers": {
+      "simple": 5,
+      "medium": 5,
+      "complex": 2
+    },
+    "fixedCosts": [
+      {
+        "item": "Scaffold SvelteKit, tooling, CI",
+        "lo": 1,
+        "hi": 3
+      },
+      {
+        "item": "Routing + layouts",
+        "lo": 1.5,
+        "hi": 4
+      },
+      {
+        "item": "State/data layer",
+        "lo": 2,
+        "hi": 6
+      },
+      {
+        "item": "Cross-cutting (auth, i18n, SEO, a11y)",
+        "lo": 2,
+        "hi": 8
+      },
+      {
+        "item": "Parity gate + cutover",
+        "lo": 2,
+        "hi": 5
+      }
+    ],
+    "swapPackages": 0,
+    "personDays": [
+      13,
+      38
+    ],
+    "basis": "Heuristic: per-component bands by size/hook density, plus fixed line items. RECALIBRATE after the Phase 1 pilot — replace these numbers with the measured throughput of the pilot slice."
+  },
+  "mapVersion": "1.1.0",
+  "measuredWith": {
+    "nodeModulesPresent": true
+  }
+}

@@ -1,0 +1,603 @@
+/* Port of src/custom-theme.scss (847 lines) minus Angular Material.
+ *
+ * The original was an SCSS file whose first 260 lines built Material palettes and called
+ * mat.define-dark-theme / mat.all-component-themes to generate every .mat-* rule. All of that
+ * is dead here. What actually carries WowUp's identity is below: six blocks of CSS custom
+ * properties, one per theme variant, plus the one-line utility classes that read them.
+ *
+ * The theme class is applied to the app root by +layout.svelte, exactly as Angular applied it
+ * in app.component.html via [ngClass]="[currentTheme, platform]".
+ */
+
+/* ---- theme variants ------------------------------------------------------------------ */
+
+.default-theme {
+	/* Hover / selected tints. Components previously hardcoded rgb(255 255 255 / n%), which is
+	   invisible on the light themes — these carry the same idea per theme. */
+	--overlay-subtle: rgb(255 255 255 / 6%);
+	--overlay-hover: rgb(255 255 255 / 8%);
+	--overlay-selected: rgb(255 255 255 / 14%);
+	--overlay-strong: rgb(255 255 255 / 22%);
+	--overlay-border: rgb(255 255 255 / 18%);
+
+	color-scheme: dark;
+	--background-primary: #6b69d6;
+	--background-primary-2: #504fa1;
+	--background-primary-3: #383773;
+	--background-secondary-1: rgba(102, 102, 102, 0.85);
+	--background-secondary-2: rgba(85, 85, 85, 0.9);
+	--background-secondary-2-fill: rgba(85, 85, 85, 1);
+	--background-secondary-3: rgba(68, 68, 68, 0.8);
+	--background-secondary-4: rgba(51, 51, 51, 0.8);
+	--background-secondary-5: rgba(34, 34, 34, 0.8);
+	--control-color: #536dfe;
+	--epic-color: #a335ee;
+	--rare-color: #0070dd;
+	--scrollbar-track-color: #333333;
+	--text-1: #ffffff;
+	--text-2: #dcddde;
+	--text-3: #cccccc;
+	--text-4: #bbbbbb;
+	--warn-color: #f44336;
+	--tab-text: #ffffff;
+	--tab-disabled: #ffffff;
+	--tab-inactive: #bbbbbb;
+	--divider-color: #666666;
+	--grid-border: rgba(255, 255, 255, 0.12);
+	--footer-hover: #444444;
+
+	--title-logo: url('/assets/images/wowup-white-1.png');
+	--theme-logo: url('/assets/images/wowup-white-1.png');
+	--ad-placeholder: url('/assets/images/wowup-placeholder.png');
+}
+
+.default-theme-light-theme {
+	/* See the dark themes: same idea, inverted so the tint reads on a light surface. */
+	--overlay-subtle: rgb(0 0 0 / 4%);
+	--overlay-hover: rgb(0 0 0 / 7%);
+	--overlay-selected: rgb(0 0 0 / 12%);
+	--overlay-strong: rgb(0 0 0 / 20%);
+	--overlay-border: rgb(0 0 0 / 18%);
+
+	color-scheme: light;
+	--background-primary: #6b69d6;
+	--background-primary-2: #504fa1;
+	--background-primary-3: #383773;
+	--background-secondary-1: rgba(255, 255, 255, 0.75);
+	--background-secondary-2: rgba(243, 243, 243, 0.8);
+	--background-secondary-2-fill: rgba(243, 243, 243, 1);
+	--background-secondary-3: rgba(235, 237, 239, 0.75);
+	--background-secondary-4: rgba(227, 229, 232, 0.75);
+	--background-secondary-5: rgba(202, 204, 206, 0.75);
+	--control-color: #536dfe;
+	--epic-color: #a335ee;
+	--rare-color: #0070dd;
+	--scrollbar-track-color: #e3e5e8;
+	--text-1: #000000;
+	--text-2: #666666;
+	--text-3: #888888;
+	--text-4: #aaaaaa;
+	--warn-color: #f44336;
+	--tab-text: #ffffff;
+	--tab-disabled: #ffffff;
+	--tab-inactive: #777777;
+	--divider-color: #aaaaaa;
+	--grid-border: #cccccc;
+	--footer-hover: #cccccc;
+
+	--title-logo: url('/assets/images/wowup-white-1.png');
+	--theme-logo: url('/assets/images/wowup-dark-1.png');
+	--ad-placeholder: url('/assets/images/wowup-placeholder.png');
+}
+
+.horde-theme {
+	/* Hover / selected tints. Components previously hardcoded rgb(255 255 255 / n%), which is
+	   invisible on the light themes — these carry the same idea per theme. */
+	--overlay-subtle: rgb(255 255 255 / 6%);
+	--overlay-hover: rgb(255 255 255 / 8%);
+	--overlay-selected: rgb(255 255 255 / 14%);
+	--overlay-strong: rgb(255 255 255 / 22%);
+	--overlay-border: rgb(255 255 255 / 18%);
+
+	color-scheme: dark;
+	--background-primary: #8c1616;
+	--background-primary-2: #9d3939;
+	--background-primary-3: #5c0606;
+	--background-secondary-1: rgba(102, 102, 102, 0.85);
+	--background-secondary-2: rgba(85, 85, 85, 0.9);
+	--background-secondary-2-fill: rgba(85, 85, 85, 1);
+	--background-secondary-3: rgba(68, 68, 68, 0.8);
+	--background-secondary-4: rgba(51, 51, 51, 0.8);
+	--background-secondary-5: rgba(34, 34, 34, 0.8);
+	--control-color: #ff5b5b;
+	--epic-color: #a335ee;
+	--rare-color: #0070dd;
+	--scrollbar-track-color: #333333;
+	--text-1: #ffffff;
+	--text-2: #dcddde;
+	--text-3: #cccccc;
+	--text-4: #bbbbbb;
+	--warn-color: #f44336;
+	--tab-text: #ffffff;
+	--tab-disabled: #ffffff;
+	--tab-inactive: #bbbbbb;
+	--divider-color: #666666;
+	--grid-border: rgba(255, 255, 255, 0.12);
+	--footer-hover: #444444;
+
+	--title-logo: url('/assets/images/horde-1.png');
+	--theme-logo: url('/assets/images/horde-1.png');
+	--ad-placeholder: url('/assets/images/wowup-placeholder.png');
+}
+
+.horde-theme-light-theme {
+	/* See the dark themes: same idea, inverted so the tint reads on a light surface. */
+	--overlay-subtle: rgb(0 0 0 / 4%);
+	--overlay-hover: rgb(0 0 0 / 7%);
+	--overlay-selected: rgb(0 0 0 / 12%);
+	--overlay-strong: rgb(0 0 0 / 20%);
+	--overlay-border: rgb(0 0 0 / 18%);
+
+	color-scheme: light;
+	--background-primary: #8c1616;
+	--background-primary-2: #9d3939;
+	--background-primary-3: #5c0606;
+	--background-secondary-1: rgba(255, 255, 255, 0.75);
+	--background-secondary-2: rgba(243, 243, 243, 0.8);
+	--background-secondary-2-fill: rgba(243, 243, 243, 1);
+	--background-secondary-3: rgba(235, 237, 239, 0.75);
+	--background-secondary-4: rgba(227, 229, 232, 0.75);
+	--background-secondary-5: rgba(202, 204, 206, 0.75);
+	--control-color: #ff5b5b;
+	--epic-color: #a335ee;
+	--rare-color: #0070dd;
+	--scrollbar-track-color: #e3e5e8;
+	--text-1: #000000;
+	--text-2: #666666;
+	--text-3: #888888;
+	--text-4: #aaaaaa;
+	--warn-color: #f44336;
+	--tab-text: #ffffff;
+	--tab-disabled: #ffffff;
+	--tab-inactive: #777777;
+	--divider-color: #aaaaaa;
+	--grid-border: #cccccc;
+	--footer-hover: #cccccc;
+
+	--title-logo: url('/assets/images/horde-1.png');
+	--theme-logo: url('/assets/images/horde-dark-1.png');
+	--ad-placeholder: url('/assets/images/wowup-placeholder.png');
+}
+
+.alliance-theme {
+	/* Hover / selected tints. Components previously hardcoded rgb(255 255 255 / n%), which is
+	   invisible on the light themes — these carry the same idea per theme. */
+	--overlay-subtle: rgb(255 255 255 / 6%);
+	--overlay-hover: rgb(255 255 255 / 8%);
+	--overlay-selected: rgb(255 255 255 / 14%);
+	--overlay-strong: rgb(255 255 255 / 22%);
+	--overlay-border: rgb(255 255 255 / 18%);
+
+	color-scheme: dark;
+	--background-primary: #162c57;
+	--background-primary-2: #394c70;
+	--background-primary-3: #06102c;
+	--background-secondary-1: rgba(102, 102, 102, 0.85);
+	--background-secondary-2: rgba(85, 85, 85, 0.9);
+	--background-secondary-2-fill: rgba(85, 85, 85, 1);
+	--background-secondary-3: rgba(68, 68, 68, 0.8);
+	--background-secondary-4: rgba(51, 51, 51, 0.8);
+	--background-secondary-5: rgba(34, 34, 34, 0.8);
+	--control-color: #335eff;
+	--epic-color: #a335ee;
+	--rare-color: #0070dd;
+	--scrollbar-track-color: #333333;
+	--text-1: #ffffff;
+	--text-2: #dcddde;
+	--text-3: #cccccc;
+	--text-4: #bbbbbb;
+	--warn-color: #f44336;
+	--tab-text: #ffffff;
+	--tab-disabled: #ffffff;
+	--tab-inactive: #bbbbbb;
+	--divider-color: #666666;
+	--grid-border: rgba(255, 255, 255, 0.12);
+	/* The original omits --footer-hover here; inherit the dark default rather than
+	   leaving the variable unset. */
+	--footer-hover: #444444;
+
+	--title-logo: url('/assets/images/alliance-1.png');
+	--theme-logo: url('/assets/images/alliance-1.png');
+	--ad-placeholder: url('/assets/images/wowup-placeholder.png');
+}
+
+.alliance-theme-light-theme {
+	/* See the dark themes: same idea, inverted so the tint reads on a light surface. */
+	--overlay-subtle: rgb(0 0 0 / 4%);
+	--overlay-hover: rgb(0 0 0 / 7%);
+	--overlay-selected: rgb(0 0 0 / 12%);
+	--overlay-strong: rgb(0 0 0 / 20%);
+	--overlay-border: rgb(0 0 0 / 18%);
+
+	color-scheme: light;
+	--background-primary: #162c57;
+	--background-primary-2: #394c70;
+	--background-primary-3: #06102c;
+	--background-secondary-1: rgba(255, 255, 255, 0.75);
+	--background-secondary-2: rgba(243, 243, 243, 0.8);
+	--background-secondary-2-fill: rgba(243, 243, 243, 1);
+	--background-secondary-3: rgba(235, 237, 239, 0.75);
+	--background-secondary-4: rgba(227, 229, 232, 0.75);
+	--background-secondary-5: rgba(202, 204, 206, 0.75);
+	--control-color: #335eff;
+	--epic-color: #a335ee;
+	--rare-color: #0070dd;
+	--scrollbar-track-color: #e3e5e8;
+	--text-1: #000000;
+	--text-2: #666666;
+	--text-3: #888888;
+	--text-4: #aaaaaa;
+	--warn-color: #f44336;
+	--tab-text: #ffffff;
+	--tab-disabled: #ffffff;
+	--tab-inactive: #777777;
+	--divider-color: #aaaaaa;
+	--grid-border: #cccccc;
+	--footer-hover: #cccccc;
+
+	--title-logo: url('/assets/images/alliance-1.png');
+	--theme-logo: url('/assets/images/alliance-dark-1.png');
+	--ad-placeholder: url('/assets/images/wowup-placeholder.png');
+}
+
+/* ---- ag-grid theming ------------------------------------------------------------------
+ * Without this block the grid renders in ag-theme-material's stock light palette on top of
+ * the app's dark chrome — the single most obvious symptom of the missing stylesheet.
+ *
+ * Two values are corrected against the original, which passed a colour where a channel
+ * triple was required and so produced an invalid declaration the browser dropped:
+ *   rgba(var(--text-1), 0.38)                -> color-mix(...)
+ *   hsl(var(--background-secondary-2), 95%)  -> var(--background-secondary-3)
+ */
+/* The doubled class is deliberate. ag-grid's own ag-theme-material.css declares the same
+ * `.ag-theme-material { --ag-*: ... }` block, and it is imported by AgGrid.svelte — which lives
+ * in the lazily-loaded page node, so its stylesheet is appended *after* this one. At equal
+ * specificity the later sheet wins and the grid renders in ag-grid's stock white palette.
+ * Repeating the class raises specificity to (0,2,0) so the theme wins whatever the load order,
+ * which matters because chunk order is not guaranteed to be stable between builds.
+ *
+ * Measured before the fix: --ag-background-color resolved to "#fff" and .ag-row to
+ * rgb(255,255,255) on a dark theme. */
+.ag-theme-material.ag-theme-material {
+	--ag-foreground-color: var(--text-1);
+	--ag-disabled-foreground-color: color-mix(in srgb, var(--text-1) 38%, transparent);
+	--ag-secondary-foreground-color: color-mix(in srgb, var(--text-1) 54%, transparent);
+	--ag-background-color: var(--background-secondary-1);
+	--ag-header-background-color: var(--background-secondary-1);
+	--ag-header-cell-hover-background-color: var(--background-secondary-3);
+	--ag-row-hover-color: var(--background-secondary-2);
+	--ag-border-color: var(--grid-border);
+	--ag-selected-row-background-color: var(--background-secondary-4);
+	--ag-range-selection-border-color: transparent;
+	--ag-odd-row-background-color: transparent;
+	--ag-data-color: var(--text-1);
+	--ag-header-foreground-color: var(--text-2);
+}
+
+/* ag-grid sets line-height on .ag-cell to roughly the row height so that plain text cells sit
+ * vertically centred. Cell *renderers* inherit it too, which silently inflates every line box
+ * inside them — a button ends up as tall as the row, and stacked text drifts apart. Reset it
+ * once at the bridge element (see svelte-cell-renderer.svelte.ts) rather than in each renderer. */
+.ag-svelte-cell {
+	line-height: normal;
+}
+
+/* ---- semantic utilities ----------------------------------------------------------------
+ * Kept under their original names: the components reference them ~100 times, and
+ * `bg-secondary-4` states intent better than the raw Tailwind arbitrary-value equivalent.
+ */
+
+.bg-primary {
+	background-color: var(--background-primary);
+}
+.bg-primary-2 {
+	background-color: var(--background-primary-2);
+}
+.bg-primary-3 {
+	background-color: var(--background-primary-3);
+}
+.bg-secondary {
+	background-color: var(--background-secondary-1);
+}
+.bg-secondary-2 {
+	background-color: var(--background-secondary-2);
+}
+.bg-secondary-3 {
+	background-color: var(--background-secondary-3);
+}
+.bg-secondary-4 {
+	background-color: var(--background-secondary-4);
+}
+.bg-secondary-5 {
+	background-color: var(--background-secondary-5);
+}
+
+.hover-primary-2:hover {
+	background-color: var(--background-primary-2);
+}
+.hover-bg-secondary:hover {
+	background-color: var(--background-secondary-1);
+}
+.hover-bg-secondary-2:hover {
+	background-color: var(--background-secondary-2);
+}
+.hover-bg-secondary-3:hover {
+	background-color: var(--background-secondary-3);
+}
+.hover-bg-secondary-4:hover {
+	background-color: var(--background-secondary-4);
+}
+.hover-bg-secondary-5:hover {
+	background-color: var(--background-secondary-5);
+}
+
+.border-primary {
+	border-color: var(--background-primary);
+}
+
+.text-1 {
+	color: var(--text-1);
+}
+.text-1-hover:hover {
+	color: var(--text-1) !important;
+}
+.text-2 {
+	color: var(--text-2);
+}
+.text-3 {
+	color: var(--text-3);
+}
+.text-4 {
+	color: var(--text-4);
+}
+.text-success {
+	color: var(--success-color);
+}
+.text-primary-1 {
+	color: var(--background-primary) !important;
+}
+.text-primary-2 {
+	color: var(--background-primary-2) !important;
+}
+.text-primary-3 {
+	color: var(--background-primary-3) !important;
+}
+.text-control {
+	color: var(--control-color) !important;
+}
+.text-warning {
+	color: var(--warn-color) !important;
+}
+
+/* ---- app chrome ------------------------------------------------------------------------ */
+
+.rounded {
+	border-radius: 4px;
+}
+
+.selectable,
+.selectable * {
+	user-select: text !important;
+	-webkit-user-select: text !important;
+}
+
+.ignored {
+	color: var(--text-4) !important;
+}
+
+.link-btn {
+	border: none;
+	background: none;
+	padding: 0;
+	color: var(--control-color);
+	cursor: pointer;
+	font: inherit;
+}
+
+.error-text {
+	color: var(--warn-color);
+}
+
+/* Two logo variables, and the difference matters. --title-logo is always the white mark; the
+ * nav rail uses it and the light themes invert it to black (see below). --theme-logo is already
+ * theme-appropriate and is used undimmed as the page watermark on About / Account / News.
+ *
+ * Binding the rail to --theme-logo makes the light themes render a dark logo that the invert
+ * then flips back to white — invisible on a light background. */
+.logo-img {
+	width: 100%;
+	height: 100%;
+	background-image: var(--title-logo);
+	background-repeat: no-repeat;
+	background-size: contain;
+	background-position: center;
+}
+
+.theme-logo .logo-img {
+	background-image: var(--theme-logo);
+}
+
+.tab-icon-inactive svg {
+	transition: fill 0.3s ease 0.1s;
+	fill: var(--tab-inactive);
+}
+
+.tab-icon-active svg {
+	transition: fill 0.3s ease 0.1s;
+	fill: var(--text-1);
+}
+
+.tab-icon-disabled svg {
+	fill: var(--text-disabled);
+	opacity: 0.25;
+}
+
+/* Addon description / changelog links, on top of markdown.css. */
+.addon-summary a,
+.addon-changelog a,
+.addon-summary a:visited,
+.addon-changelog a:visited,
+.changelog a {
+	color: var(--control-color);
+}
+
+.addon-summary h1,
+.addon-summary h2,
+.addon-changelog h1,
+.addon-changelog h2 {
+	border-bottom: 1px solid var(--background-secondary-1);
+}
+
+.addon-summary hr,
+.addon-changelog hr {
+	background-color: var(--background-secondary-1);
+}
+
+.addon-summary code,
+.addon-changelog code {
+	background-color: var(--background-secondary-4);
+}
+
+/* Light themes invert the window-control glyphs and the logo, which are white PNGs. */
+[class*='light-theme'] .window-control:hover {
+	background-color: var(--background-secondary-5);
+}
+
+[class*='light-theme'] .window-control img {
+	filter: invert(100%);
+}
+
+/* Only the rail's logo is inverted. The Angular rule targeted every `.logo-img`, which also
+   caught the About/Account/News watermarks — and those already use --theme-logo, so inverting
+   them turned a dark mark white and made the watermark vanish on light themes. */
+[class*='light-theme'] .rail-logo .logo-img {
+	filter: invert(100%);
+}
+
+/* ---- dialogs ---------------------------------------------------------------------------
+ * These were defined twice, in DialogHost.svelte's and Modal.svelte's scoped <style> blocks.
+ * Svelte scopes component styles, so the three components that render their own <dialog
+ * class="wu-dialog"> — AddonDetail, AddonManageDialog, WtfBackup — matched nothing at all and
+ * fell back to the UA stylesheet: a white, top-left-anchored box with no padding or backdrop.
+ *
+ * The surface colour has no ported equivalent; Material generated it via
+ * mat.all-component-themes. --background-secondary-2-fill is the theme's opaque surface token,
+ * which is what a modal needs — the translucent variants let the page show through.
+ */
+.wu-dialog {
+	/* A modal <dialog> is centred by the UA stylesheet's `margin: auto`. Tailwind's preflight
+	   resets margin to 0 on every element, which anchors it to the top-left instead — so this
+	   has to be restored explicitly. */
+	margin: auto;
+	border: 0;
+	border-radius: 6px;
+	padding: 1.25rem;
+	min-width: 320px;
+	max-width: min(680px, 90vw);
+	color: var(--text-1);
+	background: var(--background-secondary-2-fill);
+	box-shadow: 0 8px 32px rgb(0 0 0 / 45%);
+}
+
+.wu-dialog::backdrop {
+	background: rgb(0 0 0 / 50%);
+}
+
+.dialog-title {
+	font-size: 1.15rem;
+	margin: 0 0 0.75rem;
+}
+
+.dialog-content {
+	max-height: 60vh;
+	overflow-y: auto;
+}
+
+.dialog-buttons {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.5rem;
+	margin-top: 1.25rem;
+}
+
+.dialog-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding-top: 0.75rem;
+}
+
+/* ---- native form controls --------------------------------------------------------------
+ * The Angular app used <mat-select>, which renders its own popup in the page, so the native
+ * control was never themed. This port uses a native <select> in three places, and an option
+ * list is painted by the browser rather than the page: without `color-scheme` (set per theme
+ * above) the popup draws white while the options inherit the page's white text — invisible.
+ *
+ * Popups cannot be translucent, so the -fill variant is used here too.
+ */
+select,
+textarea,
+input:not([type='checkbox']):not([type='radio']) {
+	background-color: var(--background-secondary-2-fill);
+	color: var(--text-1);
+	border: 1px solid var(--divider-color);
+	border-radius: 4px;
+	padding: 0.4rem 0.5rem;
+	font: inherit;
+}
+
+select option,
+select optgroup {
+	background-color: var(--background-secondary-2-fill);
+	color: var(--text-1);
+}
+
+select:focus-visible,
+textarea:focus-visible,
+input:focus-visible {
+	outline: 2px solid var(--control-color);
+	outline-offset: -1px;
+}
+
+/* ---- scrollbars ------------------------------------------------------------------------ */
+
+::-webkit-scrollbar {
+	width: 12px;
+	height: 12px;
+}
+
+::-webkit-scrollbar-track {
+	background-color: var(--scrollbar-track-color);
+	margin: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+	border-color: var(--background-primary-3);
+	background: linear-gradient(
+		146deg,
+		var(--background-primary) 0%,
+		var(--background-primary-2) 100%
+	);
+	min-height: 40px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-thumb {
+	border: 4px solid transparent;
+	border-radius: 8px;
+	background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+	background: transparent;
+}

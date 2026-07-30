@@ -1,0 +1,234 @@
+{
+  "buildDir": "dist",
+  "chunks": {
+    "js": 3,
+    "css": 1,
+    "mapped": 3,
+    "unmapped": 0
+  },
+  "totals": {
+    "jsRaw": 4499800,
+    "jsGzip": 1035731,
+    "jsBrotli": 773476,
+    "cssRaw": 737271,
+    "cssGzip": 85668
+  },
+  "attribution": [
+    {
+      "name": "@angular/material",
+      "rawBytes": 755979,
+      "gzipBytes": 173197,
+      "brotliBytes": 128991,
+      "class": "unknown",
+      "replacement": null
+    },
+    {
+      "name": "ag-grid-community",
+      "rawBytes": 631048,
+      "gzipBytes": 144575,
+      "brotliBytes": 107675,
+      "class": "unknown",
+      "replacement": null
+    },
+    {
+      "name": "@angular/core",
+      "rawBytes": 516305,
+      "gzipBytes": 118287,
+      "brotliBytes": 88096,
+      "class": "runtime",
+      "replacement": "Svelte 5 compiler output"
+    },
+    {
+      "name": "@fortawesome/free-solid-svg-icons",
+      "rawBytes": 340365,
+      "gzipBytes": 77979,
+      "brotliBytes": 58076,
+      "class": "unknown",
+      "replacement": null
+    },
+    {
+      "name": "(your app code)",
+      "rawBytes": 300630,
+      "gzipBytes": 69366,
+      "brotliBytes": 51791,
+      "class": "app",
+      "replacement": null
+    },
+    {
+      "name": "@angular/cdk",
+      "rawBytes": 224213,
+      "gzipBytes": 51368,
+      "brotliBytes": 38257,
+      "class": "unknown",
+      "replacement": null
+    },
+    {
+      "name": "lodash",
+      "rawBytes": 181203,
+      "gzipBytes": 41514,
+      "brotliBytes": 30918,
+      "class": "partial",
+      "replacement": "native JS"
+    },
+    {
+      "name": "@fortawesome/free-brands-svg-icons",
+      "rawBytes": 174909,
+      "gzipBytes": 40072,
+      "brotliBytes": 29844,
+      "class": "unknown",
+      "replacement": null
+    },
+    {
+      "name": "@angular/common",
+      "rawBytes": 145611,
+      "gzipBytes": 33360,
+      "brotliBytes": 24845,
+      "class": "runtime",
+      "replacement": "Svelte 5 compiler output"
+    },
+    {
+      "name": "rxjs",
+      "rawBytes": 112401,
+      "gzipBytes": 25751,
+      "brotliBytes": 19179,
+      "class": "partial",
+      "replacement": "$state / $derived / $effect"
+    },
+    {
+      "name": "@angular/router",
+      "rawBytes": 101370,
+      "gzipBytes": 23224,
+      "brotliBytes": 17297,
+      "class": "native",
+      "replacement": "SvelteKit filesystem routing"
+    },
+    {
+      "name": "@angular/forms",
+      "rawBytes": 95374,
+      "gzipBytes": 21851,
+      "brotliBytes": 16274,
+      "class": "unknown",
+      "replacement": null
+    },
+    {
+      "name": "@microsoft/applicationinsights-core-js",
+      "rawBytes": 95214,
+      "gzipBytes": 21814,
+      "brotliBytes": 16246,
+      "class": "unknown",
+      "replacement": null
+    },
+    {
+      "name": "zone.js",
+      "rawBytes": 74638,
+      "gzipBytes": 21421,
+      "brotliBytes": 17923,
+      "class": "runtime",
+      "replacement": "n/a"
+    },
+    {
+      "name": "@angular/animations",
+      "rawBytes": 81297,
+      "gzipBytes": 18625,
+      "brotliBytes": 13872,
+      "class": "unknown",
+      "replacement": null
+    },
+    {
+      "name": "@messageformat/core",
+      "rawBytes": 66221,
+      "gzipBytes": 15171,
+      "brotliBytes": 11299,
+      "class": "unknown",
+      "replacement": null
+    },
+    {
+      "name": "ng-gallery",
+      "rawBytes": 59549,
+      "gzipBytes": 13643,
+      "brotliBytes": 10161,
+      "class": "unknown",
+      "replacement": null
+    },
+    {
+      "name": "markdown-it",
+      "rawBytes": 56487,
+      "gzipBytes": 12941,
+      "brotliBytes": 9638,
+      "class": "unknown",
+      "replacement": null
+    },
+    {
+      "name": "ag-grid-angular",
+      "rawBytes": 46380,
+      "gzipBytes": 10626,
+      "brotliBytes": 7914,
+      "class": "unknown",
+      "replacement": null
+    },
+    {
+      "name": "@fortawesome/free-regular-svg-icons",
+      "rawBytes": 45145,
+      "gzipBytes": 10343,
+      "brotliBytes": 7703,
+      "class": "unknown",
+      "replacement": null
+    },
+    {
+      "name": "@microsoft/applicationinsights-channel-js",
+      "rawBytes": 41770,
+      "gzipBytes": 9570,
+      "brotliBytes": 7127,
+      "class": "unknown",
+      "replacement": null
+    },
+    {
+      "name": "@microsoft/applicationinsights-common",
+      "rawBytes": 34791,
+      "gzipBytes": 7971,
+      "brotliBytes": 5936,
+      "class": "unknown",
+      "replacement": null
+    },
+    {
+      "name": "axios",
+      "rawBytes": 32310,
+      "gzipBytes": 7402,
+      "brotliBytes": 5513,
+      "class": "native",
+      "replacement": "fetch (SvelteKit passes a request-scoped fetch into load)"
+    },
+    {
+      "name": "@angular/platform-browser",
+      "rawBytes": 31655,
+      "gzipBytes": 7252,
+      "brotliBytes": 5401,
+      "class": "runtime",
+      "replacement": "Svelte 5 compiler output"
+    },
+    {
+      "name": "@microsoft/applicationinsights-dependencies-js",
+      "rawBytes": 31510,
+      "gzipBytes": 7219,
+      "brotliBytes": 5377,
+      "class": "unknown",
+      "replacement": null
+    }
+  ],
+  "buckets": {
+    "eliminatedGzip": 210946,
+    "reducedGzip": 67265,
+    "swappedGzip": 0,
+    "keptGzip": 688150,
+    "appCodeGzip": 69366
+  },
+  "projection": {
+    "method": "Framework-attributable bytes go to zero. App-code bytes shrink because template/reactivity boilerplate compiles away, but the shrink factor is unknown until you measure the pilot slice.",
+    "floorGzip": 824785,
+    "note": "floorGzip = today's gzip minus only the bytes that provably disappear, holding app code constant. The real figure lands below this. Replace it with a measured number after Phase 1 rather than shipping a guess."
+  },
+  "caveats": [
+    "Totals are exact; per-package compressed figures are proportional shares (±15%).",
+    "This measures the client bundle only. Server-rendered payload and hydration cost are separate — capture those from a Lighthouse/WebPageTest run."
+  ]
+}

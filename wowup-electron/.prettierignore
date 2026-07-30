@@ -16,6 +16,9 @@ src/**/*.js
 *.js.map
 *.hbs
 
+# Svelte 5 migration renderer — has its own prettier config (tabs, single quotes)
+/renderer-svelte
+
 # dependencies
 /node_modules
 
