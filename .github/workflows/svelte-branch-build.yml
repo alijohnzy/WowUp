@@ -1,0 +1,189 @@
+# Builds the Svelte renderer AppImage. Manual only, on whichever branch you select.
+#
+# Mirrors what electron-ow-all-build.yml does for the Angular CF build, reduced to the one
+# platform this branch is exercised on, plus the checks this migration turned out to need.
+#
+# SECRET SETUP
+#   Settings → Secrets and variables → Actions → Repository secrets → New repository secret
+#     Name:   CURSEFORGE_API_KEY
+#     Value:  the key, unquoted
+#
+#   A *repository* secret, not an *environment* secret. Environment secrets are only readable by
+#   a job that declares `environment: <name>`; without that, ${{ secrets.X }} resolves to an
+#   empty string and the build happily ships a dead key. If you would rather keep an environment,
+#   add `environment: <name>` under `runs-on` below instead.
+#
+#   The key is passed as an env var, so it is masked in logs and never written to the repo. It is
+#   deliberately not echoed anywhere — inject-token.js prints it on the Angular path, which
+#   Actions masks but is not worth relying on.
+#
+# ARTIFACT
+#   The key is baked into the built renderer. Artifacts on a public repository are downloadable
+#   by anyone with the run URL, so the AppImage is not uploaded unless you tick the box.
+
+name: Build Svelte AppImage
+
+on:
+  workflow_dispatch:
+    inputs:
+      upload_appimage:
+        description: 'Upload the AppImage. It contains the CurseForge key — on a public repo anyone can download it.'
+        type: boolean
+        default: false
+      run_e2e:
+        description: 'Run the Playwright end-to-end suite (adds a few minutes).'
+        type: boolean
+        default: true
+
+jobs:
+  build:
+    name: Build and verify
+    runs-on: ubuntu-latest
+
+    steps:
+      # Fails immediately and says why, rather than building for ten minutes and shipping an
+      # AppImage whose every CurseForge request 403s. That failure is invisible otherwise: the
+      # key substitutes cleanly, the build passes, and it only shows up at runtime as "an error
+      # occurred checking for updates from Curse".
+      - name: Check the secret is readable
+        env:
+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+        run: |
+          if [ -z "${CURSEFORGE_API_KEY}" ]; then
+            echo "::error::CURSEFORGE_API_KEY is empty."
+            echo "Set it as a REPOSITORY secret: Settings → Secrets and variables → Actions →"
+            echo "Repository secrets → New repository secret."
+            echo "An *environment* secret will not work here unless this job declares"
+            echo "'environment: <name>' — see the comment at the top of this workflow."
+            exit 1
+          fi
+          echo "Secret is present (${#CURSEFORGE_API_KEY} characters)."
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+
+      # wowup-electron depends on the local wowup-lib-core package, so the library is compiled
+      # before the app installs.
+      - name: Build wowup-lib
+        run: |
+          cd ./wowup-lib
+          npm ci
+          npm run build
+
+      - name: Install app dependencies
+        run: |
+          cd ./wowup-electron
+          npm ci
+
+      - name: Install renderer dependencies
+        run: |
+          cd ./wowup-electron/renderer-svelte
+          npm ci
+
+      - name: Typecheck
+        run: |
+          cd ./wowup-electron/renderer-svelte
+          npm run check
+
+      - name: Lint
+        run: |
+          cd ./wowup-electron/renderer-svelte
+          npm run lint
+
+      - name: Unit tests
+        run: |
+          cd ./wowup-electron/renderer-svelte
+          npx vitest run
+
+      - name: Build AppImage
+        env:
+          # Read by renderer-svelte/vite.config.ts. Passed as an env var rather than sourced from
+          # a file: a key of the form "$2a$10$…" loses its $-segments to shell expansion if it is
+          # ever `source`d, producing a silently invalid key and a 403 on every request.
+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+        run: |
+          cd ./wowup-electron
+          npm run svelte:appimage
+
+      - name: Verify the key was baked into the bundle
+        run: |
+          cd ./wowup-electron
+          node -e '
+            const { readdirSync, readFileSync } = require("fs");
+            const dir = "renderer-svelte/build/_app/immutable/chunks";
+            let key = null, placeholder = false;
+            for (const f of readdirSync(dir).filter((f) => f.endsWith(".js"))) {
+              const s = readFileSync(dir + "/" + f, "utf8");
+              if (s.includes("{{CURSEFORGE_API_KEY}}")) placeholder = true;
+              const m = s.match(/\$2[aby]\$\d{2}\$[A-Za-z0-9./]{40,}/);
+              if (m && !key) key = m[0];
+            }
+            if (placeholder) {
+              console.error("::error::CURSEFORGE_API_KEY was never substituted into the bundle.");
+              process.exit(1);
+            }
+            if (!key || key.length !== 60) {
+              console.error("::error::The substituted key is not well formed (length " + (key ? key.length : 0) + ", expected 60).");
+              process.exit(1);
+            }
+            console.log("CurseForge key present and well formed.");
+          '
+
+      - name: Verify the renderer boots
+        run: |
+          cd ./wowup-electron
+          xvfb-run --auto-servernum node scripts/verify-boot.mjs
+
+      - name: End-to-end tests
+        if: inputs.run_e2e
+        run: |
+          cd ./wowup-electron/renderer-svelte
+          npx playwright install --with-deps chromium
+          npx playwright test
+
+      - name: Summarise the build
+        if: always()
+        run: |
+          cd ./wowup-electron
+          {
+            echo "### Svelte AppImage"
+            echo
+            echo '| | |'
+            echo '|---|---|'
+            echo "| branch | \`${GITHUB_REF_NAME}\` |"
+            echo "| commit | \`${GITHUB_SHA::8}\` |"
+            if ls release-svelte/*.AppImage >/dev/null 2>&1; then
+              echo "| artifact | \`$(basename release-svelte/*.AppImage)\` |"
+              echo "| size | $(( $(stat -c%s release-svelte/*.AppImage) / 1048576 )) MB |"
+              echo "| renderer JS | $(find renderer-svelte/build/_app -name '*.js' | wc -l) files, $(find renderer-svelte/build/_app -name '*.js' -exec du -ch {} + | tail -1 | cut -f1) |"
+              echo "| uploaded | ${{ inputs.upload_appimage && 'yes' || 'no — tick “Upload the AppImage” to get it' }} |"
+            else
+              echo "| result | build did not produce an AppImage |"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Off unless you ask for it: the AppImage contains the CurseForge key, and artifacts on a
+      # public repository can be downloaded by anyone with the run URL.
+      - name: Upload AppImage
+        if: inputs.upload_appimage
+        uses: actions/upload-artifact@v4
+        with:
+          name: WowUp-CF-Svelte-${{ github.ref_name }}
+          path: wowup-electron/release-svelte/*.AppImage
+          retention-days: 7
+
+      # Screenshots and traces only — no key.
+      - name: Upload test artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            wowup-electron/renderer-svelte/playwright-report
+            wowup-electron/renderer-svelte/test-results
+          retention-days: 7
