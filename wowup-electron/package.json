@@ -81,8 +81,9 @@
     "svelte:ow:start": "npm-run-all -p svelte:ow:electron:serve svelte:ow:dev",
     "svelte:verify:boot": "node scripts/verify-boot.mjs",
     "svelte:ow:verify:boot": "node scripts/verify-boot.mjs --ow",
-    "svelte:appimage": "cross-env BUILD_FLAVOR=ow BUILD_RENDERER=svelte npm run build:injectenv && cross-env BUILD_FLAVOR=ow npm run svelte:ow:build && tsc -p tsconfig.serve.json && npx electron-builder build -c electron-build/electron-builder-svelte.json --publish never",
-    "angular:appimage": "cross-env BUILD_FLAVOR=ow BUILD_RENDERER=angular npm run build:injectenv && tsc -p tsconfig.serve.json && ng build -c ow-production --base-href ./ && npx electron-builder build -c electron-build/electron-builder-angular.json --publish never"
+    "angular:appimage": "cross-env BUILD_FLAVOR=ow BUILD_RENDERER=angular npm run build:injectenv && tsc -p tsconfig.serve.json && ng build -c ow-production --base-href ./ && npx electron-builder build -c electron-build/electron-builder-angular.json --publish never",
+    "svelte:package": "cross-env BUILD_FLAVOR=ow BUILD_RENDERER=svelte npm run build:injectenv && cross-env BUILD_FLAVOR=ow npm run svelte:ow:build && tsc -p tsconfig.serve.json && npx electron-builder build -c electron-build/electron-builder-svelte.json --publish never",
+    "svelte:verify:key": "node scripts/verify-cf-key.mjs"
   },
   "browserslist": [
     "chrome 98"

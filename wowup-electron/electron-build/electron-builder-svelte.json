@@ -19,10 +19,7 @@
       "nsis",
       "portable"
     ],
-    "forceCodeSigning": false,
-    "signtoolOptions": {
-      "publisherName": "WowUp LLC"
-    }
+    "forceCodeSigning": false
   },
   "nsis": {
     "deleteAppDataOnUninstall": true,

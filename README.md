@@ -33,7 +33,7 @@ so both are buildable from one tree.
 ```bash
 cd wowup-electron
 npm run svelte:start        # dev: Vite + Electron
-npm run svelte:appimage     # packaged AppImage with the Svelte renderer
+npm run svelte:package      # package for the current platform (AppImage / exe / dmg)
 npm start                   # the Angular original, unchanged
 ```
 
