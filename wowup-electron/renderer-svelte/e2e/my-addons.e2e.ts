@@ -67,9 +67,13 @@ const ADDONS = [
 	addon('Details', 'Terciob', { isIgnored: true })
 ];
 
-async function stubPreload(page: Page, addons: unknown[] = ADDONS) {
+async function stubPreload(
+	page: Page,
+	addons: unknown[] = ADDONS,
+	seed: Record<string, unknown> = {}
+) {
 	await page.addInitScript(
-		({ installs, providers, addonRows }) => {
+		({ installs, providers, addonRows, seeded }) => {
 			// Consent is a first-run gate that blocks bootstrap until answered — seed it as
 			// already-answered so suites land on the page under test.
 			const store: Record<string, unknown> = {
@@ -80,7 +84,8 @@ async function stubPreload(page: Page, addons: unknown[] = ADDONS) {
 				// getBool() compares against the literal 'true' — a boolean here reads as false.
 				enable_system_notifications: 'true',
 				wow_installations: installs,
-				addon_providers: providers
+				addon_providers: providers,
+				...seeded
 			};
 
 			(window as never as Record<string, unknown>)['platform'] = 'linux';
@@ -123,7 +128,7 @@ async function stubPreload(page: Page, addons: unknown[] = ADDONS) {
 				openPath: () => Promise.resolve('')
 			};
 		},
-		{ installs: [INSTALLATION], providers: DISABLED_PROVIDERS, addonRows: addons }
+		{ installs: [INSTALLATION], providers: DISABLED_PROVIDERS, addonRows: addons, seeded: seed }
 	);
 
 	await page.route(/^https?:\/\/(?!localhost|127\.0\.0\.1)/, (route) => route.abort());
@@ -135,6 +140,88 @@ async function openMyAddons(page: Page) {
 	// Rows render through the Svelte cell-renderer bridge.
 	await expect(page.locator('.ag-row').first()).toBeVisible();
 }
+
+/**
+ * Addon names in the order the grid *displays* them.
+ *
+ * Not DOM order: ag-grid positions rows absolutely and reuses their elements, so
+ * `.ag-row` in document order is whatever the row buffer happens to hold. `row-index`
+ * is the rendered position, which is what the user sees.
+ */
+async function rowOrder(page: Page): Promise<string[]> {
+	const rows = page.locator('.ag-center-cols-container .ag-row');
+	await expect(rows.first()).toBeVisible();
+
+	const placed = await rows.evaluateAll((els) =>
+		els
+			.map((el) => ({
+				index: Number(el.getAttribute('row-index')),
+				name: el.querySelector('.addon-title')?.textContent?.trim() ?? ''
+			}))
+			.sort((a, b) => a.index - b.index)
+	);
+	return placed.map((r) => r.name);
+}
+
+// Status ordering is the first thing on screen and the reason the page opens on this sort:
+// AddonStatusSortOrder is declared Warning, Install, Update, UpToDate, Ignored, Unknown, so
+// ascending floats everything that needs the user's attention to the top. Reported as "it
+// says 3 updates and shows them on Angular but not on ours" — the badge counts the addon
+// rows directly, so it can be right while the grid order is wrong.
+test('addons needing updates sort to the top with no saved sort order', async ({ page }) => {
+	await stubPreload(page);
+	await openMyAddons(page);
+
+	// WeakAuras needs an update, DBM is current, Details is ignored.
+	expect(await rowOrder(page)).toEqual(['WeakAuras', 'DBM', 'Details']);
+});
+
+/** The persisted shape: one entry per column, unsorted ones carrying a null sort. */
+const savedSort = (sorted: Record<string, 'asc' | 'desc'>) =>
+	['name', 'sortOrder', 'installedAt', 'latestVersion', 'releasedAt', 'gameVersion'].map(
+		(colId) => ({
+			colId,
+			sort: sorted[colId] ?? null
+		})
+	);
+
+test('a saved sort on another column wins over the default', async ({ page }) => {
+	await stubPreload(page, ADDONS, { my_addons_sort_order: savedSort({ name: 'desc' }) });
+	await openMyAddons(page);
+
+	// Sorted by canonicalName descending, so status is ignored entirely.
+	expect(await rowOrder(page)).toEqual(['WeakAuras', 'Details', 'DBM']);
+});
+
+test('a saved sort replaces the default rather than stacking with it', async ({ page }) => {
+	// If the default were applied and then overlaid, sortOrder would still be sorted first
+	// and name would only break its ties — leaving WeakAuras (Update) at the top.
+	await stubPreload(page, ADDONS, { my_addons_sort_order: savedSort({ name: 'asc' }) });
+	await openMyAddons(page);
+
+	expect(await rowOrder(page)).toEqual(['DBM', 'Details', 'WeakAuras']);
+});
+
+test('a legacy saved sort order is discarded in favour of the default', async ({ page }) => {
+	// The single-entry shape this renderer used to write. Applying it verbatim is harmless
+	// here, but the same value with any other colId would silently lose the status sort.
+	await stubPreload(page, ADDONS, { my_addons_sort_order: [{ colId: 'name', sort: 'desc' }] });
+	await openMyAddons(page);
+
+	expect(await rowOrder(page)).toEqual(['WeakAuras', 'DBM', 'Details']);
+});
+
+test('addons with the same status fall back to name order', async ({ page }) => {
+	// Descending, so the fallback is observable: a comparator that returns 0 on a tie leaves
+	// ag-grid's stable sort holding insertion order (already alphabetical), which looks
+	// correct ascending and wrong descending.
+	await stubPreload(page, [addon('Zulu', 'Z'), addon('DBM', 'Tandanu'), addon('Alpha', 'A')], {
+		my_addons_sort_order: savedSort({ sortOrder: 'desc' })
+	});
+	await openMyAddons(page);
+
+	expect(await rowOrder(page)).toEqual(['Zulu', 'DBM', 'Alpha']);
+});
 
 test('renders installed addons as grid rows', async ({ page }) => {
 	await stubPreload(page);

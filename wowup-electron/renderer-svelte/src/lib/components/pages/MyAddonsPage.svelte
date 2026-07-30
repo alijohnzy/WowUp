@@ -157,10 +157,23 @@
 
 	// ---- grid --------------------------------------------------------------------------
 
+	/**
+	 * Ties fall back to the addon name.
+	 *
+	 * Without the fallback ag-grid's sort is merely stable, so same-status rows keep the order
+	 * they were loaded in. That reads as correct ascending — the rows arrive alphabetical — and
+	 * as unsorted descending, because a stable sort does not reverse the ties.
+	 */
 	function compareElement(nodeA: IRowNode, nodeB: IRowNode, prop: string): number {
 		const a = (nodeA.data as Record<string, unknown>)[prop];
 		const b = (nodeB.data as Record<string, unknown>)[prop];
-		if (a === b) return 0;
+
+		if (a === b) {
+			const ca = (nodeA.data as AddonViewModel).canonicalName;
+			const cb = (nodeB.data as AddonViewModel).canonicalName;
+			if (ca === cb) return 0;
+			return ca > cb ? 1 : -1;
+		}
 		return (a as number) > (b as number) ? 1 : -1;
 	}
 
@@ -652,10 +665,13 @@
 	}
 
 	async function onSortChanged(event: SortChangedEvent) {
+		// Every column, unsorted ones included with a null sort — not just the sorted ones.
+		// Restoring needs the nulls: they are what clears a column the user has sorted and
+		// then unsorted, and their absence is how the restore above tells a real saved order
+		// from a legacy one.
 		const sortOrder = event.api
 			.getColumnState()
-			.filter((col) => col.sort)
-			.map((col): SortOrder => ({ colId: col.colId, sort: col.sort as 'asc' | 'desc' | null }));
+			.map((col): SortOrder => ({ colId: col.colId, sort: col.sort ?? null }));
 
 		await wowup.setMyAddonsSortOrder(sortOrder);
 	}
@@ -683,12 +699,37 @@
 		if (!api) return;
 
 		void (async () => {
-			const sortOrder = await wowup.getMyAddonsSortOrder();
-			if (sortOrder.length === 0) return;
+			let saved = await wowup.getMyAddonsSortOrder();
+
+			// One entry per column, sort included as null when a column is unsorted — that is
+			// the shape the Angular renderer writes, and `--renderer` switches the two over a
+			// single profile, so anything shorter predates the format or is corrupt. It gets
+			// rewritten rather than applied, matching loadSortOrder().
+			if (!Array.isArray(saved) || saved.length < 2) {
+				await wowup.setMyAddonsSortOrder([]);
+				saved = [];
+			}
+
 			// The preference read is async, so the panel can be unmounted — and the grid
 			// destroyed — before it resolves.
 			if (api.isDestroyed()) return;
-			api.applyColumnState({ state: sortOrder.map((s) => ({ colId: s.colId, sort: s.sort })) });
+
+			// Status ascending is the view the app opens on, and the reason the page is worth
+			// looking at: AddonStatusSortOrder runs Warning, Install, Update, UpToDate, so
+			// everything needing attention sits above the fold. It has to be applied here and
+			// not left to the saved state, or a profile that has never been sorted shows the
+			// grid in load order and the three addons the badge is counting are somewhere down
+			// a list of 198.
+			//
+			// One apply, not a default followed by an overlay: applying twice makes ag-grid
+			// emit sortChanged for the first one, and onSortChanged would persist that default
+			// over the user's real saved order while this read was still in flight.
+			// `defaultState` clears every other column so a saved sort replaces the default
+			// rather than stacking into a two-column sort.
+			api.applyColumnState({
+				state: saved.length > 0 ? saved : [{ colId: 'sortOrder', sort: 'asc' }],
+				defaultState: { sort: null }
+			});
 		})();
 	});
 

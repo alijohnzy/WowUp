@@ -1016,7 +1016,119 @@ and reported a nonsensical 1.5 GB for an idle app.
 
 ---
 
-## 14. Reproducing
+## 14. The defect the audit could not have found
+
+Reported as: *"the status seems to be wrong on addons. it says 3 updates and shows it on angular but
+not on ours."* Both builds showed the same **3 updates** badge; Angular listed those three at the
+top of My Addons with Update buttons, the port buried them in an alphabetical list of 198.
+
+### Ruling things out with data, not reasoning
+
+The two builds keep separate profiles (`~/.config/WowUpCf` vs `WowUpCfSvelte`), so the first
+question was whether they even disagreed about the data. Running the ported `needsUpdate()` over
+both `addons.json` files directly:
+
+```
+=== WowUpCf ===        addons: 198  needsUpdate: 3
+=== WowUpCfSvelte ===  addons: 198  needsUpdate: 3
+    Raider.IO …               v202607290600 -> v202607300600
+    Cooldown Manager Centered  …-v4.3.1.zip -> …-v4.3.2.zip
+    Coolinator                          112 -> 113
+```
+
+Identical. So `needsUpdate`, `sortOrder` and the status cell were all fine, and the badge was fine —
+it counts rows independently. Only the **order** was wrong. That halved the search space before a
+line of component code was read.
+
+### Two defects, and the one that mattered was invisible
+
+`AddonStatusSortOrder` is declared `Warning, Install, Update, UpToDate, Ignored, Unknown`, so
+ascending is not an arbitrary default — it is what puts everything needing attention above the fold.
+Angular applies it imperatively in a lifecycle hook:
+
+```ts
+public onGridReady(params: GridReadyEvent): void {
+  this.gridColumnApi.applyColumnState({
+    state: [{ colId: "sortOrder", sort: "asc" }],
+    defaultState: { sort: null },
+  });
+  this.loadSortOrder().catch(…);   // saved order, if any, overlaid after
+}
+```
+
+The port carried over `loadSortOrder` and **not the four lines above it**. With no saved sort the
+grid rendered in load order.
+
+The second defect was in `compareElement`, which had lost its tie-break:
+
+```ts
+// Angular — ties fall back to the addon name
+if (nodeA.data[prop] === nodeB.data[prop]) {
+  return nodeA.data.canonicalName > nodeB.data.canonicalName ? 1 : -1;
+}
+// the port
+if (a === b) return 0;
+```
+
+`return 0` looks harmless because ag-grid's sort is stable and rows arrive alphabetical — so
+**ascending looks correct and only descending exposes it**, since a stable sort does not reverse
+ties. Notably the Get Addons port kept this fallback; only My Addons lost it. A defect present in
+one of two near-identical files is exactly what a per-component audit is blind to: both files were
+reviewed, and each looked self-consistent.
+
+### Why no lens in §11 could reach this
+
+The §11 lenses were i18n keys, IPC channels, template bindings and emitters — every one of them an
+axis on which a **name** is either present or absent. This defect has no name. It is a call that
+was made in one file and not the other, whose absence changes nothing structural: the column exists,
+the comparator exists, the persisted preference is read, the grid sorts. `svelte-check`, eslint, 75
+unit tests and 55 E2E tests all passed over it, and so did a component-by-component read, because
+nothing is *missing* — the default is simply never applied.
+
+> Generalised: **imperative setup inside a framework lifecycle hook is the highest-risk code in any
+> migration.** `ngOnInit`/`onGridReady`/`ngAfterViewInit` bodies do not appear in the template, do
+> not appear in the state model, and have no counterpart to diff against in the target framework —
+> the porter reads the hook, ports the parts that look like logic, and drops the parts that look
+> like configuration. §11 found three whole subsystems this way (menu, tray, auto-update job); this
+> is the same failure at one-statement scale, and it is harder to see for being smaller.
+
+### The persisted format, which had quietly diverged
+
+Angular's `onSortChanged` persists **one entry per column**, unsorted ones carrying `sort: null`;
+its restore treats anything shorter than 2 entries as legacy and resets it. The port filtered to
+sorted columns only, writing one entry. That is not cosmetic — `app/main.ts` supports
+`--renderer=angular|svelte` **over a single profile**, so the two renderers read each other's
+preferences, and Angular would silently discard anything Svelte wrote. Restoring the format also
+fixed a bug the shorter shape would have caused on its own: applying a one-column saved sort over
+the new default would stack into a two-column sort instead of replacing it, hence `defaultState`.
+
+One further trap, avoided: applying the default synchronously and overlaying the saved order after
+makes ag-grid emit `sortChanged` for the *default*, which `onSortChanged` would persist — over the
+user's real saved order, while the read of it was still in flight. Read first, apply once.
+
+### The tests
+
+Five E2E cases, all asserting **rendered row order** — read from `row-index`, not DOM order, since
+ag-grid positions rows absolutely and recycles their elements:
+
+| test | before |
+|---|---|
+| updates sort to the top with no saved sort order | ❌ `DBM, Details, WeakAuras` |
+| a saved sort on another column wins over the default | ✅ |
+| a saved sort replaces the default rather than stacking | ✅ |
+| a legacy saved sort order is discarded for the default | ✅ |
+| same status falls back to name order | ❌ `Alpha, DBM, Zulu` |
+
+The two that failed are the two defects; the three that passed are the regressions the fix could
+have introduced. This is the discipline §10 arrived at the hard way — **assert what the user sees,
+not the mechanism being changed**. An assertion on "is `applyColumnState` called" would have been
+green before and after the real fix.
+
+Verification after: 1367 files / 0 errors, 90 unit, 81 E2E, clean packaged boot.
+
+---
+
+## 15. Reproducing
 
 ```bash
 cd wowup-electron/renderer-svelte
