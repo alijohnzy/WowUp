@@ -126,8 +126,23 @@ const server = createServer(async (req, res) => {
   }
 });
 
-await new Promise((resolve) => server.listen(PORT, resolve));
-const url = `http://localhost:${PORT}/`;
+// A leftover run holding the port is the normal way this fails, and an unhandled
+// EADDRINUSE stack is a poor way to say so. Walk up a few ports instead.
+const port = await new Promise((resolve, reject) => {
+  let candidate = PORT;
+  const attempt = () => {
+    server.once("error", (e) => {
+      if (e.code !== "EADDRINUSE" || candidate > PORT + 10) return reject(e);
+      console.log(`port ${candidate} busy, trying ${candidate + 1}`);
+      candidate += 1;
+      attempt();
+    });
+    server.listen(candidate, () => resolve(candidate));
+  };
+  attempt();
+});
+
+const url = `http://localhost:${port}/`;
 console.log(`ad frame demo: ${url}`);
 
 if (!argv.includes("--shot")) {
