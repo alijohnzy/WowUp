@@ -36,6 +36,17 @@ import {
 	IPC_COPY_FILE_CHANNEL,
 	IPC_CURSE_GET_SCAN_RESULTS,
 	IPC_DOWNLOAD_FILE_CHANNEL,
+	IPC_LIST_ENTRIES,
+	IPC_LIST_DIR_RECURSIVE,
+	IPC_GET_DIRECTORY_TREE,
+	IPC_SHOW_OPEN_DIALOG,
+	IPC_GET_ZOOM_FACTOR,
+	IPC_SET_ZOOM_FACTOR,
+	IPC_SET_ZOOM_LIMITS,
+	IPC_GET_LOGIN_ITEM_SETTINGS,
+	IPC_APP_CHECK_UPDATE,
+	IPC_APP_INSTALL_UPDATE,
+	IPC_SET_LOGIN_ITEM_SETTINGS,
 	IPC_UNZIP_FILE_CHANNEL,
 	IPC_WOWUP_GET_SCAN_RESULTS,
 	IPC_CREATE_DIRECTORY_CHANNEL,
@@ -154,6 +165,23 @@ export const CHANNEL_PARAMS: Readonly<Record<string, readonly string[]>> = {
 	// Phase 2 — install/update. Both take a single request object, and download-file replies
 	// on the caller's own `responseKey` channel rather than by resolving.
 	[IPC_DOWNLOAD_FILE_CHANNEL]: ['request'],
+	[IPC_LIST_ENTRIES]: ['sourcePath', 'filter'],
+	[IPC_LIST_DIR_RECURSIVE]: ['dirPath'],
+	// Sent as one object (files.ts:106), unlike its siblings.
+	[IPC_GET_DIRECTORY_TREE]: ['request'],
+	[IPC_SHOW_OPEN_DIALOG]: ['options'],
+	[IPC_GET_ZOOM_FACTOR]: [],
+	[IPC_SET_ZOOM_FACTOR]: ['zoomFactor'],
+	[IPC_SET_ZOOM_LIMITS]: ['minimumLevel', 'maximumLevel'],
+	[IPC_GET_LOGIN_ITEM_SETTINGS]: [],
+	[IPC_APP_CHECK_UPDATE]: [],
+	[IPC_APP_INSTALL_UPDATE]: [],
+	[IPC_SET_LOGIN_ITEM_SETTINGS]: ['settings'],
+	'rename-file': ['srcPath', 'destPath'],
+	'show-item-in-folder': ['path'],
+	'zip-file': ['srcPath', 'destPath'],
+	'zip-list-files': ['zipPath', 'filter'],
+	'zip-read-file': ['zipPath', 'filePath'],
 	[IPC_UNZIP_FILE_CHANNEL]: ['request']
 };
 

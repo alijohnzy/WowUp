@@ -522,6 +522,39 @@ and updater signing (§3.2).
 Sequenced so each phase ends with a **runnable app**, and the riskiest unknown is answered
 in Phase 1 rather than Phase 6.
 
+### Remaining channels — closed out ✅
+
+The gaps that were left after the install path landed. What shipped:
+
+| channel | how |
+| --- | --- |
+| `list-entries` | `FsDirent` with all seven of Node's type flags, glob-filtered |
+| `list-dir-recursive` | files only, symlinked root resolved as the original does |
+| `get-directory-tree` | sizes summed up the tree; sha256 per file and per directory when asked |
+| `rename-file`, `show-item-in-folder` | `fs::rename`; `opener.reveal_item_in_dir` |
+| `zip-file`, `zip-list-files`, `zip-read-file` | the `zip` crate the installer already used, deflate to stay interoperable with `archiver`'s output |
+| `show-open-dialog` | `plugin-dialog`. This is how a WoW install is added by hand — without it, only Blizzard's `product.db` auto-detection worked |
+| `get`/`set-zoom-factor` | `set_zoom`, with the factor read back from the preference store: Tauri has no zoom *getter*, and Electron persisted it there anyway |
+| `set-zoom-limits` | accepted and ignored — it bounds *pinch* zoom, which WebKitGTK and WebView2 do not expose. Left callable because the renderer calls it during bootstrap |
+| `get`/`set-login-item-settings` | `plugin-autostart`, launched with `--hidden` to match Electron starting to the tray |
+| `app-check-update` / `app-install-update` | report `UpdateNotAvailable` / `Error` rather than staying silent — see below |
+
+**Self-update is reported, not implemented.** A locally built app has no signed release channel
+for `plugin-updater` to check, so there is nothing to check against. The commands now answer
+instead of failing silently, because the footer derives its label from the last state it saw
+and no reply at all left the check apparently hanging forever. Wiring a real updater still
+needs a signing key and a manifest endpoint.
+
+**Deliberately not migrated**, with reasons rather than omissions:
+- `push-init` / `-subscribe` / `-unregister` — needs a push service, not just a command, and
+  sits behind a WowUp account.
+- `create-app-menu` — already guarded by `if (!isElectron()) return`; a decorationless window
+  has no menu bar to hang it on.
+- `ow-open-cmp` — the Overwolf consent window, which only exists inside ow-electron.
+
+`ipc-tauri.spec.ts`'s fail-loud guard was repointed to `push-init`, which should outlast the
+others for the reason above.
+
 ## Benchmark — the three shells, wago flavour
 
 `scripts/bench-shells.mjs`, median of 3 runs, unpackaged production builds, same machine and

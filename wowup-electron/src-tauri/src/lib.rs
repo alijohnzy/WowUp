@@ -137,6 +137,13 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_dialog::init())
+        // Start-with-system. `--hidden` matches Electron, which passes the same flag so the
+        // app starts to the tray rather than opening a window on login.
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec!["--hidden"]),
+        ))
         // The ad frame is an <iframe> on its own origin; this serves it. See src/ad.rs for
         // why it is proxied rather than framed directly, and why that origin matters.
         .register_asynchronous_uri_scheme_protocol(ad::AD_SCHEME, |_ctx, request, responder| {
@@ -188,8 +195,17 @@ pub fn run() {
             files::stat_files,
             files::list_files,
             files::readdir,
+            files::list_entries,
+            files::list_dir_recursive,
+            files::get_directory_tree,
+            files::rename_file,
+            files::show_item_in_folder,
+            files::show_open_dialog,
             install::download_file,
             install::unzip_file,
+            install::zip_file,
+            install::zip_list_files,
+            install::zip_read_file,
             scanner::curse_get_scan_results,
             scanner::wowup_get_scan_results,
             tray::create_tray_menu,
@@ -202,6 +218,13 @@ pub fn run() {
             window::leave_full_screen,
             window::restart_app,
             window::quit_app,
+            window::get_zoom_factor,
+            window::set_zoom_factor,
+            window::set_zoom_limits,
+            window::get_login_item_settings,
+            window::set_login_item_settings,
+            window::app_check_update,
+            window::app_install_update,
             get_locale,
             update_app_badge,
             is_default_protocol_client,

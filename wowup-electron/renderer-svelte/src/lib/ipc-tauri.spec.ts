@@ -19,7 +19,7 @@ import {
 	IPC_WARCRAFT_GET_BLIZZARD_AGENT_PATH,
 	IPC_WARCRAFT_GET_EXECUTABLE_NAME,
 	IPC_WARCRAFT_GET_INSTALLED_PRODUCTS,
-	IPC_LIST_ENTRIES
+	IPC_PUSH_INIT
 } from '$common/constants';
 import { invoke, on, platform, sendSync, UnmigratedChannelError } from './ipc-tauri';
 
@@ -58,11 +58,13 @@ describe('argument mapping', () => {
 
 describe('unmigrated channels', () => {
 	it('throws rather than resolving to undefined', async () => {
-		// A real channel with no Rust command yet — list-entries is the remainder of Group A.
-		// This has already been repointed once, when unzip-file landed. If it fails again for
-		// that reason, repoint it rather than deleting it: it guards the fail-loud behaviour,
-		// not this particular channel.
-		await expect(invoke(IPC_LIST_ENTRIES, 'p', '*')).rejects.toBeInstanceOf(UnmigratedChannelError);
+		// A real channel with no Rust command. Repointed twice already, as unzip-file and then
+		// list-entries landed. If it fails again for that reason, repoint it rather than
+		// deleting it: it guards the fail-loud behaviour, not this particular channel.
+		//
+		// push-init should outlast the others — push needs a notification service, not just a
+		// command, so it is not migrating on its own.
+		await expect(invoke(IPC_PUSH_INIT)).rejects.toBeInstanceOf(UnmigratedChannelError);
 		expect(invokeMock).not.toHaveBeenCalled();
 	});
 

@@ -274,7 +274,8 @@ mod tests {
 // Mutating operations and metadata — the rest of Group A that install/remove needs.
 // ---------------------------------------------------------------------------
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use std::path::{Path, PathBuf};
 
 /// `fsp.mkdir(path, { recursive: true })` — port of `create-directory`.
 #[tauri::command]
@@ -536,7 +537,7 @@ pub async fn stat_files(
 }
 
 /// `globrex(filter)` in the JS — a shell glob, matched against the entry *name*.
-fn glob_matcher(filter: &str) -> Result<globset::GlobMatcher, String> {
+pub(crate) fn glob_matcher(filter: &str) -> Result<globset::GlobMatcher, String> {
     globset::Glob::new(filter)
         .map_err(|e| format!("bad filter {filter:?}: {e}"))
         .map(|g| g.compile_matcher())
@@ -571,4 +572,484 @@ pub async fn list_files(source_path: String, filter: String) -> Result<Vec<Strin
 
     names.sort();
     Ok(names)
+}
+
+/// Mirrors `FsDirent` (src/common/models/ipc-events.ts).
+///
+/// Node's `Dirent` answers seven `isX()` questions and the renderer reads several of them, so
+/// the shape is reproduced rather than trimmed to the two that are usually interesting.
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FsDirent {
+    is_file: bool,
+    is_directory: bool,
+    is_block_device: bool,
+    is_character_device: bool,
+    is_symbolic_link: bool,
+    #[serde(rename = "isFIFO")]
+    is_fifo: bool,
+    is_socket: bool,
+    name: String,
+}
+
+/// Port of `IPC_LIST_ENTRIES` (app/ipc-events.ts:333).
+///
+/// The type flags come from the entry's own `file_type()`, which — like Node's `Dirent` — is
+/// the *link's* type, so a symlink reports `is_symbolic_link` and not what it points at.
+#[tauri::command]
+pub async fn list_entries(source_path: String, filter: String) -> Result<Vec<FsDirent>, String> {
+    let matcher = glob_matcher(&filter)?;
+    let mut entries = tokio::fs::read_dir(&source_path)
+        .await
+        .map_err(|e| format!("{source_path}: {e}"))?;
+
+    let mut out = Vec::new();
+    while let Some(entry) = entries
+        .next_entry()
+        .await
+        .map_err(|e| format!("{source_path}: {e}"))?
+    {
+        let name = entry.file_name().to_string_lossy().into_owned();
+        if !matcher.is_match(&name) {
+            continue;
+        }
+
+        let ft = entry
+            .file_type()
+            .await
+            .map_err(|e| format!("{name}: {e}"))?;
+
+        #[cfg(unix)]
+        let (block, char_dev, fifo, socket) = {
+            use std::os::unix::fs::FileTypeExt;
+            (
+                ft.is_block_device(),
+                ft.is_char_device(),
+                ft.is_fifo(),
+                ft.is_socket(),
+            )
+        };
+        #[cfg(not(unix))]
+        let (block, char_dev, fifo, socket) = (false, false, false, false);
+
+        out.push(FsDirent {
+            is_file: ft.is_file(),
+            is_directory: ft.is_dir(),
+            is_block_device: block,
+            is_character_device: char_dev,
+            is_symbolic_link: ft.is_symlink(),
+            is_fifo: fifo,
+            is_socket: socket,
+            name,
+        });
+    }
+
+    out.sort_by(|a, b| a.name.cmp(&b.name));
+    Ok(out)
+}
+
+/// Port of `readDirRecursive` (app/file.utils.ts:146). Files only, directories are descended.
+///
+/// A symlinked root is resolved first, matching the original — the WTF folder is a symlink on
+/// some installs, and without this the walk would return nothing for it.
+#[tauri::command]
+pub async fn list_dir_recursive(dir_path: String) -> Result<Vec<String>, String> {
+    let root = resolve_link(&dir_path).await?;
+    let mut out = Vec::new();
+    walk_files(&root, &mut out).await?;
+    Ok(out)
+}
+
+async fn resolve_link(path: &str) -> Result<PathBuf, String> {
+    let meta = tokio::fs::symlink_metadata(path)
+        .await
+        .map_err(|e| format!("{path}: {e}"))?;
+    if meta.file_type().is_symlink() {
+        return tokio::fs::read_link(path)
+            .await
+            .map_err(|e| format!("{path}: {e}"));
+    }
+    Ok(PathBuf::from(path))
+}
+
+/// Boxed because the recursion is async: an `async fn` that awaits itself needs an
+/// indirection or the future would be infinitely sized.
+fn walk_files<'a>(
+    dir: &'a Path,
+    out: &'a mut Vec<String>,
+) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), String>> + Send + 'a>> {
+    Box::pin(async move {
+        let mut entries = tokio::fs::read_dir(dir)
+            .await
+            .map_err(|e| format!("{}: {e}", dir.display()))?;
+
+        while let Some(entry) = entries
+            .next_entry()
+            .await
+            .map_err(|e| format!("{}: {e}", dir.display()))?
+        {
+            let path = entry.path();
+            let ft = entry
+                .file_type()
+                .await
+                .map_err(|e| format!("{}: {e}", path.display()))?;
+
+            if ft.is_dir() {
+                walk_files(&path, out).await?;
+            } else {
+                out.push(path.to_string_lossy().into_owned());
+            }
+        }
+        Ok(())
+    })
+}
+
+/// Mirrors `TreeNode` (src/common/models/ipc-events.ts:12).
+#[derive(Debug, Serialize)]
+pub struct TreeNode {
+    name: String,
+    path: String,
+    is_directory: bool,
+    children: Vec<TreeNode>,
+    size: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    hash: Option<String>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DirectoryTreeOptions {
+    #[serde(default)]
+    include_hash: bool,
+}
+
+/// Port of `getDirTree` (app/file.utils.ts:170), used by the WTF explorer.
+#[tauri::command]
+pub async fn get_directory_tree(
+    dir_path: String,
+    opts: Option<DirectoryTreeOptions>,
+) -> Result<TreeNode, String> {
+    let opts = opts.unwrap_or_default();
+    let root = resolve_link(&dir_path).await?;
+
+    let meta = tokio::fs::symlink_metadata(&root)
+        .await
+        .map_err(|e| format!("{}: {e}", root.display()))?;
+    if !meta.is_dir() {
+        // Same message as the original, which the renderer surfaces verbatim.
+        return Err(format!(
+            "getDirTree path was not a directory: {}",
+            root.display()
+        ));
+    }
+
+    build_tree(&root, opts.include_hash).await
+}
+
+fn build_tree<'a>(
+    dir: &'a Path,
+    include_hash: bool,
+) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<TreeNode, String>> + Send + 'a>> {
+    Box::pin(async move {
+        let mut node = TreeNode {
+            name: dir
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_default(),
+            path: dir.to_string_lossy().into_owned(),
+            is_directory: true,
+            children: Vec::new(),
+            size: 0,
+            hash: None,
+        };
+
+        let mut entries = tokio::fs::read_dir(dir)
+            .await
+            .map_err(|e| format!("{}: {e}", dir.display()))?;
+
+        while let Some(entry) = entries
+            .next_entry()
+            .await
+            .map_err(|e| format!("{}: {e}", dir.display()))?
+        {
+            let path = entry.path();
+            let ft = entry
+                .file_type()
+                .await
+                .map_err(|e| format!("{}: {e}", path.display()))?;
+
+            if ft.is_dir() {
+                let child = build_tree(&path, include_hash).await?;
+                node.size += child.size;
+                node.children.push(child);
+            } else {
+                let size = tokio::fs::metadata(&path)
+                    .await
+                    .map_err(|e| format!("{}: {e}", path.display()))?
+                    .len();
+                node.size += size;
+                node.children.push(TreeNode {
+                    name: entry.file_name().to_string_lossy().into_owned(),
+                    path: path.to_string_lossy().into_owned(),
+                    is_directory: false,
+                    children: Vec::new(),
+                    size,
+                    hash: if include_hash {
+                        Some(sha256_file(&path).await?)
+                    } else {
+                        Some(String::new())
+                    },
+                });
+            }
+        }
+
+        if include_hash {
+            // The original hashes the concatenation of the children's hashes, so a directory's
+            // hash changes when any descendant does.
+            let joined: String = node
+                .children
+                .iter()
+                .map(|c| c.hash.clone().unwrap_or_default())
+                .collect();
+            node.hash = Some(sha256_string(&joined));
+        }
+
+        Ok(node)
+    })
+}
+
+async fn sha256_file(path: &Path) -> Result<String, String> {
+    let bytes = tokio::fs::read(path)
+        .await
+        .map_err(|e| format!("{}: {e}", path.display()))?;
+    Ok(sha256_bytes(&bytes))
+}
+
+fn sha256_string(value: &str) -> String {
+    sha256_bytes(value.as_bytes())
+}
+
+fn sha256_bytes(bytes: &[u8]) -> String {
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(bytes);
+    hasher
+        .finalize()
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
+}
+
+/// Port of `rename-file` (app/ipc-events.ts:436).
+#[tauri::command]
+pub async fn rename_file(src_path: String, dest_path: String) -> Result<(), String> {
+    log::info!("[RenameFile]: '{src_path} -> {dest_path}");
+    tokio::fs::rename(&src_path, &dest_path)
+        .await
+        .map_err(|e| format!("{src_path} -> {dest_path}: {e}"))
+}
+
+/// Port of `show-item-in-folder` (app/ipc-events.ts:255) — opens the file manager with the
+/// item selected, rather than opening the item itself.
+#[tauri::command]
+pub fn show_item_in_folder(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    app.opener()
+        .reveal_item_in_dir(&path)
+        .map_err(|e| format!("{path}: {e}"))
+}
+
+/// Mirrors the subset of Electron's `OpenDialogOptions` the renderer sends.
+#[derive(Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OpenDialogOptions {
+    #[serde(default)]
+    pub properties: Vec<String>,
+    #[serde(default)]
+    pub filters: Vec<DialogFilter>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct DialogFilter {
+    pub name: String,
+    pub extensions: Vec<String>,
+}
+
+/// Mirrors Electron's `OpenDialogReturnValue`.
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OpenDialogReturnValue {
+    pub canceled: bool,
+    pub file_paths: Vec<String>,
+}
+
+/// Port of `IPC_SHOW_OPEN_DIALOG` (app/ipc-events.ts:566) — how a WoW install is added by hand
+/// when the Blizzard agent's product.db does not list it.
+///
+/// Blocking rather than the async builder: Electron's dialog resolves once, and the renderer
+/// awaits it before doing anything else.
+#[tauri::command]
+pub async fn show_open_dialog(
+    app: tauri::AppHandle,
+    options: Option<OpenDialogOptions>,
+) -> Result<OpenDialogReturnValue, String> {
+    use tauri_plugin_dialog::DialogExt;
+
+    let options = options.unwrap_or_default();
+    let directory = options.properties.iter().any(|p| p == "openDirectory");
+    let multiple = options.properties.iter().any(|p| p == "multiSelections");
+
+    let mut builder = app.dialog().file();
+    for filter in &options.filters {
+        let exts: Vec<&str> = filter.extensions.iter().map(String::as_str).collect();
+        builder = builder.add_filter(&filter.name, &exts);
+    }
+
+    // `blocking_*` would deadlock the async runtime, so this hops to a blocking thread.
+    let paths = tauri::async_runtime::spawn_blocking(move || match (directory, multiple) {
+        (true, true) => builder
+            .blocking_pick_folders()
+            .map(|v| v.into_iter().collect::<Vec<_>>()),
+        (true, false) => builder.blocking_pick_folder().map(|p| vec![p]),
+        (false, true) => builder
+            .blocking_pick_files()
+            .map(|v| v.into_iter().collect::<Vec<_>>()),
+        (false, false) => builder.blocking_pick_file().map(|p| vec![p]),
+    })
+    .await
+    .map_err(|e| format!("dialog panicked: {e}"))?;
+
+    Ok(match paths {
+        // `canceled` is what the renderer checks first; an empty list with canceled=false
+        // would read as "picked nothing" and take the success path.
+        None => OpenDialogReturnValue {
+            canceled: true,
+            file_paths: Vec::new(),
+        },
+        Some(paths) => OpenDialogReturnValue {
+            canceled: false,
+            file_paths: paths.into_iter().map(|p| p.to_string()).collect(),
+        },
+    })
+}
+
+#[cfg(test)]
+mod fs_group_tests {
+    use super::*;
+
+    fn tmpdir(name: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("wowup-fs-{name}"));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    /// The renderer reads `isDirectory` off these to split folders from files, so the flags
+    /// have to describe the entry rather than always coming back false.
+    #[tokio::test]
+    async fn list_entries_reports_type_flags_and_filters() {
+        let dir = tmpdir("entries");
+        std::fs::write(dir.join("a.toc"), "x").unwrap();
+        std::fs::write(dir.join("b.lua"), "x").unwrap();
+        std::fs::create_dir(dir.join("sub")).unwrap();
+
+        let all = list_entries(dir.to_string_lossy().into(), "*".into())
+            .await
+            .unwrap();
+        assert_eq!(all.len(), 3);
+        let sub = all.iter().find(|e| e.name == "sub").unwrap();
+        assert!(sub.is_directory && !sub.is_file);
+        let toc = all.iter().find(|e| e.name == "a.toc").unwrap();
+        assert!(toc.is_file && !toc.is_directory);
+
+        let tocs = list_entries(dir.to_string_lossy().into(), "*.toc".into())
+            .await
+            .unwrap();
+        assert_eq!(tocs.len(), 1);
+        assert_eq!(tocs[0].name, "a.toc");
+    }
+
+    /// Files only, and every level — the WTF walk depends on both.
+    #[tokio::test]
+    async fn list_dir_recursive_returns_files_at_every_level() {
+        let dir = tmpdir("recursive");
+        std::fs::create_dir_all(dir.join("a/b")).unwrap();
+        std::fs::write(dir.join("top.txt"), "x").unwrap();
+        std::fs::write(dir.join("a/mid.txt"), "x").unwrap();
+        std::fs::write(dir.join("a/b/deep.txt"), "x").unwrap();
+
+        let mut found = list_dir_recursive(dir.to_string_lossy().into())
+            .await
+            .unwrap();
+        found.sort();
+        assert_eq!(found.len(), 3, "{found:?}");
+        assert!(found.iter().all(|f| f.ends_with(".txt")));
+        assert!(found.iter().any(|f| f.ends_with("deep.txt")));
+    }
+
+    /// Directory sizes are the sum of their descendants, which is what the WTF screen shows.
+    #[tokio::test]
+    async fn directory_tree_sums_sizes_and_nests() {
+        let dir = tmpdir("tree");
+        std::fs::create_dir_all(dir.join("sub")).unwrap();
+        std::fs::write(dir.join("one.txt"), "12345").unwrap();
+        std::fs::write(dir.join("sub/two.txt"), "123").unwrap();
+
+        let tree = get_directory_tree(dir.to_string_lossy().into(), None)
+            .await
+            .unwrap();
+
+        assert!(tree.is_directory);
+        assert_eq!(tree.size, 8, "5 + 3 across both levels");
+        let sub = tree.children.iter().find(|c| c.name == "sub").unwrap();
+        assert_eq!(sub.size, 3);
+        assert_eq!(sub.children.len(), 1);
+    }
+
+    /// A directory's hash is built from its children's, so any descendant changing changes it.
+    #[tokio::test]
+    async fn directory_tree_hash_follows_content() {
+        let dir = tmpdir("tree-hash");
+        std::fs::write(dir.join("f.txt"), "before").unwrap();
+        let opts = Some(DirectoryTreeOptions { include_hash: true });
+
+        let first = get_directory_tree(dir.to_string_lossy().into(), opts)
+            .await
+            .unwrap();
+        std::fs::write(dir.join("f.txt"), "after").unwrap();
+        let second = get_directory_tree(
+            dir.to_string_lossy().into(),
+            Some(DirectoryTreeOptions { include_hash: true }),
+        )
+        .await
+        .unwrap();
+
+        assert!(first.hash.is_some());
+        assert_ne!(first.hash, second.hash);
+    }
+
+    /// Without `includeHash` the original still emits an empty string per file rather than
+    /// omitting the field, and the renderer compares against "".
+    #[tokio::test]
+    async fn directory_tree_without_hash_is_cheap_but_shaped_the_same() {
+        let dir = tmpdir("tree-nohash");
+        std::fs::write(dir.join("f.txt"), "x").unwrap();
+
+        let tree = get_directory_tree(dir.to_string_lossy().into(), None)
+            .await
+            .unwrap();
+        assert_eq!(tree.children[0].hash.as_deref(), Some(""));
+    }
+
+    #[tokio::test]
+    async fn directory_tree_refuses_a_file() {
+        let dir = tmpdir("tree-file");
+        let file = dir.join("f.txt");
+        std::fs::write(&file, "x").unwrap();
+
+        let err = get_directory_tree(file.to_string_lossy().into(), None)
+            .await
+            .unwrap_err();
+        assert!(err.contains("was not a directory"), "{err}");
+    }
 }

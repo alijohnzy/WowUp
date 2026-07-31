@@ -39,6 +39,9 @@
           "url": "https://**"
         }
       ]
-    }
+    },
+    "dialog:default",
+    "autostart:default",
+    "opener:allow-reveal-item-in-dir"
   ]
 }

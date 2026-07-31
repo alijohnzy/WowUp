@@ -456,3 +456,202 @@ mod tests {
         );
     }
 }
+
+/// Port of `zip-file` (app/ipc-events.ts:421). Used by the WTF backup.
+///
+/// Deflate, matching the `archiver` defaults the Electron side used, so an archive made by
+/// either build opens in the other.
+#[tauri::command]
+pub async fn zip_file(src_path: String, dest_path: String) -> Result<(), String> {
+    log::info!("[ZipFile]: '{src_path} -> {dest_path}");
+
+    tauri::async_runtime::spawn_blocking(move || {
+        let src = Path::new(&src_path);
+        let file = std::fs::File::create(&dest_path).map_err(|e| format!("{dest_path}: {e}"))?;
+        let mut zip = zip::ZipWriter::new(file);
+        let opts: zip::write::FileOptions<'_, ()> =
+            zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+
+        // A directory is archived with paths relative to it, so extracting reproduces its
+        // contents rather than the absolute path it happened to live at.
+        if src.is_dir() {
+            let mut stack = vec![src.to_path_buf()];
+            while let Some(dir) = stack.pop() {
+                for entry in
+                    std::fs::read_dir(&dir).map_err(|e| format!("{}: {e}", dir.display()))?
+                {
+                    let entry = entry.map_err(|e| format!("{}: {e}", dir.display()))?;
+                    let path = entry.path();
+                    let rel = path
+                        .strip_prefix(src)
+                        .map_err(|e| format!("{}: {e}", path.display()))?
+                        .to_string_lossy()
+                        .replace('\\', "/");
+
+                    if path.is_dir() {
+                        zip.add_directory(format!("{rel}/"), opts)
+                            .map_err(|e| format!("{rel}: {e}"))?;
+                        stack.push(path);
+                    } else {
+                        zip.start_file(&rel, opts)
+                            .map_err(|e| format!("{rel}: {e}"))?;
+                        let bytes =
+                            std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+                        zip.write_all(&bytes).map_err(|e| format!("{rel}: {e}"))?;
+                    }
+                }
+            }
+        } else {
+            let name = src
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .ok_or_else(|| format!("{src_path}: no file name"))?;
+            zip.start_file(&name, opts)
+                .map_err(|e| format!("{name}: {e}"))?;
+            let bytes = std::fs::read(src).map_err(|e| format!("{src_path}: {e}"))?;
+            zip.write_all(&bytes).map_err(|e| format!("{name}: {e}"))?;
+        }
+
+        zip.finish().map_err(|e| format!("{dest_path}: {e}"))?;
+        Ok::<(), String>(())
+    })
+    .await
+    .map_err(|e| format!("zip panicked: {e}"))?
+}
+
+/// Port of `zip-list-files` (app/ipc-events.ts:431).
+#[tauri::command]
+pub async fn zip_list_files(zip_path: String, filter: String) -> Result<Vec<String>, String> {
+    log::info!("[ZipListEntries]: '{zip_path}");
+
+    tauri::async_runtime::spawn_blocking(move || {
+        let matcher = crate::files::glob_matcher(&filter)?;
+        let file = std::fs::File::open(&zip_path).map_err(|e| format!("{zip_path}: {e}"))?;
+        let mut archive = zip::ZipArchive::new(file).map_err(|e| format!("{zip_path}: {e}"))?;
+
+        let mut names = Vec::new();
+        for i in 0..archive.len() {
+            let entry = archive
+                .by_index(i)
+                .map_err(|e| format!("{zip_path}: {e}"))?;
+            let name = entry.name().to_string();
+            // Matched on the whole path, as globrex did — a filter like `**/*.lua` has to see
+            // the directories to match against them.
+            if matcher.is_match(&name) {
+                names.push(name);
+            }
+        }
+        names.sort();
+        Ok(names)
+    })
+    .await
+    .map_err(|e| format!("zip list panicked: {e}"))?
+}
+
+/// Port of `zip-read-file` (app/ipc-events.ts:426). Returns the entry as text.
+#[tauri::command]
+pub async fn zip_read_file(zip_path: String, file_path: String) -> Result<String, String> {
+    log::info!("[ZipReadFile]: '{zip_path} : {file_path}");
+
+    tauri::async_runtime::spawn_blocking(move || {
+        use std::io::Read;
+        let file = std::fs::File::open(&zip_path).map_err(|e| format!("{zip_path}: {e}"))?;
+        let mut archive = zip::ZipArchive::new(file).map_err(|e| format!("{zip_path}: {e}"))?;
+        let mut entry = archive
+            .by_name(&file_path)
+            .map_err(|e| format!("{zip_path}!{file_path}: {e}"))?;
+
+        let mut out = String::new();
+        entry
+            .read_to_string(&mut out)
+            .map_err(|e| format!("{zip_path}!{file_path}: {e}"))?;
+        Ok(out)
+    })
+    .await
+    .map_err(|e| format!("zip read panicked: {e}"))?
+}
+
+#[cfg(test)]
+mod zip_group_tests {
+    use super::*;
+
+    fn tmpdir(name: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("wowup-zip-{name}"));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    /// A round trip through our own writer and reader: the WTF backup zips a folder and the
+    /// restore lists and reads it back, so the two have to agree on entry naming.
+    #[tokio::test]
+    async fn zip_round_trips_a_directory() {
+        let dir = tmpdir("roundtrip");
+        let src = dir.join("src");
+        std::fs::create_dir_all(src.join("nested")).unwrap();
+        std::fs::write(src.join("top.lua"), "-- top").unwrap();
+        std::fs::write(src.join("nested/deep.lua"), "-- deep").unwrap();
+        let archive = dir.join("out.zip");
+
+        zip_file(
+            src.to_string_lossy().into(),
+            archive.to_string_lossy().into(),
+        )
+        .await
+        .unwrap();
+
+        let listed = zip_list_files(archive.to_string_lossy().into(), "**/*.lua".into())
+            .await
+            .unwrap();
+        assert!(listed.iter().any(|n| n == "top.lua"), "{listed:?}");
+        assert!(listed.iter().any(|n| n == "nested/deep.lua"), "{listed:?}");
+
+        let body = zip_read_file(archive.to_string_lossy().into(), "nested/deep.lua".into())
+            .await
+            .unwrap();
+        assert_eq!(body, "-- deep");
+    }
+
+    /// Entries are stored relative to the zipped directory. Absolute paths would restore into
+    /// the machine's original layout rather than wherever the user extracts.
+    #[tokio::test]
+    async fn entries_are_relative_to_the_source() {
+        let dir = tmpdir("relative");
+        let src = dir.join("wtf");
+        std::fs::create_dir_all(&src).unwrap();
+        std::fs::write(src.join("Config.wtf"), "SET x 1").unwrap();
+        let archive = dir.join("wtf.zip");
+
+        zip_file(
+            src.to_string_lossy().into(),
+            archive.to_string_lossy().into(),
+        )
+        .await
+        .unwrap();
+
+        let listed = zip_list_files(archive.to_string_lossy().into(), "*".into())
+            .await
+            .unwrap();
+        assert_eq!(listed, vec!["Config.wtf"]);
+    }
+
+    #[tokio::test]
+    async fn reading_a_missing_entry_names_it() {
+        let dir = tmpdir("missing");
+        let src = dir.join("s");
+        std::fs::create_dir_all(&src).unwrap();
+        std::fs::write(src.join("a.txt"), "a").unwrap();
+        let archive = dir.join("a.zip");
+        zip_file(
+            src.to_string_lossy().into(),
+            archive.to_string_lossy().into(),
+        )
+        .await
+        .unwrap();
+
+        let err = zip_read_file(archive.to_string_lossy().into(), "nope.txt".into())
+            .await
+            .unwrap_err();
+        assert!(err.contains("nope.txt"), "{err}");
+    }
+}

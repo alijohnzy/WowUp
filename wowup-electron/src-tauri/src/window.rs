@@ -5,6 +5,7 @@
 //! or close it; with these channels unmigrated the buttons were inert and the window could
 //! only be killed from outside.
 
+use serde::Serialize;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
@@ -195,4 +196,161 @@ pub fn forward_window_events(window: &WebviewWindow) {
             _ => {}
         }
     });
+}
+
+/// `ZOOM_FACTOR_KEY` (src/common/constants.ts) — Electron persists the factor alongside the
+/// preferences so it survives a restart.
+const ZOOM_FACTOR_KEY: &str = "zoom_factor";
+
+/// `IPC_APP_UPDATE_STATE` (src/common/constants.ts).
+const IPC_APP_UPDATE_STATE: &str = "app-update-state";
+
+/// Port of `IPC_GET_ZOOM_FACTOR` (app/ipc-events.ts:243).
+///
+/// Read back from the store rather than from the webview: Tauri exposes `set_zoom` but no
+/// getter. Electron persists the factor on every set anyway (:265), so the store is already
+/// the durable copy — this just makes it the only one.
+#[tauri::command]
+pub fn get_zoom_factor(
+    app: AppHandle,
+    stores: tauri::State<'_, crate::store::Stores>,
+) -> Result<f64, String> {
+    let stored = crate::store::store_get_object(
+        app.clone(),
+        stores,
+        crate::store::PREFERENCE_STORE_NAME.to_string(),
+        ZOOM_FACTOR_KEY.to_string(),
+    )?;
+
+    // The store coerces primitives to strings on the way in (see store::coerce_for_storage),
+    // so the value comes back as "1.25" rather than 1.25.
+    Ok(stored
+        .and_then(|v| match v {
+            serde_json::Value::String(s) => s.parse::<f64>().ok(),
+            serde_json::Value::Number(n) => n.as_f64(),
+            _ => None,
+        })
+        .unwrap_or(1.0))
+}
+
+/// Port of `IPC_SET_ZOOM_FACTOR` (app/ipc-events.ts:259), including the persist — the Electron
+/// handler writes the factor to the preference store as well as applying it.
+#[tauri::command]
+pub fn set_zoom_factor(
+    app: AppHandle,
+    stores: tauri::State<'_, crate::store::Stores>,
+    zoom_factor: f64,
+) -> Result<(), String> {
+    let webview = app
+        .get_webview_window("main")
+        .ok_or_else(|| "no main window".to_string())?;
+    webview.set_zoom(zoom_factor).map_err(|e| e.to_string())?;
+
+    crate::store::store_set_object(
+        app.clone(),
+        stores,
+        crate::store::PREFERENCE_STORE_NAME.to_string(),
+        ZOOM_FACTOR_KEY.to_string(),
+        serde_json::json!(zoom_factor),
+    )
+}
+
+/// Port of `IPC_SET_ZOOM_LIMITS` (app/ipc-events.ts:251).
+///
+/// Electron's `setVisualZoomLevelLimits` bounds *pinch* zoom, which WebKitGTK and WebView2 do
+/// not expose. Accepted and ignored rather than removed: the renderer calls it at startup, and
+/// an unmigrated channel there would throw into the bootstrap.
+#[tauri::command]
+pub fn set_zoom_limits(minimum_level: f64, maximum_level: f64) -> Result<(), String> {
+    log::debug!("set_zoom_limits {minimum_level}..{maximum_level} — no equivalent, ignoring");
+    Ok(())
+}
+
+/// Mirrors Electron's `LoginItemSettings`, of which the renderer reads `openAtLogin`.
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LoginItemSettings {
+    pub open_at_login: bool,
+}
+
+/// Port of `IPC_GET_LOGIN_ITEM_SETTINGS` (app/ipc-events.ts:280).
+#[tauri::command]
+pub fn get_login_item_settings(app: AppHandle) -> Result<LoginItemSettings, String> {
+    use tauri_plugin_autostart::ManagerExt;
+    Ok(LoginItemSettings {
+        open_at_login: app.autolaunch().is_enabled().map_err(|e| e.to_string())?,
+    })
+}
+
+/// Port of `IPC_SET_LOGIN_ITEM_SETTINGS` (app/ipc-events.ts:284).
+#[tauri::command]
+pub fn set_login_item_settings(app: AppHandle, settings: LoginItemSettings) -> Result<(), String> {
+    use tauri_plugin_autostart::ManagerExt;
+    let auto = app.autolaunch();
+    if settings.open_at_login {
+        auto.enable().map_err(|e| e.to_string())
+    } else {
+        auto.disable().map_err(|e| e.to_string())
+    }
+}
+
+/// Mirrors `AppUpdateState` (src/common/wowup/models.ts:1). `Serialize_repr` because the
+/// renderer switches on the numeric value.
+#[derive(Debug, Clone, Copy, serde_repr::Serialize_repr)]
+#[repr(u8)]
+enum AppUpdateState {
+    #[allow(dead_code)]
+    CheckingForUpdate = 1,
+    #[allow(dead_code)]
+    UpdateAvailable = 2,
+    UpdateNotAvailable = 3,
+    #[allow(dead_code)]
+    Downloading = 4,
+    #[allow(dead_code)]
+    Downloaded = 5,
+    Error = 6,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct AppUpdateEvent {
+    state: AppUpdateState,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    error: Option<String>,
+}
+
+/// Port of `app-check-update`.
+///
+/// This build has no update feed. Self-update needs a signed release channel — `tauri-plugin-
+/// updater` wants a public key in the config and a manifest endpoint to check — and neither
+/// exists for a locally built app, so there is nothing to check against.
+///
+/// It reports `UpdateNotAvailable` rather than staying silent. The renderer's footer derives
+/// its label from the last state it saw, so with no reply at all the check appears to hang
+/// forever; this is both accurate for a build with no update channel and visibly finished.
+/// Wiring the real updater is Group L in migration/tauri-scope.md.
+#[tauri::command]
+pub fn app_check_update(app: AppHandle) -> Result<(), String> {
+    log::info!("app-check-update: no update feed configured for this build");
+    app.emit(
+        IPC_APP_UPDATE_STATE,
+        AppUpdateEvent {
+            state: AppUpdateState::UpdateNotAvailable,
+            error: None,
+        },
+    )
+    .map_err(|e| e.to_string())
+}
+
+/// Port of `app-install-update`. There is nothing to install — see `app_check_update`.
+#[tauri::command]
+pub fn app_install_update(app: AppHandle) -> Result<(), String> {
+    log::warn!("app-install-update: no update feed configured for this build");
+    app.emit(
+        IPC_APP_UPDATE_STATE,
+        AppUpdateEvent {
+            state: AppUpdateState::Error,
+            error: Some("This build has no update channel; reinstall to update.".into()),
+        },
+    )
+    .map_err(|e| e.to_string())
 }

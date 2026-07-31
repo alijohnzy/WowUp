@@ -29,6 +29,8 @@ tokio = { version = "1", features = ["fs", "time"] }
 globset = "0.4"
 # The WowUp scanner fingerprints files with md5, matching file.utils.ts hashFile.
 md5 = "0.7"
+# getDirTree hashes with sha256 (app/file.utils.ts), unlike the scanner's md5.
+sha2 = "0.10"
 # Addon download + extraction, replacing Electron's net.request and yauzl.
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "charset", "http2"] }
 zip = { version = "2", default-features = false, features = ["deflate", "bzip2"] }
@@ -43,6 +45,8 @@ tauri-plugin-opener = "2"
 tauri-plugin-store = "2"
 tauri-plugin-http = "2"
 tauri-plugin-deep-link = "2"
+tauri-plugin-dialog = "2.7.2"
+tauri-plugin-autostart = "2.5.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 # resolveProducts on mac reads .app bundles; no extra crates needed yet.
