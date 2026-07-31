@@ -64,7 +64,32 @@ A listener for an event that is never sent. Since Tauri keeps only the Svelte re
 drops out — but note the distinction, because it means the count of genuinely-unreferenced
 channels is 2, not 3.
 
-### Group B — Zip + download · 2 channels → **custom Rust**
+### Group B — Zip + download · 2 channels → **custom Rust** ✅ done
+
+> Ported in `install.rs` with `reqwest` and the `zip` crate; `yauzl` and Electron's
+> `net.request` are no longer needed. Verified against a live addon zip end to end
+> (`cargo test --lib -- --ignored live_download`).
+>
+> Two things worth knowing:
+>
+> * **`DownloadStatusType` must cross as a number.** The renderer compares
+>   `status.type !== DownloadStatusType.Progress` and then switches on it, so serde's default
+>   variant-name encoding would unsubscribe the listener, match no case, and leave the
+>   download promise pending forever — an install that hangs with no error. `Serialize_repr`,
+>   caught by a test before it shipped. Same class as `WowClientType`.
+> * **`error` crosses as a string, not an Error.** JSON would deliver `{}`, and the
+>   renderer's `reject(status.error)` would produce an empty rejection with nothing to show.
+>
+> The extractor also refuses entries that escape the target directory. The yauzl version
+> joined the entry name onto the output path directly, so an archive containing
+> `../../.bashrc` would write outside the addon folder — and addon zips are third-party
+> content fetched over the network. That is a deliberate deviation from the original.
+>
+> Progress events are *not* emitted, matching Electron: `handleDownloadFile` only ever sends
+> Complete or Error, so the install bar does not move during the download. The renderer's
+> `onProgress` is wired and would work if that changed.
+
+### Group B — original plan
 `UNZIP_FILE_CHANNEL` (`ipc-events.ts:411`, yauzl) · `DOWNLOAD_FILE_CHANNEL` (`:649`)
 
 `zip` crate + `reqwest` with a progress stream. The download handler already emits

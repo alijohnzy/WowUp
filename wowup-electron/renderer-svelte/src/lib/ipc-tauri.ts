@@ -35,6 +35,8 @@ import {
 	IPC_MINIMIZE_WINDOW,
 	IPC_COPY_FILE_CHANNEL,
 	IPC_CURSE_GET_SCAN_RESULTS,
+	IPC_DOWNLOAD_FILE_CHANNEL,
+	IPC_UNZIP_FILE_CHANNEL,
 	IPC_WOWUP_GET_SCAN_RESULTS,
 	IPC_CREATE_DIRECTORY_CHANNEL,
 	IPC_DELETE_DIRECTORY_CHANNEL,
@@ -147,7 +149,12 @@ export const CHANNEL_PARAMS: Readonly<Record<string, readonly string[]>> = {
 	// Phase 2 — addon folder scanners (Group C). These are what reconcile installedVersion
 	// with what is actually on disk, so update detection depends on them.
 	[IPC_CURSE_GET_SCAN_RESULTS]: ['filePaths'],
-	[IPC_WOWUP_GET_SCAN_RESULTS]: ['filePaths']
+	[IPC_WOWUP_GET_SCAN_RESULTS]: ['filePaths'],
+
+	// Phase 2 — install/update. Both take a single request object, and download-file replies
+	// on the caller's own `responseKey` channel rather than by resolving.
+	[IPC_DOWNLOAD_FILE_CHANNEL]: ['request'],
+	[IPC_UNZIP_FILE_CHANNEL]: ['request']
 };
 
 /** `warcraft-get-executable-name` -> `warcraft_get_executable_name`. */

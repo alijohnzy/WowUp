@@ -27,6 +27,10 @@ tokio = { version = "1", features = ["fs"] }
 globset = "0.4"
 # The WowUp scanner fingerprints files with md5, matching file.utils.ts hashFile.
 md5 = "0.7"
+# Addon download + extraction, replacing Electron's net.request and yauzl.
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "charset", "http2"] }
+zip = { version = "2", default-features = false, features = ["deflate", "bzip2"] }
+nanoid = "0.4"
 
 # Plugin set. Deliberately minimal — each phase adds its own.
 tauri-plugin-log = "2"
