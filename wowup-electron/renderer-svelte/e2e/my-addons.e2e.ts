@@ -92,6 +92,13 @@ async function stubPreload(
 			(window as never as Record<string, unknown>)['userDataPath'] = '/tmp/wowup';
 			(window as never as Record<string, unknown>)['logPath'] = '/tmp/wowup/logs';
 
+			// Read on every fetch rather than captured, so a test can change what the database
+			// holds while the page is open — which is what a background sync does.
+			let rows = addonRows;
+			(window as never as Record<string, unknown>)['__setAddonRows'] = (next: unknown[]) => {
+				rows = next;
+			};
+
 			(window as never as Record<string, unknown>)['wowup'] = {
 				rendererInvoke: (channel: string, ...args: unknown[]) => {
 					switch (channel) {
@@ -106,10 +113,10 @@ async function stubPreload(
 							return Promise.resolve();
 						case 'addons-get-all':
 						case 'addons-get-all-for-installation':
-							return Promise.resolve(addonRows);
+							return Promise.resolve(rows);
 						case 'addons-get-available-for-update':
 							return Promise.resolve(
-								(addonRows as { installedVersion: string; latestVersion: string }[]).filter(
+								(rows as { installedVersion: string; latestVersion: string }[]).filter(
 									(a) => a.installedVersion !== a.latestVersion
 								)
 							);
@@ -221,6 +228,42 @@ test('addons with the same status fall back to name order', async ({ page }) => 
 	await openMyAddons(page);
 
 	expect(await rowOrder(page)).toEqual(['Zulu', 'DBM', 'Alpha']);
+});
+
+// Reported as: "got a new update while app was on but the list did not update again."
+//
+// The hourly auto-update job syncs every client and then signals completion, which is how an
+// update appears with the app sitting open on this page. The client-selector badge above the
+// grid tracked it — it recounts on the same job's badge refresh — so the page showed "1 update"
+// over a list that did not contain one.
+test('an update found while the page is open reaches the grid', async ({ page }) => {
+	// Fake timers, so the job's next tick is an assertion rather than an hour's wait. Installed
+	// before the app boots: the interval has to be created against the fake clock.
+	await page.clock.install();
+
+	const current = [addon('Alpha', 'A'), addon('Zulu', 'Z')];
+	await stubPreload(page, current);
+	await openMyAddons(page);
+
+	// Under fake timers nothing scheduled runs until the clock is told to, and ag-grid renders
+	// cell contents on a frame — the rows exist immediately, their text does not.
+	await page.clock.runFor(1000);
+	await expect.poll(() => rowOrder(page)).toEqual(['Alpha', 'Zulu']);
+
+	// What a sync writes to the database when it finds a new release.
+	await page.evaluate(
+		(rows) => (window as never as Record<string, (r: unknown[]) => void>)['__setAddonRows'](rows),
+		[current[0], { ...current[1], latestVersion: '2.0.0' }]
+	);
+
+	// autoUpdateIntervalMs is one hour. fastForward rather than runFor so the jump fires each
+	// due timer once instead of stepping through an hour of them.
+	await page.clock.fastForward('01:00:01');
+	// The job's own work resolves on microtasks; the grid then repaints on a frame.
+	await page.clock.runFor(1000);
+
+	// Zulu now needs an update, so the status sort floats it above Alpha.
+	await expect.poll(() => rowOrder(page)).toEqual(['Zulu', 'Alpha']);
 });
 
 test('renders installed addons as grid rows', async ({ page }) => {

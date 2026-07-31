@@ -23,12 +23,15 @@
 		CellContextMenuEvent,
 		GetRowIdParams
 	} from 'ag-grid-community';
+	import { untrack } from 'svelte';
 	import { AddonChannelType, type Addon, type WowInstallation } from 'wowup-lib-core';
 	import { ADDON_PROVIDER_UNKNOWN } from '$common/constants';
 	import { Debounced } from 'runed';
 	import { AddonViewModel } from '$lib/business-objects/addon-view-model';
+	import { withInstalledAddon } from '$lib/business-objects/addon-rows';
 	import type { ColumnState } from '$lib/models/column-state';
 	import type { SortOrder } from '$lib/models/sort-order';
+	import { AddonInstallState } from '$lib/models/addon-install-state';
 	import type { AddonUpdateEvent } from '$lib/models/addon-update-event';
 	import { t, i18n } from '$lib/i18n.svelte';
 	import { invoke } from '$lib/ipc';
@@ -740,13 +743,48 @@
 		void loadAddons();
 	});
 
+	// An install finishing has to replace the row's view model, not repaint the cell.
+	//
+	// The view model is a snapshot: `sortOrder`, the version columns and the status text all read
+	// through the `addon` it was constructed with, and ag-grid re-sorts on new row data, not on
+	// refreshCells(). Repainting alone left a finished update sitting in the Update group showing
+	// its old version — the status cell said "Up to date" because it tracks install events
+	// itself, and every other column disagreed with it.
 	$effect(() =>
 		onAddonInstalled((evt: AddonUpdateEvent) => {
-			// Only refresh for the client currently on screen.
+			// Only the client currently on screen.
 			if (evt.addon.installationId !== session.getSelectedWowInstallation()?.id) return;
-			gridApi?.refreshCells({ force: false });
+
+			if (
+				evt.installState !== AddonInstallState.Complete &&
+				evt.installState !== AddonInstallState.Error
+			) {
+				session.setEnableControls(false);
+				return;
+			}
+
+			baseRowData = withInstalledAddon(
+				baseRowData,
+				evt.addon,
+				evt.installState === AddonInstallState.Complete
+			);
+
+			session.setEnableControls(calculateControlState());
 		})
 	);
+
+	// The hourly auto-update job is how an update appears while the app sits open on this page:
+	// it syncs every client, installs whatever is set to auto-update, and signals when done.
+	//
+	// The port had the publisher — auto-update.ts calls session.autoUpdateComplete() — and no
+	// subscriber anywhere, so the grid kept whatever it loaded when the page opened while the
+	// badge above it counted the new update. Skipping the initial 0 leaves the first load to
+	// the mount effect above; untrack keeps this from also depending on the installation, which
+	// would make an installation change load twice.
+	$effect(() => {
+		if (session.autoUpdateCompleteAt === 0) return;
+		untrack(() => void loadAddons());
+	});
 
 	$effect(() => addonService.addonRemoved.subscribe(() => void loadAddons()));
 
