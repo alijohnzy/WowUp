@@ -147,10 +147,7 @@ fn drive_c_prefix(agent_path: &str) -> Option<&str> {
 /// the same behaviour rather than "fixing" it, so paths still match what the addon
 /// scanner and the Electron build produce.
 fn join_windows_relative(prefix: &str, rest: &str) -> String {
-    Path::new(prefix)
-        .join(rest)
-        .to_string_lossy()
-        .into_owned()
+    Path::new(prefix).join(rest).to_string_lossy().into_owned()
 }
 
 async fn lutris_wow_path() -> Option<PathBuf> {
@@ -178,7 +175,10 @@ async fn lutris_wow_path() -> Option<PathBuf> {
     for dir in LUTRIS_WOW_DIRS {
         let product_path = Path::new(library_path).join(dir);
         if path_exists(&product_path).await {
-            log::info!("Found WoW product in Lutris library at {}", product_path.display());
+            log::info!(
+                "Found WoW product in Lutris library at {}",
+                product_path.display()
+            );
             return Some(product_path);
         }
     }
@@ -216,8 +216,14 @@ mod tests {
             get_client_type("C:\\WoW\\_classic_\\WowClassic.exe"),
             WowClientType::Classic
         );
-        assert_eq!(get_client_type("C:\\WoW\\_xptr_\\WowT.exe"), WowClientType::RetailXPtr);
-        assert_eq!(get_client_type("C:\\WoW\\_ptr_\\WowT.exe"), WowClientType::RetailPtr);
+        assert_eq!(
+            get_client_type("C:\\WoW\\_xptr_\\WowT.exe"),
+            WowClientType::RetailXPtr
+        );
+        assert_eq!(
+            get_client_type("C:\\WoW\\_ptr_\\WowT.exe"),
+            WowClientType::RetailPtr
+        );
         assert_eq!(
             get_client_type("C:\\WoW\\_classic_era_ptr_\\WowClassicT.exe"),
             WowClientType::ClassicEraPtr
@@ -226,12 +232,18 @@ mod tests {
             get_client_type("C:\\WoW\\_classic_ptr_\\WowClassicT.exe"),
             WowClientType::ClassicPtr
         );
-        assert_eq!(get_client_type("C:\\WoW\\_beta_\\WowB.exe"), WowClientType::Beta);
+        assert_eq!(
+            get_client_type("C:\\WoW\\_beta_\\WowB.exe"),
+            WowClientType::Beta
+        );
         assert_eq!(
             get_client_type("C:\\WoW\\_classic_beta_\\WowClassicB.exe"),
             WowClientType::ClassicBeta
         );
-        assert_eq!(get_client_type("C:\\WoW\\explorer.exe"), WowClientType::None);
+        assert_eq!(
+            get_client_type("C:\\WoW\\explorer.exe"),
+            WowClientType::None
+        );
     }
 
     /// The folder check is case-insensitive in the JS (`.toLowerCase()`), and Wine prefixes
@@ -282,12 +294,24 @@ mod tests {
     #[test]
     fn executable_name_covers_every_client_type() {
         assert_eq!(get_executable_name(WowClientType::Retail), "Wow.exe");
-        assert_eq!(get_executable_name(WowClientType::Classic), "WowClassic.exe");
-        assert_eq!(get_executable_name(WowClientType::Anniversary), "WowClassic.exe");
+        assert_eq!(
+            get_executable_name(WowClientType::Classic),
+            "WowClassic.exe"
+        );
+        assert_eq!(
+            get_executable_name(WowClientType::Anniversary),
+            "WowClassic.exe"
+        );
         assert_eq!(get_executable_name(WowClientType::RetailXPtr), "WowT.exe");
-        assert_eq!(get_executable_name(WowClientType::ClassicEraPtr), "WowClassicT.exe");
+        assert_eq!(
+            get_executable_name(WowClientType::ClassicEraPtr),
+            "WowClassicT.exe"
+        );
         assert_eq!(get_executable_name(WowClientType::Beta), "WowB.exe");
-        assert_eq!(get_executable_name(WowClientType::ClassicBeta), "WowClassicB.exe");
+        assert_eq!(
+            get_executable_name(WowClientType::ClassicBeta),
+            "WowClassicB.exe"
+        );
         assert_eq!(get_executable_name(WowClientType::None), "");
     }
 }

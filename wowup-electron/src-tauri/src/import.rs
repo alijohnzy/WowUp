@@ -23,7 +23,11 @@ use crate::store::{ADDON_STORE_NAME, PREFERENCE_STORE_NAME, SENSITIVE_STORE_NAME
 /// the user has since changed in the Tauri build.
 const IMPORT_MARKER_KEY: &str = "electron_data_imported";
 
-const STORE_FILES: [&str; 3] = [PREFERENCE_STORE_NAME, ADDON_STORE_NAME, SENSITIVE_STORE_NAME];
+const STORE_FILES: [&str; 3] = [
+    PREFERENCE_STORE_NAME,
+    ADDON_STORE_NAME,
+    SENSITIVE_STORE_NAME,
+];
 
 /// Electron's `app.getPath("userData")` is `<config>/<app name>`. The names below are the
 /// ones this repo's builds produce, most specific first: the Svelte build is the direct
@@ -54,7 +58,10 @@ fn electron_config_root() -> Option<PathBuf> {
 fn find_electron_data_dir() -> Option<PathBuf> {
     if let Some(override_dir) = std::env::var_os("WOWUP_IMPORT_FROM") {
         let dir = PathBuf::from(override_dir);
-        return dir.join(format!("{PREFERENCE_STORE_NAME}.json")).is_file().then_some(dir);
+        return dir
+            .join(format!("{PREFERENCE_STORE_NAME}.json"))
+            .is_file()
+            .then_some(dir);
     }
 
     let root = electron_config_root()?;
@@ -113,7 +120,11 @@ pub fn import_electron_data(app: &AppHandle) {
     log::info!(
         "[import] imported from {}: {}",
         source.display(),
-        if copied.is_empty() { "nothing".to_string() } else { copied.join(", ") }
+        if copied.is_empty() {
+            "nothing".to_string()
+        } else {
+            copied.join(", ")
+        }
     );
 }
 
@@ -133,7 +144,10 @@ mod tests {
         let found = find_electron_data_dir();
         std::env::remove_var("WOWUP_IMPORT_FROM");
 
-        assert!(found.is_none(), "a directory with no preferences.json is not an install");
+        assert!(
+            found.is_none(),
+            "a directory with no preferences.json is not an install"
+        );
     }
 
     #[test]

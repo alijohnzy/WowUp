@@ -120,7 +120,11 @@ fn is_bindings_xml(relative: &str) -> bool {
 
 /// Strips comments the way the JS regexes do, per extension.
 fn remove_comments(path: &Path, content: &str) -> String {
-    match path.extension().and_then(|e| e.to_str()).map(str::to_ascii_lowercase) {
+    match path
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(str::to_ascii_lowercase)
+    {
         // `/\s*#.*$/gim` — a `#` to end of line, with any preceding whitespace.
         Some(ref ext) if ext == "toc" => content
             .lines()
@@ -204,10 +208,13 @@ fn xml_includes(content: &str) -> Vec<String> {
         // Leftmost `<Include`/`<Script` that is followed by a `file="` attribute.
         let mut search = 0usize;
         loop {
-            let tag = [lower[search..].find("<include"), lower[search..].find("<script")]
-                .into_iter()
-                .flatten()
-                .min()?
+            let tag = [
+                lower[search..].find("<include"),
+                lower[search..].find("<script"),
+            ]
+            .into_iter()
+            .flatten()
+            .min()?
                 + search;
 
             let after = &piece[tag..];
@@ -278,10 +285,13 @@ fn xml_includes_all(content: &str) -> Vec<String> {
         let lower = segment.to_ascii_lowercase();
         let mut search = 0usize;
 
-        while let Some(tag_rel) = [lower[search..].find("<include"), lower[search..].find("<script")]
-            .into_iter()
-            .flatten()
-            .min()
+        while let Some(tag_rel) = [
+            lower[search..].find("<include"),
+            lower[search..].find("<script"),
+        ]
+        .into_iter()
+        .flatten()
+        .min()
         {
             let tag = search + tag_rel;
             let after = &segment[tag..];
@@ -415,11 +425,16 @@ impl FolderScan {
             }
             self.push(real.clone());
 
-            let Ok(raw) = std::fs::read(&real) else { continue };
+            let Ok(raw) = std::fs::read(&real) else {
+                continue;
+            };
             // Includes are ASCII paths; lossy keeps a stray byte from dropping the file.
             let content = remove_comments(&real, &String::from_utf8_lossy(&raw));
 
-            let ext = real.extension().and_then(|e| e.to_str()).map(str::to_ascii_lowercase);
+            let ext = real
+                .extension()
+                .and_then(|e| e.to_str())
+                .map(str::to_ascii_lowercase);
             let includes = match (ext.as_deref(), self.flavour) {
                 (Some("toc"), Flavour::Curse) => toc_includes(&content),
                 (Some("xml"), Flavour::Curse) => xml_includes(&content),
@@ -559,8 +574,9 @@ mod tests {
 
     #[test]
     fn flavour_suffixes_match() {
-        for f in ["mainline", "bcc", "tbc", "classic", "vanilla", "wrath", "wotlkc", "cata", "mists"]
-        {
+        for f in [
+            "mainline", "bcc", "tbc", "classic", "vanilla", "wrath", "wotlkc", "cata", "mists",
+        ] {
             assert!(is_addon_toc(&format!("weakauras/weakauras-{f}.toc")), "{f}");
             assert!(is_addon_toc(&format!("weakauras/weakauras_{f}.toc")), "{f}");
         }
@@ -602,7 +618,8 @@ mod tests {
 
     #[test]
     fn toc_includes_are_lua_and_xml_paths_only() {
-        let includes = toc_includes("## Title: X\nCore.lua\nUI.xml\nnotes.txt\n\n  Sub\\Thing.lua  ");
+        let includes =
+            toc_includes("## Title: X\nCore.lua\nUI.xml\nnotes.txt\n\n  Sub\\Thing.lua  ");
         assert_eq!(includes, vec!["Core.lua", "UI.xml", "Sub\\Thing.lua"]);
     }
 
@@ -665,7 +682,11 @@ mod tests {
         let _ = std::fs::remove_dir_all(&root);
         std::fs::create_dir_all(addon.join("Sub")).unwrap();
 
-        std::fs::write(addon.join("WeakAuras.toc"), "## Title: WA\nCore.lua\nUI.xml\n").unwrap();
+        std::fs::write(
+            addon.join("WeakAuras.toc"),
+            "## Title: WA\nCore.lua\nUI.xml\n",
+        )
+        .unwrap();
         std::fs::write(addon.join("Core.lua"), "-- core").unwrap();
         std::fs::write(addon.join("UI.xml"), "<Include file=\"Sub/Extra.lua\"/>").unwrap();
         std::fs::write(addon.join("Sub/Extra.lua"), "-- extra").unwrap();
@@ -737,7 +758,10 @@ mod real_folder_diff {
     #[test]
     #[ignore]
     fn diff_real() {
-        for folder in std::env::var("WOWUP_SCAN_DIRS").unwrap_or_default().split(':') {
+        for folder in std::env::var("WOWUP_SCAN_DIRS")
+            .unwrap_or_default()
+            .split(':')
+        {
             if folder.is_empty() {
                 continue;
             }

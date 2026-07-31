@@ -94,7 +94,10 @@ pub async fn get_blizzard_agent_path() -> String {
 }
 
 /// macOS paths in product.db are already absolute and correct.
-pub fn resolve_products(decoded: Vec<InstalledProduct>, _agent_path: &str) -> Vec<InstalledProduct> {
+pub fn resolve_products(
+    decoded: Vec<InstalledProduct>,
+    _agent_path: &str,
+) -> Vec<InstalledProduct> {
     decoded
 }
 
@@ -128,10 +131,15 @@ mod tests {
             WowClientType::RetailXPtr
         );
         assert_eq!(
-            get_client_type("/Applications/WoW/_classic_era_ptr_/World of Warcraft Classic Test.app"),
+            get_client_type(
+                "/Applications/WoW/_classic_era_ptr_/World of Warcraft Classic Test.app"
+            ),
             WowClientType::ClassicEraPtr
         );
-        assert_eq!(get_client_type("/Applications/Safari.app"), WowClientType::None);
+        assert_eq!(
+            get_client_type("/Applications/Safari.app"),
+            WowClientType::None
+        );
     }
 
     #[test]

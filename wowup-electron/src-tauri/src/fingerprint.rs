@@ -101,7 +101,10 @@ mod tests {
 
     #[test]
     fn differs_on_a_single_byte() {
-        assert_ne!(compute_hash(b"## Version: 1.0.0"), compute_hash(b"## Version: 1.0.1"));
+        assert_ne!(
+            compute_hash(b"## Version: 1.0.0"),
+            compute_hash(b"## Version: 1.0.1")
+        );
     }
 
     #[test]

@@ -67,22 +67,46 @@ pub fn get_executable_name(client_type: WowClientType) -> String {
     let arm = is_arm64();
     match client_type {
         WowClientType::Retail => {
-            if arm { WOW_RETAIL_NAME_ARM64 } else { WOW_RETAIL_NAME }
+            if arm {
+                WOW_RETAIL_NAME_ARM64
+            } else {
+                WOW_RETAIL_NAME
+            }
         }
         WowClientType::ClassicEra | WowClientType::Classic | WowClientType::Anniversary => {
-            if arm { WOW_CLASSIC_NAME_ARM64 } else { WOW_CLASSIC_NAME }
+            if arm {
+                WOW_CLASSIC_NAME_ARM64
+            } else {
+                WOW_CLASSIC_NAME
+            }
         }
         WowClientType::RetailPtr | WowClientType::RetailXPtr => {
-            if arm { WOW_RETAIL_PTR_NAME_ARM64 } else { WOW_RETAIL_PTR_NAME }
+            if arm {
+                WOW_RETAIL_PTR_NAME_ARM64
+            } else {
+                WOW_RETAIL_PTR_NAME
+            }
         }
         WowClientType::ClassicPtr | WowClientType::ClassicEraPtr => {
-            if arm { WOW_CLASSIC_PTR_NAME_ARM64 } else { WOW_CLASSIC_PTR_NAME }
+            if arm {
+                WOW_CLASSIC_PTR_NAME_ARM64
+            } else {
+                WOW_CLASSIC_PTR_NAME
+            }
         }
         WowClientType::Beta => {
-            if arm { WOW_RETAIL_BETA_NAME_ARM64 } else { WOW_RETAIL_BETA_NAME }
+            if arm {
+                WOW_RETAIL_BETA_NAME_ARM64
+            } else {
+                WOW_RETAIL_BETA_NAME
+            }
         }
         WowClientType::ClassicBeta => {
-            if arm { WOW_CLASSIC_BETA_NAME_ARM64 } else { WOW_CLASSIC_BETA_NAME }
+            if arm {
+                WOW_CLASSIC_BETA_NAME_ARM64
+            } else {
+                WOW_CLASSIC_BETA_NAME
+            }
         }
         WowClientType::None => "",
     }
@@ -151,7 +175,10 @@ pub async fn get_blizzard_agent_path() -> String {
 }
 
 /// Windows paths in product.db are already absolute and correct.
-pub fn resolve_products(decoded: Vec<InstalledProduct>, _agent_path: &str) -> Vec<InstalledProduct> {
+pub fn resolve_products(
+    decoded: Vec<InstalledProduct>,
+    _agent_path: &str,
+) -> Vec<InstalledProduct> {
     decoded
 }
 
@@ -181,12 +208,19 @@ mod tests {
 
     #[test]
     fn unknown_binary_is_none() {
-        assert_eq!(get_client_type("C:\\Windows\\explorer.exe"), WowClientType::None);
+        assert_eq!(
+            get_client_type("C:\\Windows\\explorer.exe"),
+            WowClientType::None
+        );
     }
 
     #[test]
     fn executable_name_matches_the_build_architecture() {
-        let expected = if is_arm64() { "Wow-arm64.exe" } else { "Wow.exe" };
+        let expected = if is_arm64() {
+            "Wow-arm64.exe"
+        } else {
+            "Wow.exe"
+        };
         assert_eq!(get_executable_name(WowClientType::Retail), expected);
         assert_eq!(get_executable_name(WowClientType::None), "");
     }

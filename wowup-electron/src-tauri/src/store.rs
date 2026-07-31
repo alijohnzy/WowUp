@@ -20,7 +20,11 @@ pub const SENSITIVE_STORE_NAME: &str = "sensitive";
 /// `COLLAPSE_TO_TRAY_PREFERENCE_KEY` in src/common/constants.ts:136.
 pub const COLLAPSE_TO_TRAY_PREFERENCE_KEY: &str = "collapse_to_tray";
 
-const STORE_NAMES: [&str; 3] = [ADDON_STORE_NAME, PREFERENCE_STORE_NAME, SENSITIVE_STORE_NAME];
+const STORE_NAMES: [&str; 3] = [
+    ADDON_STORE_NAME,
+    PREFERENCE_STORE_NAME,
+    SENSITIVE_STORE_NAME,
+];
 
 #[derive(Default)]
 pub struct Stores {
@@ -261,7 +265,10 @@ mod tests {
 
         let loaded = Stores::load(&path);
         assert_eq!(loaded.get("theme").unwrap(), &json!("horde-dark"));
-        assert_eq!(loaded.get("wow_installations").unwrap(), &json!([{"id": "a"}]));
+        assert_eq!(
+            loaded.get("wow_installations").unwrap(),
+            &json!([{"id": "a"}])
+        );
     }
 
     #[test]

@@ -28,7 +28,9 @@ fn is_ignored(addon: &Value) -> bool {
 /// common and inconsistent between providers; without this every such addon would read as
 /// permanently updatable.
 fn strip_leading_v(s: &str) -> &str {
-    s.strip_prefix('v').or_else(|| s.strip_prefix('V')).unwrap_or(s)
+    s.strip_prefix('v')
+        .or_else(|| s.strip_prefix('V'))
+        .unwrap_or(s)
 }
 
 /// Port of `needsUpdate` (addon.controller.ts:104).
@@ -210,7 +212,9 @@ mod tests {
     fn an_addon_with_no_installed_version_is_not_updatable() {
         // Otherwise a freshly-scanned folder with no version reads as needing an update.
         assert!(!needs_update(&json!({ "latestVersion": "1.0.0" })));
-        assert!(!needs_update(&json!({ "installedVersion": "", "latestVersion": "1.0.0" })));
+        assert!(!needs_update(
+            &json!({ "installedVersion": "", "latestVersion": "1.0.0" })
+        ));
     }
 
     #[test]

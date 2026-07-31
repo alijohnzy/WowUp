@@ -227,20 +227,47 @@ mod tests {
 
     #[test]
     fn maps_every_known_folder_name() {
-        assert_eq!(client_type_for_folder_name("_retail_"), WowClientType::Retail);
-        assert_eq!(client_type_for_folder_name("_ptr_"), WowClientType::RetailPtr);
-        assert_eq!(client_type_for_folder_name("_xptr_"), WowClientType::RetailXPtr);
-        assert_eq!(client_type_for_folder_name("_classic_"), WowClientType::Classic);
-        assert_eq!(client_type_for_folder_name("_classic_era_"), WowClientType::ClassicEra);
+        assert_eq!(
+            client_type_for_folder_name("_retail_"),
+            WowClientType::Retail
+        );
+        assert_eq!(
+            client_type_for_folder_name("_ptr_"),
+            WowClientType::RetailPtr
+        );
+        assert_eq!(
+            client_type_for_folder_name("_xptr_"),
+            WowClientType::RetailXPtr
+        );
+        assert_eq!(
+            client_type_for_folder_name("_classic_"),
+            WowClientType::Classic
+        );
+        assert_eq!(
+            client_type_for_folder_name("_classic_era_"),
+            WowClientType::ClassicEra
+        );
         assert_eq!(
             client_type_for_folder_name("_classic_era_ptr_"),
             WowClientType::ClassicEraPtr
         );
-        assert_eq!(client_type_for_folder_name("_classic_ptr_"), WowClientType::ClassicPtr);
+        assert_eq!(
+            client_type_for_folder_name("_classic_ptr_"),
+            WowClientType::ClassicPtr
+        );
         assert_eq!(client_type_for_folder_name("_beta_"), WowClientType::Beta);
-        assert_eq!(client_type_for_folder_name("_classic_beta_"), WowClientType::ClassicBeta);
-        assert_eq!(client_type_for_folder_name("_anniversary_"), WowClientType::Anniversary);
-        assert_eq!(client_type_for_folder_name("_nonsense_"), WowClientType::None);
+        assert_eq!(
+            client_type_for_folder_name("_classic_beta_"),
+            WowClientType::ClassicBeta
+        );
+        assert_eq!(
+            client_type_for_folder_name("_anniversary_"),
+            WowClientType::Anniversary
+        );
+        assert_eq!(
+            client_type_for_folder_name("_nonsense_"),
+            WowClientType::None
+        );
     }
 
     /// product.db holds Windows paths even when WowUp runs on Linux under Lutris, so

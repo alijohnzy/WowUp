@@ -162,7 +162,9 @@ mod tests {
     #[tokio::test]
     async fn a_missing_path_is_false_rather_than_an_error() {
         assert_eq!(
-            path_exists("/nonexistent/wow/_retail_".into()).await.unwrap(),
+            path_exists("/nonexistent/wow/_retail_".into())
+                .await
+                .unwrap(),
             false
         );
     }
@@ -170,7 +172,9 @@ mod tests {
     #[tokio::test]
     async fn an_existing_directory_is_true() {
         let dir = std::env::temp_dir();
-        assert!(path_exists(dir.to_string_lossy().into_owned()).await.unwrap());
+        assert!(path_exists(dir.to_string_lossy().into_owned())
+            .await
+            .unwrap());
     }
 
     #[tokio::test]
@@ -189,15 +193,21 @@ mod tests {
     #[tokio::test]
     async fn read_file_round_trips_utf8() {
         let path = std::env::temp_dir().join("wowup-read-file-test.toc");
-        tokio::fs::write(&path, "## Title: Déjà Vu\n").await.unwrap();
-        let text = read_file(path.to_string_lossy().into_owned()).await.unwrap();
+        tokio::fs::write(&path, "## Title: Déjà Vu\n")
+            .await
+            .unwrap();
+        let text = read_file(path.to_string_lossy().into_owned())
+            .await
+            .unwrap();
         assert_eq!(text, "## Title: Déjà Vu\n");
     }
 
     #[tokio::test]
     async fn read_file_reports_the_path_it_failed_on() {
         // A scan reads hundreds of files; "No such file" alone names none of them.
-        let err = read_file("/nonexistent/WeakAuras.toc".into()).await.unwrap_err();
+        let err = read_file("/nonexistent/WeakAuras.toc".into())
+            .await
+            .unwrap_err();
         assert!(err.contains("WeakAuras.toc"), "got {err}");
     }
 
@@ -205,8 +215,12 @@ mod tests {
     async fn list_directories_excludes_files() {
         let dir = std::env::temp_dir().join("wowup-listdirs-test");
         let _ = tokio::fs::remove_dir_all(&dir).await;
-        tokio::fs::create_dir_all(dir.join("WeakAuras")).await.unwrap();
-        tokio::fs::create_dir_all(dir.join("DBM-Core")).await.unwrap();
+        tokio::fs::create_dir_all(dir.join("WeakAuras"))
+            .await
+            .unwrap();
+        tokio::fs::create_dir_all(dir.join("DBM-Core"))
+            .await
+            .unwrap();
         tokio::fs::write(dir.join("notes.txt"), "x").await.unwrap();
 
         let dirs = list_directories(dir.to_string_lossy().into_owned(), Some(false))
@@ -219,9 +233,15 @@ mod tests {
     async fn latest_update_time_finds_the_newest_file_at_any_depth() {
         let dir = std::env::temp_dir().join("wowup-mtime-test");
         let _ = tokio::fs::remove_dir_all(&dir).await;
-        tokio::fs::create_dir_all(dir.join("WeakAuras/Sub")).await.unwrap();
-        tokio::fs::write(dir.join("WeakAuras/a.toc"), "x").await.unwrap();
-        tokio::fs::write(dir.join("WeakAuras/Sub/b.lua"), "y").await.unwrap();
+        tokio::fs::create_dir_all(dir.join("WeakAuras/Sub"))
+            .await
+            .unwrap();
+        tokio::fs::write(dir.join("WeakAuras/a.toc"), "x")
+            .await
+            .unwrap();
+        tokio::fs::write(dir.join("WeakAuras/Sub/b.lua"), "y")
+            .await
+            .unwrap();
 
         let t = get_latest_dir_update_time(dir.to_string_lossy().into_owned())
             .await
@@ -236,7 +256,9 @@ mod tests {
     async fn latest_update_time_of_a_missing_directory_is_zero_not_an_error() {
         // The renderer asks about installations whose folder may not exist yet.
         assert_eq!(
-            get_latest_dir_update_time("/nonexistent/AddOns".into()).await.unwrap(),
+            get_latest_dir_update_time("/nonexistent/AddOns".into())
+                .await
+                .unwrap(),
             0.0
         );
     }
@@ -344,10 +366,7 @@ pub async fn copy_file(request: CopyFileRequest) -> Result<bool, String> {
 /// Iterative rather than recursive: `async fn` cannot recurse without boxing, and an addon
 /// tree is arbitrarily deep.
 async fn copy_dir_recursive(from: &str, to: &str) -> Result<(), String> {
-    let mut stack = vec![(
-        std::path::PathBuf::from(from),
-        std::path::PathBuf::from(to),
-    )];
+    let mut stack = vec![(std::path::PathBuf::from(from), std::path::PathBuf::from(to))];
 
     while let Some((src, dst)) = stack.pop() {
         tokio::fs::create_dir_all(&dst)

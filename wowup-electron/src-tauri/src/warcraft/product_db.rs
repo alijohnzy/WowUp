@@ -252,8 +252,16 @@ mod tests {
     #[test]
     fn decodes_multiple_products_preserving_order() {
         let mut db = Vec::new();
-        message_field(1, &product("wow", "wow", &client("/a", "_retail_")), &mut db);
-        message_field(1, &product("wow_classic", "wow", &client("/b", "_classic_")), &mut db);
+        message_field(
+            1,
+            &product("wow", "wow", &client("/a", "_retail_")),
+            &mut db,
+        );
+        message_field(
+            1,
+            &product("wow_classic", "wow", &client("/b", "_classic_")),
+            &mut db,
+        );
         message_field(1, &product("agent", "agent", &client("/c", "")), &mut db);
 
         let decoded = ProductDb::decode(&db).unwrap();
@@ -307,7 +315,11 @@ mod tests {
         // Forces a two-byte varint length prefix, exercising the shift loop.
         let long = "x".repeat(200);
         let mut db = Vec::new();
-        message_field(1, &product("wow", "wow", &client(&long, "_retail_")), &mut db);
+        message_field(
+            1,
+            &product("wow", "wow", &client(&long, "_retail_")),
+            &mut db,
+        );
 
         let decoded = ProductDb::decode(&db).unwrap();
         assert_eq!(decoded.products[0].client.location.len(), 200);
