@@ -183,11 +183,28 @@ export class WagoAddonProvider extends AddonProvider {
 	public enabled = true;
 	public authRequired = true;
 	public adRequired = true;
+
+	/** Write `adRequired` through here, never directly — see the constructor. */
+	private setAdRequired(required: boolean): void {
+		if (this.adRequired === required) return;
+		this.adRequired = required;
+		this.onAdRequirementChanged();
+	}
 	public allowEdit = true;
 	public allowReinstall = true;
 	public allowChannelChange = true;
 
-	public constructor() {
+	/**
+	 * @param onAdRequirementChanged Called when `adRequired` changes after construction.
+	 *
+	 * `adRequired` is a plain field on the base provider, so writing it triggers nothing.
+	 * The nav rail's ad slot derives from it, and this class only learns the answer once an
+	 * async token lookup settles — so whether the ad frame appeared came down to whether that
+	 * lookup happened to land before or after the derivation first ran. Signalling makes it
+	 * deterministic. Injected rather than imported, because the registry that owns the
+	 * reactive revision also owns this provider.
+	 */
+	public constructor(private readonly onAdRequirementChanged: () => void = () => {}) {
 		super();
 
 		this._circuitBreaker = network.getCircuitBreaker(
@@ -206,8 +223,10 @@ export class WagoAddonProvider extends AddonProvider {
 			if (this.isValidToken(change.value as string)) {
 				this._wagoSecret = change.value as string;
 				this._circuitBreaker.close();
+				this.setAdRequired(false);
 			} else {
 				this._wagoSecret = '';
+				this.setAdRequired(true);
 			}
 		});
 
@@ -216,7 +235,7 @@ export class WagoAddonProvider extends AddonProvider {
 			try {
 				const accessKey = await sensitiveStorage.getAsync(PREF_WAGO_ACCESS_KEY);
 				const validToken = this.isValidToken(accessKey);
-				this.adRequired = !validToken;
+				this.setAdRequired(!validToken);
 				if (validToken) {
 					this._wagoSecret = accessKey;
 					console.debug('[wago] secret key set');

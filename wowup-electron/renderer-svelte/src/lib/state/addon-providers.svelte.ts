@@ -57,7 +57,9 @@ class AddonProviders {
 			)
 		];
 
-		if (AppConfig.wago.enabled) providers.push(new WagoAddonProvider());
+		// Wago decides whether it needs an ad only once an async token check settles, and
+		// `adRequired` is a plain field, so bump the revision the derivations read.
+		if (AppConfig.wago.enabled) providers.push(new WagoAddonProvider(() => this.revision++));
 		if (AppConfig.curseforge.enabled) providers.push(new CurseAddonProvider());
 
 		providers.push(
