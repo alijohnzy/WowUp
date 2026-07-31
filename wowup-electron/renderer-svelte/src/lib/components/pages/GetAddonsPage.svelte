@@ -183,9 +183,13 @@
 					hide: hidden('releasedAt'),
 					headerName: t('PAGES.GET_ADDONS.TABLE.RELEASED_AT_COLUMN_HEADER'),
 					valueFormatter: (row) => {
-						const [fmt, args] = getRelativeDateFormat(
-							new Date((row.data as GetAddonListItem).releasedAt).toISOString()
-						);
+						// `releasedAt` is already epoch milliseconds, and getRelativeDateFormat takes
+						// `string | number` — so the round-trip through toISOString() bought nothing
+						// and could throw. `new Date(NaN).toISOString()` raises RangeError, and this
+						// runs inside ag-grid's render loop: one addon with an unparseable release
+						// date left the grid stuck "in the middle of drawing rows" and **every** row
+						// vanished, while the footer still reported the full count.
+						const [fmt, args] = getRelativeDateFormat((row.data as GetAddonListItem).releasedAt);
 						return fmt ? i18n.t(fmt, args) : '';
 					},
 					comparator: (_a, _b, na, nb) => compareElement(na, nb, 'releasedAt'),

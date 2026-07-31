@@ -35,7 +35,13 @@ export class GetAddonListItem {
 		if (defaultAddonChannel !== undefined) {
 			const latestFile = getLatestFile(searchResult, defaultAddonChannel);
 			this.latestAddonChannel = latestFile?.channelType ?? AddonChannelType.Stable;
-			this.releasedAt = new Date(latestFile?.releaseDate ?? new Date()).getTime();
+			// `?? new Date()` only covers a missing releaseDate. A *present but unparseable*
+			// one — which providers do return — makes getTime() NaN, and NaN travels: the Get
+			// Addons grid fed it to `new Date(...).toISOString()`, which throws inside ag-grid's
+			// render loop and blanked every row. Keep the field a usable number here rather than
+			// relying on each consumer to re-check it.
+			const released = new Date(latestFile?.releaseDate ?? new Date()).getTime();
+			this.releasedAt = Number.isNaN(released) ? 0 : released;
 		}
 	}
 }
