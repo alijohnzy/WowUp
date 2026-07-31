@@ -451,6 +451,40 @@ and updater signing (§3.2).
 Sequenced so each phase ends with a **runnable app**, and the riskiest unknown is answered
 in Phase 1 rather than Phase 6.
 
+### Phase 1 (part) — store, addons, window, app data ✅
+
+Driven by the app being unusable: it booted to a spinner behind an error banner because
+`store-get-object` had no command, so bootstrap threw and `ready` never flipped.
+
+Migrated: the three key/value stores (Group D), the eight addon-database channels
+(Group E), window controls and their state events (Group G), `get-app-version`,
+`get-locale`, `get-asset-file-path`, `update-app-badge`, and the three
+default-protocol-client channels via `plugin-deep-link`.
+
+Three things this surfaced that the plan did not have:
+
+1. **`electron-store` stringifies primitives.** `store.set` does `value.toString()` unless
+   the value is an object or array, so `true` persists as `"true"` — and `getBool()`
+   compares against exactly that. Storing a JSON boolean would make every boolean
+   preference read as false. `coerce_for_storage` in store.rs reproduces it.
+2. **A fresh identifier means a fresh app.** `io.wowupcf.tauri` has its own data directory,
+   so a machine with a working Electron install still started with no WoW clients and no
+   addons. `import.rs` copies the three store files once on first run — which real users
+   switching builds need too, not just developers. It works because store.rs kept
+   electron-store's on-disk format.
+3. **`-webkit-app-region` is Electron-only.** The titlebar's drag region is defined with it,
+   and Tauri wants `data-tauri-drag-region` instead. Since the window is `decorations:
+   false`, that plus the unmigrated window channels meant the title bar could neither move
+   the window nor close it.
+
+**Known open:** two unhandled rejections per sync — `The resource id … is invalid` — from a
+plugin-http response body. Ruled out: the fetch call itself, `network.ts`'s body read, the
+axios adapter (disabling it changes nothing), and the invoke path (patching
+`__TAURI_INTERNALS__.invoke` catches nothing). That leaves the Channel plugin-http streams
+bodies over, which does not surface through the invoke promise. Non-fatal — the UI is
+unaffected — but it means some addon's update check is failing silently, so it wants
+finishing before Phase 2. `npm run tauri:verify:boot` fails on it, deliberately.
+
 ### Phase 0 — Prove the seam. `WarcraftController`. ✅ done (`d0f8392c`)
 
 Delivered: `src-tauri/` crate, all six `IPC_WARCRAFT_*` channels as Rust commands with a

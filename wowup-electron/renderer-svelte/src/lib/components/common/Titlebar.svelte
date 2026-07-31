@@ -16,7 +16,7 @@
 		IPC_WINDOW_LEAVE_FULLSCREEN
 	} from '$common/constants';
 	import { AppConfig } from '$config/environment';
-	import { invoke, isElectron, isLinux, isMac, isWin, on } from '$lib/ipc';
+	import { invoke, isDesktop, isLinux, isMac, isWin, on } from '$lib/ipc';
 	import { t } from '$lib/i18n.svelte';
 	import { electron } from '$lib/state/electron.svelte';
 	import { snackbar } from '$lib/state/snackbar.svelte';
@@ -32,7 +32,7 @@
 	);
 
 	$effect(() => {
-		if (!isElectron()) return;
+		if (!isDesktop()) return;
 
 		invoke<boolean>(IPC_WINDOW_IS_FULLSCREEN)
 			.then((v) => (isFullscreen = v))
@@ -77,9 +77,19 @@
 	class:windows={isWin()}
 	class:linux={isLinux()}
 >
-	<!-- drag region, not a control -->
+	<!--
+	  Drag region, not a control. Two mechanisms, because the shells disagree:
+
+	  - Electron reads `-webkit-app-region: drag` from CSS.
+	  - Tauri reads the `data-tauri-drag-region` attribute and ignores the CSS property
+	    entirely. WebKitGTK still *parses* `-webkit-app-region`, though, and treats such a
+	    region as non-interactive — so leaving it on under Tauri gave a bar that swallowed
+	    clicks without dragging anything.
+
+	  Hence the attribute here and the `:global(.tauri)` override in the style block.
+	-->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="titlebar-drag-region" ondblclick={onDblClick}></div>
+	<div class="titlebar-drag-region" data-tauri-drag-region ondblclick={onDblClick}></div>
 
 	<div class="title-container">
 		<div>{t(titleKey)}</div>
@@ -149,6 +159,12 @@
 		position: absolute;
 		inset: 0;
 		-webkit-app-region: drag;
+	}
+
+	/* Under Tauri the drag comes from data-tauri-drag-region; the CSS property would only
+	   make the bar swallow clicks. `.tauri` is set on <html> at startup — see app.html. */
+	:global(html.tauri) .titlebar-drag-region {
+		-webkit-app-region: no-drag;
 	}
 
 	.title-container {

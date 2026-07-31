@@ -21,6 +21,7 @@
     "opener:default",
     "store:default",
     "log:default",
+    "deep-link:default",
     {
       "identifier": "http:default",
       "allow": [

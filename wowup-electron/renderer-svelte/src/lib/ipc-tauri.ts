@@ -17,6 +17,34 @@ import { platform as osPlatform } from '@tauri-apps/plugin-os';
 import { openUrl, openPath as tauriOpenPath } from '@tauri-apps/plugin-opener';
 
 import {
+	IPC_ADDONS_GET_ALL,
+	IPC_ADDONS_GET_ALL_FOR_INSTALLATION,
+	IPC_ADDONS_GET_ALL_FOR_PROVIDER,
+	IPC_ADDONS_GET_AUTO_UPDATE_ENABLED,
+	IPC_ADDONS_GET_AVAILABLE_FOR_UPDATE,
+	IPC_ADDONS_GET_BY_EXTERNAL_ID,
+	IPC_ADDONS_GET_BY_EXTERNAL_IDS,
+	IPC_ADDONS_SAVE_ALL,
+	IPC_GET_APP_VERSION,
+	IPC_GET_ASSET_FILE_PATH,
+	IPC_CLOSE_WINDOW,
+	IPC_FOCUS_WINDOW,
+	IPC_GET_LOCALE,
+	IPC_MAXIMIZE_WINDOW,
+	IPC_MINIMIZE_WINDOW,
+	IPC_QUIT_APP,
+	IPC_RESTART_APP,
+	IPC_WINDOW_IS_FULLSCREEN,
+	IPC_WINDOW_IS_MAXIMIZED,
+	IPC_WINDOW_LEAVE_FULLSCREEN,
+	IPC_IS_DEFAULT_PROTOCOL_CLIENT,
+	IPC_REMOVE_AS_DEFAULT_PROTOCOL_CLIENT,
+	IPC_SET_AS_DEFAULT_PROTOCOL_CLIENT,
+	IPC_UPDATE_APP_BADGE,
+	IPC_STORE_GET_ALL,
+	IPC_STORE_GET_OBJECT,
+	IPC_STORE_REMOVE_OBJECT,
+	IPC_STORE_SET_OBJECT,
 	IPC_WARCRAFT_GET_BLIZZARD_AGENT_PATH,
 	IPC_WARCRAFT_GET_CLIENT_TYPE_FOR_BINARY,
 	IPC_WARCRAFT_GET_EXECUTABLE_EXTENSION,
@@ -43,7 +71,42 @@ export const CHANNEL_PARAMS: Readonly<Record<string, readonly string[]>> = {
 	[IPC_WARCRAFT_GET_EXECUTABLE_NAME]: ['clientType'],
 	[IPC_WARCRAFT_GET_CLIENT_TYPE_FOR_BINARY]: ['binaryPath'],
 	[IPC_WARCRAFT_IS_WOW_APPLICATION]: ['appName'],
-	[IPC_WARCRAFT_GET_EXECUTABLE_EXTENSION]: []
+	[IPC_WARCRAFT_GET_EXECUTABLE_EXTENSION]: [],
+
+	// Phase 1 — key/value stores (app/stores.ts) and app version.
+	[IPC_STORE_GET_OBJECT]: ['storeName', 'key'],
+	[IPC_STORE_GET_ALL]: ['storeName'],
+	[IPC_STORE_SET_OBJECT]: ['storeName', 'key', 'value'],
+	[IPC_STORE_REMOVE_OBJECT]: ['storeName', 'key'],
+	[IPC_GET_APP_VERSION]: [],
+	[IPC_GET_ASSET_FILE_PATH]: ['fileName'],
+	[IPC_GET_LOCALE]: [],
+	[IPC_UPDATE_APP_BADGE]: ['count'],
+	[IPC_IS_DEFAULT_PROTOCOL_CLIENT]: ['protocol'],
+	[IPC_SET_AS_DEFAULT_PROTOCOL_CLIENT]: ['protocol'],
+	[IPC_REMOVE_AS_DEFAULT_PROTOCOL_CLIENT]: ['protocol'],
+
+	// Phase 1 — addon database (app/controllers/addon.controller.ts).
+	[IPC_ADDONS_GET_ALL]: [],
+	[IPC_ADDONS_GET_ALL_FOR_INSTALLATION]: ['installationId'],
+	[IPC_ADDONS_GET_ALL_FOR_PROVIDER]: ['providerName'],
+	[IPC_ADDONS_GET_BY_EXTERNAL_ID]: ['externalId', 'providerName', 'installationId'],
+	[IPC_ADDONS_GET_BY_EXTERNAL_IDS]: ['externalIds'],
+	[IPC_ADDONS_GET_AVAILABLE_FOR_UPDATE]: ['installationId'],
+	[IPC_ADDONS_GET_AUTO_UPDATE_ENABLED]: [],
+	[IPC_ADDONS_SAVE_ALL]: ['addons'],
+
+	// Phase 1 — window controls (Group G). The window is decorationless, so the app's own
+	// titlebar is the only way to minimise, maximise or close it.
+	[IPC_MINIMIZE_WINDOW]: [],
+	[IPC_MAXIMIZE_WINDOW]: [],
+	[IPC_CLOSE_WINDOW]: [],
+	[IPC_FOCUS_WINDOW]: [],
+	[IPC_WINDOW_IS_MAXIMIZED]: [],
+	[IPC_WINDOW_IS_FULLSCREEN]: [],
+	[IPC_WINDOW_LEAVE_FULLSCREEN]: [],
+	[IPC_RESTART_APP]: [],
+	[IPC_QUIT_APP]: []
 };
 
 /** `warcraft-get-executable-name` -> `warcraft_get_executable_name`. */

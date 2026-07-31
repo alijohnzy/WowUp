@@ -19,7 +19,7 @@ import {
 	IPC_WARCRAFT_GET_BLIZZARD_AGENT_PATH,
 	IPC_WARCRAFT_GET_EXECUTABLE_NAME,
 	IPC_WARCRAFT_GET_INSTALLED_PRODUCTS,
-	IPC_STORE_GET_OBJECT
+	IPC_UNZIP_FILE_CHANNEL
 } from '$common/constants';
 import { invoke, on, platform, sendSync, UnmigratedChannelError } from './ipc-tauri';
 
@@ -58,10 +58,10 @@ describe('argument mapping', () => {
 
 describe('unmigrated channels', () => {
 	it('throws rather than resolving to undefined', async () => {
-		// IPC_STORE_GET_OBJECT is a real channel with no Rust command yet (Phase 1).
-		await expect(invoke(IPC_STORE_GET_OBJECT, 'prefs', 'theme')).rejects.toBeInstanceOf(
-			UnmigratedChannelError
-		);
+		// A real channel with no Rust command yet — unzip is Phase 2 (Group B). If this ever
+		// starts failing because unzip landed, repoint it at another pending channel rather
+		// than deleting the test: it guards the fail-loud behaviour, not this one channel.
+		await expect(invoke(IPC_UNZIP_FILE_CHANNEL, {})).rejects.toBeInstanceOf(UnmigratedChannelError);
 		expect(invokeMock).not.toHaveBeenCalled();
 	});
 

@@ -23,7 +23,7 @@
 	import Snackbar from '$lib/components/common/Snackbar.svelte';
 	import Titlebar from '$lib/components/common/Titlebar.svelte';
 	import VerticalTabs from '$lib/components/common/VerticalTabs.svelte';
-	import { isElectron, isTauri, on, platform } from '$lib/ipc';
+	import { isDesktop, isTauri, markShellOnDocument, on, platform } from '$lib/ipc';
 	import { forwardConsoleToTauri } from '$lib/log-tauri';
 	import { configureAxiosForTauri } from '$lib/http';
 	import { addonService, onAddonInstalled, ScanUpdateType } from '$lib/state/addon.svelte';
@@ -344,6 +344,9 @@
 	async function bootstrap(): Promise<void> {
 		// Before anything that can fail: without this the webview console is unreachable in a
 		// packaged Tauri build, so a startup exception leaves no trace at all.
+		// Before first paint: stylesheets branch on this (see Titlebar's drag region).
+		markShellOnDocument();
+
 		if (isTauri()) {
 			forwardConsoleToTauri();
 			// Before providers load: curseforge-v2 goes through axios, which defaults to XHR and
@@ -352,7 +355,10 @@
 		}
 
 		// Language first: an unsupported saved locale must not break the rest of startup.
-		if (isElectron()) {
+		// isDesktop, not isElectron — initializeLanguage() reads `get-locale`, which both
+		// shells now serve. Gating it on Electron left Tauri on hardcoded English with no
+		// saved preference, which showed up as an empty Set Language dropdown.
+		if (isDesktop()) {
 			await wowup.initializeLanguage();
 		} else {
 			await i18n.load('en');

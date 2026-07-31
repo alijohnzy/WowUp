@@ -19,8 +19,49 @@ import { isTauri } from '$lib/ipc';
  * Every network call the renderer makes should go through this rather than global `fetch` —
  * `src/lib/ipc-channels.spec.ts`'s sibling guard (`http-callers.spec.ts`) enforces that.
  */
-export function httpFetch(input: URL | Request | string, init?: RequestInit): Promise<Response> {
-	return isTauri() ? tauriFetch(input, init) : globalThis.fetch(input, init);
+export async function httpFetch(
+	input: URL | Request | string,
+	init?: RequestInit
+): Promise<Response> {
+	if (!isTauri()) return globalThis.fetch(input, init);
+
+	const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+	const describe = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+	let res: Response;
+	try {
+		res = await tauriFetch(input, init);
+	} catch (e) {
+		// Tauri rejects a command with a plain string, not an Error, so these arrive with no
+		// stack and no URL — "The resource id 545763241 is invalid." on its own is untraceable.
+		throw new Error(`${init?.method ?? 'GET'} ${url} failed: ${describe(e)}`, { cause: e });
+	}
+
+	// The body is read through a *second* command against a resource handle, so it can fail
+	// long after the request succeeded — and that rejection carries no URL either. Wrapping
+	// the readers here covers every caller, rather than each provider annotating its own.
+	return annotateBodyReads(res, url);
+}
+
+/** Adds the request URL to any failure from `json()` / `text()` / `arrayBuffer()`. */
+function annotateBodyReads(res: Response, url: string): Response {
+	const wrap =
+		<A extends unknown[], R>(name: string, fn: (...a: A) => Promise<R>) =>
+		async (...args: A): Promise<R> => {
+			try {
+				return await fn.apply(res, args);
+			} catch (e) {
+				const detail = e instanceof Error ? e.message : String(e);
+				throw new Error(`Reading ${name} body of ${url} failed: ${detail}`, { cause: e });
+			}
+		};
+
+	// Defined on the instance so the originals stay reachable via the prototype.
+	return Object.defineProperties(res, {
+		json: { value: wrap('json', res.json), configurable: true },
+		text: { value: wrap('text', res.text), configurable: true },
+		arrayBuffer: { value: wrap('arrayBuffer', res.arrayBuffer), configurable: true }
+	});
 }
 
 let axiosConfigured = false;

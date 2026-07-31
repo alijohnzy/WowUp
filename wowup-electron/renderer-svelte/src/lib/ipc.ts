@@ -56,6 +56,22 @@ export const isDesktop = (): boolean => isElectron() || isTauri();
 // nothing else — keeps exercising the Electron path unchanged.
 const useTauri = (): boolean => !isElectron() && isTauri();
 
+/**
+ * Marks <html> with the active shell so stylesheets can branch on it.
+ *
+ * Needed because `-webkit-app-region` means different things in the two shells. Electron
+ * implements it fully. WebKitGTK parses it but honours only the "this area is not
+ * interactive" half, so a drag region defined that way swallows clicks under Tauri while
+ * dragging nothing — which is what made the titlebar dead and the area under it unclickable.
+ *
+ * Defined after `useTauri` on purpose: it is a const arrow, so it does not hoist.
+ */
+export function markShellOnDocument(): void {
+	if (typeof document === 'undefined') return;
+	document.documentElement.classList.toggle('tauri', useTauri());
+	document.documentElement.classList.toggle('electron', isElectron());
+}
+
 function bridge(): WowUpBridge {
 	const b = typeof window !== 'undefined' ? window.wowup : undefined;
 	if (!b) throw new Error('Electron preload bridge unavailable (window.wowup is undefined)');

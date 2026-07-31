@@ -42,7 +42,16 @@ async function request<T>(
 	});
 
 	if (!res.ok) throw new HttpError(res.status, url.toString(), res.headers);
-	return parse === 'json' ? ((await res.json()) as T) : ((await res.text()) as T);
+
+	try {
+		return parse === 'json' ? ((await res.json()) as T) : ((await res.text()) as T);
+	} catch (e) {
+		// Under Tauri the body is read through a second command against a resource handle, so
+		// a failure here says only "The resource id 3505945688 is invalid" — no URL, no stack,
+		// because Tauri rejects commands with a plain string.
+		const detail = e instanceof Error ? e.message : String(e);
+		throw new Error(`Reading ${parse} body of ${url.toString()} failed: ${detail}`, { cause: e });
+	}
 }
 
 export class CircuitBreakerWrapper {
@@ -57,7 +66,17 @@ export class CircuitBreakerWrapper {
 	) {
 		this.#defaultTimeoutMs = httpTimeoutMs;
 		this.#cb = new CircuitBreaker((action: () => Promise<unknown>) => action(), {
-			timeout: httpTimeoutMs,
+			// The request already carries `AbortSignal.timeout(timeoutMs)`, and opossum's own
+			// timer at the same duration made two. Opossum's does not cancel anything — it
+			// rejects the outer promise and leaves the request running — so whichever fired
+			// first left the other's rejection unobserved. Under Tauri that surfaced as
+			// "Unhandled rejection: The resource id … is invalid" during addon sync: the signal
+			// aborted, plugin-http dropped the response, and the abandoned body read rejected
+			// into nothing.
+			//
+			// The signal is the one that actually aborts, so it is the one kept. A timed-out
+			// request still rejects and still counts toward the breaker.
+			timeout: false,
 			resetTimeout: resetTimeoutMs,
 			// Don't trip the breaker on a 404.
 			errorFilter: (err: unknown) => (err as HttpError)?.status === 404
