@@ -35,22 +35,42 @@ async function request<T>(
 	timeoutMs: number,
 	parse: 'json' | 'text'
 ): Promise<T> {
-	// httpFetch, not fetch: under Tauri this has to leave the webview to escape CORS.
-	const res = await httpFetch(url.toString(), {
-		...init,
-		signal: AbortSignal.timeout(timeoutMs)
-	});
-
-	if (!res.ok) throw new HttpError(res.status, url.toString(), res.headers);
+	// A cancellable timer, not `AbortSignal.timeout()`.
+	//
+	// `AbortSignal.timeout` cannot be cleared: it fires at `timeoutMs` whether or not the
+	// request finished. Under Electron a post-completion abort is inert, but plugin-http
+	// registers an abort listener that cancels the request in Rust — and by then its response
+	// resource has been freed, so it rejected with "The resource id 3697265254 is invalid"
+	// roughly ten seconds after each successful call. Unhandled, because nothing is awaiting
+	// a request that already returned, and untraceable, because Tauri rejects commands with a
+	// bare string: no stack, no URL.
+	//
+	// Clearing the timer in `finally` means the signal can only fire while the request is
+	// genuinely outstanding.
+	const controller = new AbortController();
+	const timer = setTimeout(
+		() => controller.abort(new DOMException(`Timed out after ${timeoutMs}ms`, 'TimeoutError')),
+		timeoutMs
+	);
 
 	try {
-		return parse === 'json' ? ((await res.json()) as T) : ((await res.text()) as T);
-	} catch (e) {
-		// Under Tauri the body is read through a second command against a resource handle, so
-		// a failure here says only "The resource id 3505945688 is invalid" — no URL, no stack,
-		// because Tauri rejects commands with a plain string.
-		const detail = e instanceof Error ? e.message : String(e);
-		throw new Error(`Reading ${parse} body of ${url.toString()} failed: ${detail}`, { cause: e });
+		// httpFetch, not fetch: under Tauri this has to leave the webview to escape CORS.
+		const res = await httpFetch(url.toString(), { ...init, signal: controller.signal });
+
+		if (!res.ok) throw new HttpError(res.status, url.toString(), res.headers);
+
+		try {
+			return parse === 'json' ? ((await res.json()) as T) : ((await res.text()) as T);
+		} catch (e) {
+			// The body is read through a second command against a resource handle, so it can
+			// fail after the request itself succeeded — and that rejection carries no URL either.
+			const detail = e instanceof Error ? e.message : String(e);
+			throw new Error(`Reading ${parse} body of ${url.toString()} failed: ${detail}`, {
+				cause: e
+			});
+		}
+	} finally {
+		clearTimeout(timer);
 	}
 }
 

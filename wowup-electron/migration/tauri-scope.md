@@ -535,7 +535,22 @@ Three things were checked before deciding what to do:
 So the ad panel restores the *free* path, and the way to do that honestly is a real child
 webview in the nav rail — Tauri's multi-webview, behind the `unstable` feature.
 
-**Known open:** two unhandled rejections per sync — `The resource id … is invalid` — from a
+**Fixed: the "resource id … is invalid" rejections.** `network.ts` passed
+`AbortSignal.timeout(timeoutMs)`, which cannot be cleared — it fires at the deadline whether
+or not the request finished. Under Electron a post-completion abort is inert. plugin-http
+registers an abort listener that cancels the request in Rust, and by then the response
+resource has been freed, so every successful call rejected about ten seconds later with a
+bare string: no stack, no URL, and unhandled because nothing awaits a request that already
+returned. Replaced with an `AbortController` whose timer is cleared in `finally`. Measured:
+two per launch before, none after.
+
+**Build directories collide.** Both shells write `renderer-svelte/build/`, and they need
+opposite contents — relative asset paths for Electron's `file://`, absolute for Tauri's
+origin. Whichever built last wins, so `verify-boot.mjs` and `verify-tauri-boot.mjs` are only
+meaningful immediately after their own build. Running the Tauri package and then the
+Electron boot check reports `ERR_FAILED` that has nothing to do with the Electron build.
+
+**Previously open:** two unhandled rejections per sync — `The resource id … is invalid` — from a
 plugin-http response body. Ruled out: the fetch call itself, `network.ts`'s body read, the
 axios adapter (disabling it changes nothing), and the invoke path (patching
 `__TAURI_INTERNALS__.invoke` catches nothing). That leaves the Channel plugin-http streams
