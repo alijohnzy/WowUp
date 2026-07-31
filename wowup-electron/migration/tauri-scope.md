@@ -522,6 +522,48 @@ and updater signing (§3.2).
 Sequenced so each phase ends with a **runnable app**, and the riskiest unknown is answered
 in Phase 1 rather than Phase 6.
 
+### Install/update path — four failures behind one button ✅
+
+Reported as "clicking update does nothing". Each cause hid the next.
+
+1. **CurseForge returns `downloadUrl: null`** for files whose author opted out of
+   third-party distribution, and `/v1/mods/{id}/files/{fid}/download-url` answers **403**
+   with our key. The file is still on the CDN at a path derived from the file id
+   (`8543831` -> `files/8543/831/<name>`), verified 200 / 346 KB. That is where the
+   released app's stored URLs come from — its store is full of them. Empty URLs made
+   `installOrUpdateAddon` throw "Addon not found or invalid", logging one line and
+   otherwise doing nothing. **Not Tauri-specific**: neither renderer builds this URL, so a
+   fresh Electron install has the same gap. Existing installs hide it because sync never
+   overwrites a stored URL with an empty one — which is also why wiping the Tauri store
+   during scanner testing exposed it (33 of 177 Curse addons had no URL).
+
+2. **No preload means no `window.userDataPath` / `window.logPath`.** Every derived path
+   (`downloads/`, `wtf_backups/`, the updater) collapsed to a *relative* path and resolved
+   against the working directory — the read-only AppImage mount. Every install failed with
+   "Read-only file system (os error 30)" after four retries. `get_app_paths` now reports
+   both; the renderer reads them through getters, because the `wowup` singleton is
+   constructed at module import, before the bootstrap can inject anything. `download_file`
+   rejects a relative folder outright: on a writable working directory the old behaviour
+   would have silently scattered downloads next to the binary instead of erroring.
+
+3. **Assets were not bundled and handlebars lived on `window.libs`** (put there by
+   Electron's preload), so writing the WowUp companion addon threw on every sync. Assets
+   ship via `bundle.resources` — use the *map* form, since the array form stages them under
+   `_up_/` and `get_asset_file_path` joins `resource_dir/assets/`. handlebars is now
+   imported directly, dropping a `window.libs` coupling.
+
+4. **The "N updates" badge never decremented.** `ClientSelector` recounted only when
+   `anyUpdatesAvailable` — a boolean — changed; installing one of three left it `true`. It
+   now tracks `updatesRevision`, bumped on every recount. **Not Tauri-specific.**
+
+Worth recording, because it reads as a bug and is not: the three builds keep **separate
+stores** (`io.wowupcf.tauri`, `WowUpCf`, `WowUpCfSvelte`). They agree on `latestVersion`
+(same providers) but not on `installedVersion`, because **"Check Updates" only syncs
+provider metadata — it never re-reads the `.toc` files** (`onRefresh` -> `syncClient` +
+`loadAddons()` with `reScan = false`). After one build installs an update the others keep
+showing it as pending. Only ⋮ -> **Rescan Folders** fixes it; restarting does not, since
+`getAddons` rescans only when the store is *empty*.
+
 ### Phase 1 (part) — store, addons, window, app data ✅
 
 Driven by the app being unusable: it booted to a spinner behind an error banner because
