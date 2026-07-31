@@ -266,12 +266,112 @@ are unaffected. Nothing to do here, which removes the largest theoretical risk.
 
 ---
 
+## 3a. Plugin map (verified against crates.io, July 2026)
+
+All 30 official plugins were reviewed; these are the ones this app can use. Versions are
+the current stable releases, and `tauri` itself is **2.11.5**.
+
+| need | plugin | ver | notes |
+|---|---|---|---|
+| filesystem | `tauri-plugin-fs` | 2.5.1 | covers ~80% of Group A |
+| file dialogs | `tauri-plugin-dialog` | 2.7.2 | `SHOW_OPEN_DIALOG` |
+| HTTP from the webview | `tauri-plugin-http` | 2.5.9 | **the CORS answer** — §2 |
+| key/value store | `tauri-plugin-store` | 2.4.4 | replaces `electron-store` |
+| SQLite | `tauri-plugin-sql` | 2.4.0 | candidate for the addon DB, §Group E |
+| logging | `tauri-plugin-log` | 2.9.0 | replaces `electron-log` |
+| open URLs/paths | `tauri-plugin-opener` | 2.5.4 | `shell.openExternal`/`openPath` |
+| OS info | `tauri-plugin-os` | 2.3.2 | platform, locale, arch |
+| relaunch/exit | `tauri-plugin-process` | 2.3.1 | `RESTART_APP`, `QUIT_APP` |
+| launch args | `tauri-plugin-cli` | 2.4.1 | `GET_LAUNCH_ARGS` |
+| start at login | `tauri-plugin-autostart` | 2.5.1 | replaces `auto-launch` |
+| window geometry | `tauri-plugin-window-state` | 2.4.1 | replaces `app/window-state.ts` |
+| protocol handler | `tauri-plugin-deep-link` | 2.4.9 | `wowup://`, and the Wago OAuth route in §3.4 |
+| single instance | `tauri-plugin-single-instance` | 2.4.3 | `app/main.ts` already enforces this |
+| notifications | `tauri-plugin-notification` | 2.3.3 | partial answer for §3.3 |
+
+**Not covered by any plugin**, confirmed by review: zip/unzip (`zip` crate), file download
+with progress (`reqwest`), the CurseForge fingerprint (§3.1), power-monitor events
+(Group J — `tauri-plugin-screen-lock-status` is v1-only and unmaintained), tray/menu
+(core API, but a full rewrite), and zoom (no equivalent; do it in CSS).
+
+**Rejected:** `tauri-plugin-cors-fetch`, an unofficial plugin that hooks global `fetch`
+transparently. Tempting for §2, but it explicitly does **not** support `XMLHttpRequest` —
+so it would not fix the axios path in §2.1, the one place that actually needs help — and it
+requires `withGlobalTauri`, which widens the JS API surface. Use official `plugin-http`
+plus an axios adapter instead.
+
+---
+
+## 3b. What Phase 0 actually cost (findings from the build)
+
+Phase 0 is done and committed (`d0f8392c`). Four things were not visible from reading:
+
+1. **`webSecurity: false` is not the only file:// accommodation.** Hash routing
+   (`router.type`), relative asset paths (`paths.relative`), and the bespoke
+   `renderer-svelte/scripts/relative-paths.mjs` all exist for Electron's `file://` origin.
+   Under `tauri://localhost` all three are wrong: `goto()` degraded to a full-page
+   navigation, and because `+page.svelte` redirects to `/my-addons` on mount, the app
+   reloaded roughly thirty times a second. **Nothing was logged** — no error, no failed
+   request, just a window that never finished starting. All three are now conditional on
+   `BUILD_SHELL=tauri`.
+
+2. **Tauri's IPC is JSON; Electron's is structured clone.** `get-installed-products` is
+   typed `Map<WowClientType, InstalledProduct>` and its only consumer calls `.get()`. Under
+   Tauri the Map would have arrived as `{}` and every lookup returned undefined — the app
+   would have reported no WoW installation rather than failing. Anything crossing IPC as a
+   `Map`, `Set` or `Date` needs the same treatment; these are the only ones today.
+
+3. **`isElectron()` is used as "is a desktop shell present" in 14 places** — menus, tray,
+   zoom, auto-update, push, titlebar, language init. Under Tauri they all silently take the
+   browser branch. `isDesktop()` now exists for them, but flipping a guard before its Rust
+   command lands just moves the failure, so they migrate per phase. **This is the
+   per-phase checklist**; grep `isElectron(` to see what remains.
+
+4. **`wowup-lib-core` breaks the Vite dev server.** It is Parcel-built CommonJS whose
+   re-exports go through a runtime `$parcel$exportWildcard` helper, which defeats Vite's
+   static named-export detection — every named import is a missing binding in dev
+   (`SyntaxError: Importing binding name 'getTocForGameType' is not found`). Production is
+   unaffected because Rollup resolves it at build time, which is why it had gone unnoticed.
+   Fixed with `optimizeDeps.include`. **This affected `npm run svelte:dev` too** — it is not
+   a Tauri problem, it was just never hit because the dev server is rarely used.
+
+### The one thing Phase 0 did not solve
+
+The **production embedded-asset path does not boot on this machine** (Arch, WebKitGTK
+2.52.5): module scripts served over `tauri://localhost` fail with *"Importing a module
+script failed"*, alongside *"IPC custom protocol failed, Tauri will now use the postMessage
+interface instead"*. The same bundle loads correctly over `http://` (verified in both
+Chromium and the Tauri dev server), so this is the custom protocol, not the build.
+
+Everything above was therefore verified against `tauri dev` and against a debug binary once
+the routing fixes landed — the vertical slice is proven, but **packaging is not**. This
+needs settling before Phase 1 ends, since it may be a WebKitGTK 2.52 regression rather than
+anything in this repo. It is the single largest open risk after §3.4.
+
+---
+
 ## 4. Phased plan
 
 Sequenced so each phase ends with a **runnable app**, and the riskiest unknown is answered
 in Phase 1 rather than Phase 6.
 
-### Phase 0 — Prove the seam. `WarcraftController`, as suggested.
+### Phase 0 — Prove the seam. `WarcraftController`. ✅ done (`d0f8392c`)
+
+Delivered: `src-tauri/` crate, all six `IPC_WARCRAFT_*` channels as Rust commands with a
+`#[cfg(target_os)]` split, a hand-rolled `product.db` protobuf decoder, `ipc.ts` selecting
+its backend at runtime, and renderer console forwarding to the Rust log.
+
+Verified end-to-end in a running Tauri window — every command round-tripped:
+`ext=exe exe=WowClassic.exe clientType=6 isWow=true products=0 isMap=true`.
+21 Rust tests, 137 renderer tests, 88 E2E, `svelte-check` 0 errors, lint clean, and the
+Electron build still boots (`verify-boot.mjs`: 1 boot, 0 console errors).
+
+**Deferred out of Phase 0:** routing renderer HTTP through `plugin-http` (§2). It is a
+one-line change to `network.ts:37` plus two stragglers, but the axios adapter in §2.1 is
+the real work, and verifying it needs an `ow`-flavour build (the `wago` flavour ships
+`apiKey: ""` deliberately, so a CurseForge call cannot be exercised from it).
+
+<details><summary>original plan</summary>
 Right call: 6 channels, already isolated behind
 `renderer-svelte/src/lib/services/api/warcraft-api.service.ts`, and the win/mac/linux split
 exercises `#[cfg(target_os)]` on day one.
@@ -291,6 +391,11 @@ request returns 200, and `warcraft-api.service` tests pass unmodified.
 **Settle the routing question here too** — Tauri serves from a custom protocol, so hash
 routing, `paths.relative`, and the `resolve()` workaround in `src/lib/routes.ts` may all be
 removable. Measure it in Phase 0; it changes every route assertion downstream.
+
+</details>
+
+*(Outcome: the routing question was not optional — see §3b.1. Tauri now builds with
+pathname routing and absolute asset paths; Electron keeps hash routing and relative ones.)*
 
 ### Phase 1 — Filesystem + store (Groups A, D)
 The widest, dullest, least risky surface. Delete the 3 dead channels and `getSync` as you go.
