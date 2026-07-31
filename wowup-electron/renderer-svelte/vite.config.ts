@@ -194,6 +194,21 @@ export default defineConfig({
 	optimizeDeps: {
 		include: ['wowup-lib-core']
 	},
+	resolve: {
+		alias: {
+			// One axios, not two.
+			//
+			// axios ships separate CJS and ESM entries. `curseforge-v2` is CommonJS and
+			// `require('axios')` resolved to dist/browser/axios.cjs, while `import('axios')`
+			// from src/lib/http.ts resolved to index.js — two module instances with two
+			// independent `defaults`. Setting an adapter on ours therefore did nothing to the
+			// one actually issuing CurseForge requests, silently: the config looked correct and
+			// every call still went out over XHR.
+			//
+			// Pinning both to the ESM entry collapses them to one instance.
+			axios: fileURLToPath(new URL('./node_modules/axios/index.js', import.meta.url))
+		}
+	},
 	// routes.ts needs to know which router is in play to build an address, and the router is
 	// chosen at build time. Inlined as a literal so the dead branch is dropped from the bundle.
 	define: {

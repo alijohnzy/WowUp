@@ -73,7 +73,31 @@ progress events to the renderer, so the shape carries over 1:1. **Drops `yauzl` 
 
 ### Group C — Addon folder scanners · 2 channels → **custom Rust (hard, see §3.1)**
 
-> **This is why update detection does not work**, diagnosed 2026-07-31. The scan is what
+> **Done.** Both scanners are ported (`scanner.rs`) and produce **byte-identical results to
+> the Electron scanners across all 307 addon folders on the test machine** — same
+> fingerprints, same file counts, both flavours. Update detection works: a scan from an
+> empty database now reports `Coolinator 112 -> 114`, the addon that was previously stuck.
+>
+> Two fidelity traps, both of which change the fingerprint:
+>
+> * **`ripMatch` is not a tidy-up target.** The CurseForge scanner splits content on `\n`
+>   only and keeps one match per piece, deliberately reproducing how .NET treats lines
+>   ending in bare `\r`. On such a file its greedy dotall capture swallows the whole line,
+>   the result contains control characters, and the invalid-character check aborts the
+>   include list — so it follows nothing. CurseForge's own .NET fingerprinter does the same,
+>   so this is what makes an addon match.
+> * **The two scanners must not share an include matcher.** WowUp uses `matchAll` over the
+>   whole content and drops the `s` flag, so `.` stops at a line terminator and it follows
+>   every include in exactly the files CurseForge skips. Unifying them changed 10 of 307
+>   fingerprints.
+>
+> Verified by diffing against the Electron scanners directly. Note the compiled
+> `app/*.js` on disk was two months stale (missing the `mists` flavour), which made 68
+> folders look like mismatches until it was rebuilt from the TypeScript.
+>
+> ---
+>
+> **Original diagnosis (2026-07-31).** The scan is what
 > reconciles `installedVersion` with what is actually in the AddOns folder; without it the
 > Tauri build is frozen on whatever data it imported. Measured against disk:
 >
@@ -556,6 +580,33 @@ Three things were checked before deciding what to do:
 
 So the ad panel restores the *free* path, and the way to do that honestly is a real child
 webview in the nav rail — Tauri's multi-webview, behind the `unstable` feature.
+
+**Fixed: CurseForge folder matching.** `POST /v1/fingerprints` — the call that matches
+installed folders to addons — sends `content-type: application/json` and `x-api-key`, which
+forces a CORS preflight, and CurseForge answers `OPTIONS /v1/fingerprints` with **405 and no
+CORS headers**. Their GET endpoints preflight fine, which is why browsing addons worked
+while matching failed with a bare "AxiosError: Network Error" and the toast "An error
+occurred matching your addon folders with Curse". Electron never saw it: `webSecurity:
+false` skips the preflight.
+
+So this is the one place §2's correction does not reach — routing axios through Rust is
+genuinely required, not defence-in-depth.
+
+Two things had to be fixed for that routing to take effect:
+
+1. **`config.env.fetch` does not work.** axios's own fetch adapter reads it, and setting it
+   looked correct at runtime — `defaults.adapter` was `'fetch'`, `defaults.env.fetch` was a
+   function — yet not one CurseForge request reached it. Replaced with an explicit adapter
+   function, which has no such ambiguity.
+2. **There were two axios instances in the bundle.** axios ships separate CJS and ESM
+   entries; `curseforge-v2` is CommonJS so `require('axios')` resolved to
+   `dist/browser/axios.cjs`, while `import('axios')` resolved to `index.js`. Two modules,
+   two `defaults` — settings applied to one, requests issued by the other, silently. Pinned
+   with a `resolve.alias` in vite.config.ts. `grep -c isAxiosError build/_app/immutable/chunks/*.js`
+   went from 2 to 1.
+
+The unit test now asserts that an axios request *lands in* `httpFetch`, rather than that
+the settings look right — the old assertion passed throughout the entire failure.
 
 **Fixed: the "resource id … is invalid" rejections.** `network.ts` passed
 `AbortSignal.timeout(timeoutMs)`, which cannot be cleared — it fires at the deadline whether

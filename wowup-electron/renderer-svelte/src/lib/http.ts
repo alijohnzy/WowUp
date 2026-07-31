@@ -67,19 +67,93 @@ function annotateBodyReads(res: Response, url: string): Response {
 let axiosConfigured = false;
 
 /**
- * Points axios at {@link httpFetch}.
+ * An axios adapter that issues the request through {@link httpFetch}.
  *
- * `curseforge-v2` — the CurseForge v2 client, used for ten live calls in
- * curse-addon-provider.ts — calls the default axios instance directly, and axios in a
- * browser bundle defaults to `XMLHttpRequest`. Tauri cannot intercept XHR, so those calls
- * would be the one part of the renderer still bound by CORS. (This is also why
- * `tauri-plugin-cors-fetch` is not the answer: it hooks `fetch` only, and says so.)
+ * Written out rather than reusing axios's own `fetch` adapter via `config.env.fetch`. That
+ * looked like the tidy route — `getFetch()` does read `config.env` — but measured against
+ * the running app it never took effect: `axios.defaults.adapter` was `'fetch'` and
+ * `defaults.env.fetch` was a function, and still not one CurseForge request reached
+ * httpFetch. An explicit adapter has no such ambiguity.
  *
- * Rather than a hand-written adapter, this uses axios's own `fetch` adapter and hands it a
- * custom implementation via `config.env.fetch`, which is a supported entry point
- * (`getFetch` reads `config.env` when resolving the adapter). `env` is not in axios's merge
- * map, so it deep-merges from defaults and a caller that passes no `env` — which
- * curseforge-v2 does not — inherits this.
+ * This matters because of a specific CurseForge behaviour. `POST /v1/fingerprints` — the
+ * call that matches installed folders to addons — sends `content-type: application/json`
+ * and `x-api-key`, which forces a CORS preflight, and CurseForge answers
+ * `OPTIONS /v1/fingerprints` with **405 and no CORS headers**. Their GET endpoints preflight
+ * fine, which is why browsing addons worked while matching failed with a bare
+ * "AxiosError: Network Error", surfacing as "An error occurred matching your addon folders
+ * with Curse". Electron never saw it because `webSecurity: false` skips the preflight
+ * entirely. Going through Rust does too.
+ */
+async function tauriAxiosAdapter(config: Record<string, unknown>): Promise<unknown> {
+	const method = String(config.method ?? 'get').toUpperCase();
+	const url = String(config.url ?? '');
+
+	// AxiosHeaders in recent versions; toJSON flattens it to a plain record.
+	const rawHeaders = config.headers as { toJSON?: () => Record<string, string> } | undefined;
+	const headers = rawHeaders?.toJSON?.() ?? (config.headers as Record<string, string>) ?? {};
+
+	// axios has already run transformRequest, so `data` is a string for a JSON body.
+	const body = config.data as BodyInit | undefined;
+
+	const timeout = typeof config.timeout === 'number' && config.timeout > 0 ? config.timeout : 0;
+	const controller = new AbortController();
+	const timer = timeout ? setTimeout(() => controller.abort(), timeout) : undefined;
+
+	try {
+		const res = await httpFetch(url, {
+			method,
+			headers,
+			// A GET/HEAD with a body is a TypeError.
+			body: method === 'GET' || method === 'HEAD' ? undefined : body,
+			signal: controller.signal
+		});
+
+		const text = await res.text();
+		const responseType = String(config.responseType ?? 'json');
+		let data: unknown = text;
+		if (responseType === 'json') {
+			try {
+				data = text.length ? JSON.parse(text) : null;
+			} catch {
+				// Leave it as text; axios does the same for unparseable JSON.
+				data = text;
+			}
+		}
+
+		const response = {
+			data,
+			status: res.status,
+			statusText: res.statusText,
+			headers: Object.fromEntries(res.headers.entries()),
+			config,
+			request: null
+		};
+
+		// cfv2 reads `e.response.status` on failure, so a non-2xx has to reject with the
+		// response attached rather than resolve.
+		const validate = config.validateStatus as ((s: number) => boolean) | null | undefined;
+		const ok = validate ? validate(res.status) : res.status >= 200 && res.status < 300;
+		if (!ok) {
+			const error = new Error(`Request failed with status code ${res.status}`) as Error & {
+				response?: unknown;
+				isAxiosError?: boolean;
+			};
+			error.response = response;
+			error.isAxiosError = true;
+			throw error;
+		}
+
+		return response;
+	} finally {
+		clearTimeout(timer);
+	}
+}
+
+/**
+ * Points axios at {@link tauriAxiosAdapter}.
+ *
+ * `curseforge-v2` calls the default axios instance directly, and axios in a browser bundle
+ * defaults to `XMLHttpRequest`, which Tauri cannot intercept.
  *
  * Idempotent, and a no-op outside Tauri so the Electron build keeps its existing transport.
  */
@@ -90,8 +164,7 @@ export async function configureAxiosForTauri(): Promise<void> {
 	// Imported lazily: axios reaches the renderer only as curseforge-v2's dependency, and the
 	// Electron build has no reason to pull it into the entry chunk.
 	const { default: axios } = await import('axios');
-	axios.defaults.adapter = 'fetch';
-	axios.defaults.env = { ...axios.defaults.env, fetch: httpFetch };
+	axios.defaults.adapter = tauriAxiosAdapter as never;
 }
 
 /** Test seam: lets a spec re-run the one-shot configuration. */

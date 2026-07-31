@@ -9,6 +9,7 @@ pub mod constants;
 pub mod files;
 pub mod fingerprint;
 pub mod import;
+pub mod scanner;
 pub mod store;
 pub mod tray;
 pub mod window;
@@ -127,6 +128,8 @@ pub fn run() {
             files::stat_files,
             files::list_files,
             files::readdir,
+            scanner::curse_get_scan_results,
+            scanner::wowup_get_scan_results,
             tray::create_tray_menu,
             window::minimize_window,
             window::maximize_window,

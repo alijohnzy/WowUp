@@ -49,15 +49,44 @@ describe('httpFetch', () => {
 });
 
 describe('configureAxiosForTauri', () => {
-	it('routes curseforge-v2 off XHR and onto httpFetch', async () => {
-		// curseforge-v2 calls the default axios instance, and axios in a browser bundle
-		// defaults to XMLHttpRequest — which Tauri cannot intercept.
+	it('sends an axios request through httpFetch rather than XHR', async () => {
+		// Behavioural on purpose. The previous version asserted `axios.defaults.adapter` and
+		// `defaults.env.fetch` and passed while every CurseForge request still went out over
+		// XHR — the bundle had two axios instances (CJS for curseforge-v2, ESM for us), so the
+		// settings were applied to one and read from the other. Asserting the settings proved
+		// nothing; asserting a request lands here proves the adapter is wired.
 		tauriPresent = true;
-		await configureAxiosForTauri();
+		tauriFetchMock.mockResolvedValue(
+			new Response('{"ok":true}', { status: 200, headers: { 'content-type': 'application/json' } })
+		);
 
+		await configureAxiosForTauri();
 		const { default: axios } = await import('axios');
-		expect(axios.defaults.adapter).toBe('fetch');
-		expect((axios.defaults.env as { fetch?: unknown } | undefined)?.fetch).toBe(httpFetch);
+		const res = await axios({
+			method: 'post',
+			url: 'https://api.curseforge.com/v1/fingerprints',
+			data: { fingerprints: [1, 2] }
+		});
+
+		expect(tauriFetchMock).toHaveBeenCalled();
+		expect(tauriFetchMock.mock.calls.at(-1)?.[0]).toBe(
+			'https://api.curseforge.com/v1/fingerprints'
+		);
+		expect(res.status).toBe(200);
+		expect(res.data).toEqual({ ok: true });
+	});
+
+	it('rejects a non-2xx with the response attached, as curseforge-v2 expects', async () => {
+		// httpSend reads `e.response.status`; resolving instead would hide every API error.
+		tauriPresent = true;
+		tauriFetchMock.mockResolvedValue(new Response('nope', { status: 403 }));
+
+		await configureAxiosForTauri();
+		const { default: axios } = await import('axios');
+
+		await expect(
+			axios({ method: 'get', url: 'https://api.curseforge.com/v1/mods/1' })
+		).rejects.toMatchObject({ response: { status: 403 } });
 	});
 
 	it('leaves axios alone under Electron', async () => {

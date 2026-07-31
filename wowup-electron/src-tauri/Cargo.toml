@@ -25,6 +25,8 @@ log = "0.4"
 tokio = { version = "1", features = ["fs"] }
 # glob matching for list-files / list-entries, which the JS did with globrex.
 globset = "0.4"
+# The WowUp scanner fingerprints files with md5, matching file.utils.ts hashFile.
+md5 = "0.7"
 
 # Plugin set. Deliberately minimal — each phase adds its own.
 tauri-plugin-log = "2"

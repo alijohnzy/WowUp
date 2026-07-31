@@ -34,6 +34,8 @@ import {
 	IPC_MAXIMIZE_WINDOW,
 	IPC_MINIMIZE_WINDOW,
 	IPC_COPY_FILE_CHANNEL,
+	IPC_CURSE_GET_SCAN_RESULTS,
+	IPC_WOWUP_GET_SCAN_RESULTS,
 	IPC_CREATE_DIRECTORY_CHANNEL,
 	IPC_DELETE_DIRECTORY_CHANNEL,
 	IPC_GET_HOME_DIR,
@@ -140,7 +142,12 @@ export const CHANNEL_PARAMS: Readonly<Record<string, readonly string[]>> = {
 	[IPC_LIST_FILES_CHANNEL]: ['sourcePath', 'filter'],
 	// copy-file is invoked with one object argument (services/files.ts:77), not positionals,
 	// so the Rust command takes a single `request` and destructures it there.
-	[IPC_COPY_FILE_CHANNEL]: ['request']
+	[IPC_COPY_FILE_CHANNEL]: ['request'],
+
+	// Phase 2 — addon folder scanners (Group C). These are what reconcile installedVersion
+	// with what is actually on disk, so update detection depends on them.
+	[IPC_CURSE_GET_SCAN_RESULTS]: ['filePaths'],
+	[IPC_WOWUP_GET_SCAN_RESULTS]: ['filePaths']
 };
 
 /** `warcraft-get-executable-name` -> `warcraft_get_executable_name`. */
