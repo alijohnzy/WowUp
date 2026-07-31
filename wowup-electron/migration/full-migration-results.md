@@ -1126,6 +1126,57 @@ green before and after the real fix.
 
 Verification after: 1367 files / 0 errors, 90 unit, 81 E2E, clean packaged boot.
 
+### The follow-up: the same list, not reactive
+
+Reported next: *"got a new update while app was on but the list did not update again… aren't you
+using some sort of `$derived` or something?"* The badge said **1 update**; the grid did not
+contain one.
+
+The reactive plumbing was there and unconnected. `session.autoUpdateCompleteAt` is a `$state`
+field, written by the hourly job in `auto-update.ts` and **read by nothing in the renderer**.
+Angular's page subscribed to it:
+
+```ts
+this._sessionService.autoUpdateComplete$
+  .pipe(switchMap(() => from(this.loadAddons())))
+  .subscribe(() => this._cdRef.markForCheck());
+```
+
+A second instance of the same shape sat next to it. An install finishing called
+`gridApi.refreshCells()` where Angular replaced the row's `AddonViewModel`. The model is a
+**snapshot** — `sortOrder`, both version columns and the status text all read through the `addon`
+it was constructed with — and ag-grid re-sorts on new row data, not on a repaint. So a finished
+update kept its old version in every column except the status one, which disagreed with them
+because the status cell tracks install events itself, and the row stayed in the Update group.
+
+> `$state` is not reactivity on its own; it is one half of it. A migration audit that checks
+> "was this Subject ported to a rune?" answers yes here and misses that nothing subscribes. The
+> Angular original made the missing half impossible to overlook — an `Observable` with no
+> `.subscribe()` is visibly inert — where a `$state` field with no reader looks exactly like one
+> that has readers.
+
+**Why the §11 emitter lens did not catch it.** It did run, and it found three of these. But
+`auto-update.ts` — the publisher — is a module *that same audit created*, in its own round of
+fixes. The lens ran over the code as it stood before them. **A one-off sweep cannot cover what
+it causes**, so this one is now a test rather than a pass: `session-consumers.spec.ts` requires
+every public member of the `Session` singleton to be named somewhere else in the renderer. Four
+members are allowlisted as dead in Angular too (verified against `src/app`, one of them
+commented out there); everything else must have a consumer. Removing the fix turns the guard red.
+
+The install-side logic moved to `addon-rows.ts` so it could be tested at all: reaching it through
+the UI means stubbing a download, an unzip and a filesystem, which is out of proportion to
+fifteen lines and three branches. The auto-update path is an E2E, using Playwright's clock to
+advance the hour rather than wait it:
+
+```ts
+await page.clock.install();          // before boot — the interval must be created against it
+…
+await page.clock.fastForward('01:00:01');
+await expect.poll(() => rowOrder(page)).toEqual(['Zulu', 'Alpha']);
+```
+
+Verified failing first: without the subscriber the order stays `Alpha, Zulu`.
+
 ---
 
 ## 15. Reproducing
