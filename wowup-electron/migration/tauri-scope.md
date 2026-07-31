@@ -560,6 +560,16 @@ app's DOM nor `invoke` — Tauri has blocked IPC from iframes since 2.0.0-beta.2
 a webview would have needed: granting a capability `remote.urls` gives the origin *every* app
 command, which for a frame running third-party ad code is not acceptable.
 
+**The iframe's one real cost: it shares the app's web process.** A video ad made WebKitGTK
+reach for GStreamer, which it could not find inside the AppImage — "GStreamer element appsink
+not found", then a NULL instance handed to `g_signal_connect_data`, and the WebKitWebProcess
+went down. As a separate window that killed only the ad; as an iframe it took the UI with it
+and left the app stuck on "Loading...". The proxy now answers `Content-Security-Policy:
+media-src 'none'`, which is the one directive that stops it — naming any of `default-src`,
+`script-src` or `frame-src` would blank the ad instead, turning a crash into a permanently
+empty slot. Note the plugins *are* installed system-wide; the AppImage's environment is what
+cannot see them, so this is not something a user can fix by installing a package.
+
 Three things had to be true before anything rendered, each hidden by the last:
 
 - **The token cannot come back over a top-level navigation.** WebKitGTK blanks the document
