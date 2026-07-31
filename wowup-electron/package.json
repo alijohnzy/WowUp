@@ -90,7 +90,8 @@
     "tauri:test": "cargo test --manifest-path src-tauri/Cargo.toml",
     "tauri:renderer:build": "cd renderer-svelte && cross-env BUILD_SHELL=tauri BUILD_FLAVOR=wago NODE_ENV=production npm run build",
     "tauri:renderer:dev": "cd renderer-svelte && cross-env BUILD_SHELL=tauri BUILD_FLAVOR=wago npm run dev",
-    "tauri:verify:boot": "node scripts/verify-tauri-boot.mjs"
+    "tauri:verify:boot": "node scripts/verify-tauri-boot.mjs",
+    "tauri:link": "node scripts/link-tauri-appimage.mjs"
   },
   "browserslist": [
     "chrome 98"

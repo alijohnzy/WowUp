@@ -429,6 +429,17 @@ Two things had to be settled, neither of them about this app:
 - **`bundle.category`** was `Utility`; `electron-builder-svelte.json` declares `Game`.
   Corrected.
 
+**Running both shells side by side.** The AppImage filenames already differed
+(`WowUp-CF-Tauri_…` vs `WowUp-CF-Svelte-…`), but the *window titles* did not: Electron
+titles its window `WowUp CF` for the `ow` flavour (`app/main.ts:290`) and Tauri's was the
+same string, so the two were indistinguishable in alt-tab and the taskbar. Tauri's is now
+`WowUp CF (Tauri)`.
+
+`npm run tauri:link` points `~/Applications/WowUp-CF-Tauri.AppImage` at the current build.
+It exists because the bundler emits a versioned filename, so a hand-made symlink goes stale
+on the next version bump; the script repoints it, and refuses to replace anything that is
+not already a symlink.
+
 Still to do for full packaging parity: the `wowup://` protocol association (comes with
 `plugin-deep-link`, Group I), Windows and macOS bundles (untested — this was a Linux host),
 and updater signing (§3.2).
