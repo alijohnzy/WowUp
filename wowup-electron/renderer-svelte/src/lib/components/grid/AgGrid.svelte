@@ -63,6 +63,17 @@
 		height: 100%;
 	}
 
+	/* ag-grid lays out whatever a header component hands back as a flex item of
+	   .ag-header-cell-comp-wrapper. The cell-renderer bridge hands back a plain div, so it
+	   shrink-wrapped to its content: the sort click target was 61x24 inside a 150x56 header
+	   cell, and the cursor only turned into a pointer over the words. Angular had no such
+	   wrapper — `host: { class: "ag-cell-label-container" }` put the class on the component's
+	   own element, so ag-grid's sizing applied to it directly. */
+	:global(.ag-header-cell-comp-wrapper > .ag-svelte-cell) {
+		flex: 1 1 auto;
+		height: 100%;
+	}
+
 	/* Replaces CellWrapTextComponent, an ag-grid renderer component that existed only to
 	   clamp a cell to three lines. Applied via `cellClass: 'cell-wrap-text'`, so the cell
 	   stays plain text — no component instance, no bridge, no mount/destroy per row. */

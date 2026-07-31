@@ -266,6 +266,51 @@ test('an update found while the page is open reaches the grid', async ({ page })
 	await expect.poll(() => rowOrder(page)).toEqual(['Zulu', 'Alpha']);
 });
 
+// The whole header cell sorts, not just its label. The port wraps every Svelte cell renderer
+// in a div that ag-grid lays out as a flex item, so it shrink-wrapped to the text and the click
+// target was 61x24 inside a 150x56 header — the cursor only turned into a pointer over the
+// words. Angular put the class on the component host, so ag-grid's own layout applied to it.
+test('the whole header cell sorts, not just the label', async ({ page }) => {
+	await stubPreload(page);
+	await openMyAddons(page);
+
+	expect(await rowOrder(page)).toEqual(['WeakAuras', 'DBM', 'Details']);
+
+	// Below and to the right of the text, still well inside the cell.
+	const status = page.locator('.ag-header-cell').nth(1);
+	await status.click({ position: { x: 110, y: 45 } });
+
+	// asc -> desc, so the ignored addon leads and the one needing an update goes last.
+	await expect.poll(() => rowOrder(page)).toEqual(['Details', 'DBM', 'WeakAuras']);
+});
+
+test('the header click target fills the space ag-grid gives it', async ({ page }) => {
+	// The click above only proves one point is live. This pins the region, so a bridge change
+	// that re-shrinks the wrapper fails here with the reason rather than at some arbitrary
+	// coordinate. ag-grid reserves the padding either side of .ag-header-cell-comp-wrapper for
+	// the resize handle and the select-all checkbox, so the wrapper is the whole budget.
+	await stubPreload(page);
+	await openMyAddons(page);
+
+	const boxes = await page
+		.locator('.ag-header-cell')
+		.nth(1)
+		.evaluate((cell) => {
+			const rect = (sel: string) => {
+				const el = cell.querySelector(sel);
+				if (!el) return null;
+				const { width, height } = el.getBoundingClientRect();
+				return { w: Math.round(width), h: Math.round(height) };
+			};
+			return {
+				wrapper: rect('.ag-header-cell-comp-wrapper'),
+				target: rect('.ag-cell-label-container')
+			};
+		});
+
+	expect(boxes.target).toEqual(boxes.wrapper);
+});
+
 test('renders installed addons as grid rows', async ({ page }) => {
 	await stubPreload(page);
 	await openMyAddons(page);
