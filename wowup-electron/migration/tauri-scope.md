@@ -522,6 +522,38 @@ and updater signing (§3.2).
 Sequenced so each phase ends with a **runnable app**, and the riskiest unknown is answered
 in Phase 1 rather than Phase 6.
 
+## Benchmark — the three shells, wago flavour
+
+`scripts/bench-shells.mjs`, median of 3 runs, unpackaged production builds, same machine and
+same addon library (204 addons).
+
+| shell | boot | idle PSS | procs | build output |
+| --- | --- | --- | --- | --- |
+| Angular + Electron | 603ms | 1022MB | 41 | 9MB |
+| Svelte + Electron | — | 896MB | 40 | 16MB |
+| Svelte + Tauri | 853ms | 554MB | **3** | 32MB |
+
+Memory is **PSS**, not summed RSS — summing RSS across a process tree counts each shared page
+once per process and reported ~4GB for Electron before that was corrected.
+
+What it says: Tauri holds roughly **half the memory** and runs **3 processes instead of ~40**,
+and boots about 250ms slower to "renderer running". Swapping Angular for Svelte inside Electron
+saved ~12% of memory; swapping Electron for Tauri saved ~40% more.
+
+Size needs care. The build outputs above exclude the ~312MB Electron runtime every Electron
+build ships, while Tauri's 32MB *is* the whole application. Packaged, though, the Tauri
+AppImage is **larger**: 162MB against Electron's 131MB — the bundled GStreamer (needed for the
+video ad, see above) costs more than the engine saves.
+
+Two caveats worth keeping:
+- **Svelte + Electron reports no boot time**, and that is a defect rather than a gap in the
+  harness: that combination forwards its renderer console nowhere. `forwardConsoleToTauri()`
+  covers Tauri and `window.log` (app/preload.ts) covers Angular, but the Svelte renderer under
+  Electron logs into a void — in normal use as well as here.
+- Boot is measured to "renderer running" (`Language setup start`), not to addons on screen.
+  `syncAllClients` would be the better mark but both renderers log it at debug level and
+  electron-log drops it.
+
 ### The ad frame — what actually ports, and what does not ✅
 
 **CurseForge/Overwolf: no path.** `AdWebView`'s CF branch is
