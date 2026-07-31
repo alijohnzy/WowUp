@@ -162,8 +162,6 @@ pub fn forward_window_events(window: &WebviewWindow) {
                 let _ = handle.hide();
                 // Otherwise the window keeps a taskbar entry it can no longer be raised from.
                 let _ = handle.set_skip_taskbar(true);
-                // The ad frame is its own window and does not follow its parent out of sight.
-                crate::ad::set_visible(handle.app_handle(), false);
                 return;
             }
         }
@@ -173,17 +171,6 @@ pub fn forward_window_events(window: &WebviewWindow) {
                 log::error!("failed to emit {channel}: {e}");
             }
         };
-
-        // The ad frame is a separate window overlaying this one, so it has to be re-placed
-        // whenever this one moves or resizes — otherwise it sits where the slot used to be.
-        if matches!(
-            event,
-            tauri::WindowEvent::Resized(_) | tauri::WindowEvent::Moved(_)
-        ) {
-            if let Err(e) = crate::ad::position_over_slot(handle.app_handle()) {
-                log::debug!("ad frame reposition: {e}");
-            }
-        }
 
         match event {
             tauri::WindowEvent::Resized(_) => {

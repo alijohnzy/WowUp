@@ -137,6 +137,13 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_deep_link::init())
+        // The ad frame is an <iframe> on its own origin; this serves it. See src/ad.rs for
+        // why it is proxied rather than framed directly, and why that origin matters.
+        .register_asynchronous_uri_scheme_protocol(ad::AD_SCHEME, |_ctx, request, responder| {
+            tauri::async_runtime::spawn(async move {
+                responder.respond(ad::serve(request).await);
+            });
+        })
         .plugin(
             tauri_plugin_log::Builder::new()
                 .clear_targets()
@@ -161,7 +168,6 @@ pub fn run() {
                 .level_for("rustls", log::LevelFilter::Info)
                 .build(),
         )
-        .manage(ad::AdFrame::default())
         .manage(store::Stores::default())
         .manage(tray::TrayState::default())
         .manage(window::Quitting::default())
@@ -182,10 +188,6 @@ pub fn run() {
             files::stat_files,
             files::list_files,
             files::readdir,
-            ad::ad_frame_open,
-            ad::ad_frame_close,
-            ad::ad_frame_reload,
-            ad::ad_frame_set_bounds,
             install::download_file,
             install::unzip_file,
             scanner::curse_get_scan_results,

@@ -154,9 +154,6 @@ export const CHANNEL_PARAMS: Readonly<Record<string, readonly string[]>> = {
 	// Phase 2 — install/update. Both take a single request object, and download-file replies
 	// on the caller's own `responseKey` channel rather than by resolving.
 	[IPC_DOWNLOAD_FILE_CHANNEL]: ['request'],
-	// The ad frame is a child webview positioned by the renderer; see src-tauri/src/ad.rs.
-	'ad-frame-open': ['url', 'userAgent', 'x', 'y', 'width', 'height'],
-	'ad-frame-set-bounds': ['x', 'y', 'width', 'height'],
 	[IPC_UNZIP_FILE_CHANNEL]: ['request']
 };
 

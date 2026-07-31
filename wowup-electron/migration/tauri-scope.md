@@ -522,6 +522,63 @@ and updater signing (§3.2).
 Sequenced so each phase ends with a **runnable app**, and the riskiest unknown is answered
 in Phase 1 rather than Phase 6.
 
+### The ad frame — what actually ports, and what does not ✅
+
+**CurseForge/Overwolf: no path.** `AdWebView`'s CF branch is
+`document.createElement('owadview')`, a custom element supplied by `@overwolf/ow-electron`
+(this repo depends on 39.8.10), and `CurseAddonProvider.getAdPageParams()` returns
+`pageUrl: ''` because the content comes from the runtime, not a URL. Researched rather than
+assumed: Overwolf's docs describe `<owadview/>` as "based on the Electron `<webview/>` tag",
+and the web SDK (`OwAd`, `content.overwolf.com/libs/ads/latest/owads.min.js`) needs
+`manifest.json` permissions plus Overwolf's backend enabled for the app's uid. Both require
+an Overwolf-provided runtime and account-side enablement — not a code problem.
+
+**Wago: an `<iframe>`, after two wrong turns.** Both are worth recording, because both look
+right until they are running.
+
+1. `Window::add_child` — a positioned child webview. Does not position at all on Linux:
+   `tauri-runtime-wry` builds child webviews into the window's `default_vbox()`, and wry only
+   honours absolute bounds for a `gtk::Fixed` (`add_to_container`); a `gtk::Box` falls through
+   to `pack_start(expand, fill)`. The ad and the UI split the window between them. Upstream
+   [tauri-apps/tauri#10420](https://github.com/tauri-apps/tauri/issues/10420) is **open**,
+   with a forked `tao`/`wry` as the only fix.
+2. A borderless child window. Positions correctly, and was wrong for a more fundamental
+   reason: **a native overlay composites above the page**. It painted over the addon detail
+   dialog and appeared as a second entry in alt-tab. No amount of tuning fixes that — it is
+   what an overlay is. Electron's `<webview>` avoids it by being a real element in the page's
+   layer tree, which Tauri has no equivalent of.
+
+So the frame is an `<iframe>`, served through a `wowupad:` custom scheme handler
+(`src-tauri/src/ad.rs`) that fetches `addons.wago.io/wowup_ad` and re-serves it. The proxy
+exists because the page answers `X-Frame-Options: SAMEORIGIN`; the injected `<base>` is what
+keeps its protocol-relative script srcs resolving to `https://` instead of `wowupad://`.
+
+Security: the frame is a *different origin* to the app, so ad JavaScript gets neither the
+app's DOM nor `invoke` — Tauri has blocked IPC from iframes since 2.0.0-beta.20
+([GHSA-57fm-592m-34r7](https://github.com/tauri-apps/tauri/security/advisories/GHSA-57fm-592m-34r7)).
+`postMessage` is the only channel, origin-checked on receipt. This is a smaller surface than
+a webview would have needed: granting a capability `remote.urls` gives the origin *every* app
+command, which for a frame running third-party ad code is not acceptable.
+
+Three things had to be true before anything rendered, each hidden by the last:
+
+- **The token cannot come back over a top-level navigation.** WebKitGTK blanks the document
+  the moment one starts, and cancelling it in `on_navigation` does not bring the page back —
+  so the ad was destroyed by the mechanism reporting the token, while the logs said the token
+  had arrived.
+- **Cross-origin navigation cannot be blocked.** Electron's `will-navigate` guard only fires
+  for the top frame; wry's fires for subframes too and cannot tell them apart, so porting the
+  rule blocked `cdn.intergient.com` — the iframe RAMP renders the creative in.
+- **The ad needs a normal-looking user agent**, exactly as `WAGO_AD_USER_AGENT`'s comment has
+  said all along. WebKitGTK's default is Safari-like and the slot stays empty.
+
+Flavour: `BUILD_FLAVOR=tauri` (`environment.{prod,dev}.tauri.ts`) is `ow` plus `wago.enabled`,
+so CurseForge keeps serving the library while the Wago ad runs. Wago is enabled as a provider
+too — the frame hands back an API token, and taking it while never using it would be showing
+the ad without the exchange it pays for. Both providers set `adRequired`, so `VerticalTabs`
+renders one frame, preferring the params that have a page; the fallback keeps the ow-electron
+build rendering its own `<owadview>`.
+
 ### Install/update path — four failures behind one button ✅
 
 Reported as "clicking update does nothing". Each cause hid the next.

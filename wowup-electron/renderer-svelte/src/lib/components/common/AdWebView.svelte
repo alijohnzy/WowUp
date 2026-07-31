@@ -14,11 +14,12 @@
 
 	import { AppConfig } from '$config/environment';
 	import { on, isTauri } from '$lib/ipc';
-	import { adFrame } from '$lib/services/ad-frame';
+	import { adFrameSrc, onAdFrameToken } from '$lib/services/ad-frame-proxy';
 	import { session } from '$lib/state/session.svelte';
 	import { confirmLinkNavigation } from '$lib/services/links';
 	import { getAssetFilePath } from '$lib/services/files';
 	import { onUiMessage } from '$lib/services/ui-message';
+	import { t } from '$lib/i18n.svelte';
 	import type { AdPageOptions } from 'wowup-lib-core';
 
 	const IPC_WEBVIEW_NEW_WINDOW = 'webview-new-window';
@@ -50,6 +51,14 @@
 
 	let tag: WebviewTag | undefined;
 	let ready = $state(false);
+	let reloadNonce = $state(0);
+
+	// Only meaningful under Tauri; `#key` on it forces a fresh document on reload.
+	let frameSrc = $derived(adFrameSrc(options, reloadNonce));
+
+	// The frame is cross-origin by design, so postMessage is the only way the token can come
+	// back — the same key `assets/preload/wago.js` sends over IPC in the Electron build.
+	$effect(() => (isTauri() ? onAdFrameToken(() => (ready = true)) : undefined));
 
 	function onWebviewReady() {
 		ready = true;
@@ -99,31 +108,12 @@
 		return placeholder;
 	}
 
-	// Tauri has no <webview> tag, so the frame is a child webview overlaid on the window and
-	// kept over this container. The trade-off is that it is not a document node: it cannot be
-	// styled, and it paints above everything, so it has to be closed rather than hidden.
-	function tauriAdFrame(container: HTMLElement) {
-		const untrack = adFrame.track(container);
-
-		adFrame
-			.open(container, options.pageUrl, options.userAgent)
-			.then(() => (ready = true))
-			.catch((e: unknown) => console.error('ad frame open failed', e));
-
-		return () => {
-			untrack();
-			ready = false;
-			void adFrame.close().catch((e: unknown) => console.error('ad frame close failed', e));
-		};
-	}
-
 	function adWebview(container: HTMLElement) {
-		// The CurseForge branch below needs <owadview>, which only @overwolf/ow-electron
-		// supplies, so under Tauri only the Wago frame can run at all. The tauri flavour
-		// enables Wago for exactly that reason — see environment.prod.tauri.ts.
-		if (isTauri()) {
-			return options.pageUrl ? tauriAdFrame(container) : undefined;
-		}
+		// Under Tauri the frame is an <iframe> in the template below, not something built
+		// here — see $lib/services/ad-frame-proxy and src-tauri/src/ad.rs. The CurseForge
+		// branch needs <owadview>, which only @overwolf/ow-electron supplies, so the tauri
+		// flavour enables Wago to have an ad at all (environment.prod.tauri.ts).
+		if (isTauri()) return;
 
 		let placeholder: HTMLElement | undefined;
 
@@ -148,7 +138,8 @@
 		onUiMessage((msg) => {
 			if (msg.action !== 'ad-frame-reload' || !ready) return;
 			if (isTauri()) {
-				void adFrame.reload().catch((e: unknown) => console.error('ad frame reload failed', e));
+				// Re-assigning src is the iframe's reloadIgnoringCache: the proxy refetches.
+				reloadNonce += 1;
 			} else {
 				tag?.reloadIgnoringCache();
 			}
@@ -169,11 +160,26 @@
 	);
 </script>
 
-<div class="webview-container" {@attach adWebview}></div>
+<div class="webview-container" {@attach adWebview}>
+	{#if isTauri() && frameSrc}
+		{#key frameSrc}
+			<!-- A document node, unlike a child webview or a borderless window: it clips and
+			     z-orders with the app, so dialogs draw over it instead of under it. -->
+			<iframe src={frameSrc} title={t('ADS.AD_EXPLAINER_BUTTON')} referrerpolicy="no-referrer"
+			></iframe>
+		{/key}
+	{/if}
+</div>
 
 <style>
 	.webview-container {
 		width: 100%;
 		height: 100%;
+	}
+
+	iframe {
+		width: 100%;
+		height: 100%;
+		border: 0;
 	}
 </style>
