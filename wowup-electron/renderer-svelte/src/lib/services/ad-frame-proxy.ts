@@ -31,9 +31,7 @@ interface AdFrameMessage {
  * which is what keeps the frame out of the app's DOM.
  */
 function schemeOrigin(): string {
-	return platform() === 'win32'
-		? `http://${AD_SCHEME}.localhost`
-		: `${AD_SCHEME}://localhost`;
+	return platform() === 'win32' ? `http://${AD_SCHEME}.localhost` : `${AD_SCHEME}://localhost`;
 }
 
 /**
@@ -69,7 +67,9 @@ export function onAdFrameToken(onReceived: () => void): () => void {
 		if (event.origin !== origin) return;
 
 		const data = event.data as AdFrameMessage | null;
-		if (!data || data.wowup !== 'wago-token') return;
+		if (!data) return;
+
+		if (data.wowup !== 'wago-token') return;
 
 		const token = data.token;
 		// Same guard as app/wago-handler.ts:29. Never log the token itself.

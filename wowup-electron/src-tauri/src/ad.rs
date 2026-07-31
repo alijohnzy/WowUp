@@ -102,6 +102,7 @@ const SHIM: &str = r#"<script>
   }
 
   keyExpectedTimeout = window.setTimeout(backoffReload, 30000);
+
 })();
 </script>"#;
 

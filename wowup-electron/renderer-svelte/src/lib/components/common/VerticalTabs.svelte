@@ -81,6 +81,12 @@
 	// what keeps the ow-electron build rendering its own ad.
 	let adParams = $derived(adPageParams.find((params) => params.pageUrl) ?? adPageParams[0]);
 
+	// The slot is sized by the ad actually being rendered, not by which providers are enabled.
+	// The tauri flavour enables both, so the CurseForge sizing (400x300, for Overwolf's
+	// <owadview>) was winning over the Wago ad it actually shows — a 300x250 creative in a
+	// 400x300 hole. A pageUrl is what tells them apart; CurseForge has none.
+	let adKind = $derived(adParams ? (adParams.pageUrl ? 'wago' : 'curseforge') : undefined);
+
 	const isSelected = (path: RoutePath) => currentPath(page.route?.id) === path;
 
 	const isDisabled = (tab: Tab) =>
@@ -100,8 +106,8 @@
 	class:mac={isMac()}
 	class:windows={isWin()}
 	class:linux={isLinux()}
-	class:wago={AppConfig.wago.enabled}
-	class:curseforge={AppConfig.curseforge.enabled}
+	class:wago={adKind === 'wago'}
+	class:curseforge={adKind === 'curseforge'}
 	class:collapsed={isCollapsed}
 	class:has-ad={session.adSpace}
 >
@@ -382,6 +388,8 @@
 	/* --ad-placeholder shows through until the ad <webview> paints, so the panel never
 	   renders as an empty box. */
 	.ad {
+		/* The positioning context for the frame inside it — see AdWebView. */
+		position: relative;
 		flex-shrink: 0;
 		background-color: var(--background-secondary-4);
 		background-image: var(--ad-placeholder);

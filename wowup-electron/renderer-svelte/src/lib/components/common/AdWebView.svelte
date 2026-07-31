@@ -165,7 +165,14 @@
 		{#key frameSrc}
 			<!-- A document node, unlike a child webview or a borderless window: it clips and
 			     z-orders with the app, so dialogs draw over it instead of under it. -->
-			<iframe src={frameSrc} title={t('ADS.AD_EXPLAINER_BUTTON')} referrerpolicy="no-referrer"
+			<!-- scrolling="no" because the page is a 300x250 creative followed by Wago's own
+			     description, and the slot is only as tall as the creative. Without it the
+			     leftover text gives the frame a scrollbar inside the nav rail. -->
+			<iframe
+				src={frameSrc}
+				title={t('ADS.AD_EXPLAINER_BUTTON')}
+				referrerpolicy="no-referrer"
+				scrolling="no"
 			></iframe>
 		{/key}
 	{/if}
@@ -173,11 +180,17 @@
 
 <style>
 	.webview-container {
-		width: 100%;
-		height: 100%;
+		/* Absolute against .ad (VerticalTabs), which is the element with the ad unit's real
+		   size. A height: 100% chain collapsed here: the iframe ended up 0x0, and every
+		   element inside the ad document measured 0x0 with it, so the frame loaded and ran
+		   but laid out nothing. */
+		position: absolute;
+		inset: 0;
 	}
 
 	iframe {
+		/* display: block stops the inline baseline gap under the frame. */
+		display: block;
 		width: 100%;
 		height: 100%;
 		border: 0;
