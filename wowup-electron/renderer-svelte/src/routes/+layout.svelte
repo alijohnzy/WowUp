@@ -11,7 +11,9 @@
 		APP_PROTOCOL_NAME,
 		IPC_MENU_ZOOM_IN_CHANNEL,
 		IPC_MENU_ZOOM_OUT_CHANNEL,
-		IPC_MENU_ZOOM_RESET_CHANNEL
+		IPC_MENU_ZOOM_RESET_CHANNEL,
+		IPC_POWER_MONITOR_RESUME,
+		IPC_POWER_MONITOR_UNLOCK
 	} from '$common/constants';
 	import { getProtocol, getProtocolParts } from '$lib/utils/string';
 	import AnimatedLogo from '$lib/components/common/AnimatedLogo.svelte';
@@ -27,7 +29,13 @@
 	import { AppUpdateState } from '$common/wowup/models';
 	import { dialogs } from '$lib/state/dialogs.svelte';
 	import * as analytics from '$lib/services/analytics';
-	import { startAutoUpdate, updateBadgeCount } from '$lib/services/auto-update';
+	import {
+		startAppUpdateCheck,
+		startAutoUpdate,
+		stopAppUpdateCheck,
+		stopAutoUpdate,
+		updateBadgeCount
+	} from '$lib/services/auto-update';
 	import { createAppMenu, createSystemTray } from '$lib/services/native-menu';
 	import { changeLogs } from '$lib/data/changelogs';
 	import { AppConfig } from '$config/environment';
@@ -135,6 +143,27 @@
 			// The taskbar/dock badge counts pending updates, so installing one has to redo the sum.
 			if (evt.installState === AddonInstallState.Complete) {
 				void updateBadgeCount();
+			}
+		})
+	);
+
+	// Both background jobs are torn down on any power event and rebuilt on resume or unlock.
+	//
+	// A window.setInterval does not reliably survive suspend — it can be throttled, coalesced or
+	// simply never fire again — and both jobs here are hourly, so a machine that sleeps nightly
+	// could go a long time without either running. That is a stale list and a missed app update
+	// with nothing on screen to suggest anything is wrong, which is why the original tore them
+	// down deliberately rather than trusting the timers. Suspend and lock intentionally stop the
+	// jobs without restarting: the matching resume or unlock event is what brings them back.
+	$effect(() =>
+		electron.powerMonitor.subscribe((event) => {
+			console.log('Power event, restarting background jobs:', event);
+			stopAutoUpdate();
+			stopAppUpdateCheck();
+
+			if (event === IPC_POWER_MONITOR_RESUME || event === IPC_POWER_MONITOR_UNLOCK) {
+				void startAutoUpdate();
+				startAppUpdateCheck();
 			}
 		})
 	);
@@ -364,6 +393,7 @@
 				// with auto-update on were never actually updated in the background, and the
 				// `--quit` scheduled-task mode never terminated.
 				void startAutoUpdate();
+				startAppUpdateCheck();
 				return showNewVersionNotes();
 			})
 			.catch((e: unknown) => {

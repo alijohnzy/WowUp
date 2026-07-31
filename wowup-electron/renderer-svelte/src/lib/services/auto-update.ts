@@ -134,3 +134,34 @@ export function stopAutoUpdate(): void {
 	window.clearInterval(interval);
 	interval = undefined;
 }
+
+// ---- the app's own update check ---------------------------------------------------------
+//
+// From home.component.ts (initAppUpdateCheck/destroyAppUpdateCheck) rather than
+// app.component.ts, but it is the same shape — an hourly interval torn down and rebuilt
+// around sleep — so it lives next to its twin instead of in the shell.
+//
+// The port had only the footer's manual button. `checkForAppUpdate` is what puts the footer
+// into CheckingForUpdate → UpdateAvailable → Downloaded, so without the interval a new WowUp
+// release never announced itself: the footer sat blank until someone clicked.
+
+let appUpdateInterval: number | undefined;
+
+export function startAppUpdateCheck(): void {
+	if (appUpdateInterval !== undefined) {
+		console.warn('App update interval already exists');
+		return;
+	}
+
+	// No immediate call, unlike the addon job: the main process already checks on launch.
+	appUpdateInterval = window.setInterval(
+		() => wowup.checkForAppUpdate(),
+		AppConfig.appUpdateIntervalMs
+	);
+}
+
+export function stopAppUpdateCheck(): void {
+	if (appUpdateInterval === undefined) return;
+	window.clearInterval(appUpdateInterval);
+	appUpdateInterval = undefined;
+}

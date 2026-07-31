@@ -54,6 +54,7 @@
 	import ProgressSpinner from '$lib/components/common/ProgressSpinner.svelte';
 
 	import { addonService, onAddonInstalled } from '$lib/state/addon.svelte';
+	import { onAddonUpdatePush } from '$lib/state/push.svelte';
 	import { addonProviders } from '$lib/state/addon-providers.svelte';
 	import { handleRemoveAddon } from '$lib/services/addon-ui';
 	import { dialogs } from '$lib/state/dialogs.svelte';
@@ -63,6 +64,9 @@
 	import { warcraftInstallations } from '$lib/state/warcraft-installation.svelte';
 
 	// ---- state ----------------------------------------------------------------------
+
+	/** Angular's debounceTime on the push stream, kept at the same 5s. */
+	const PUSH_REFRESH_DEBOUNCE_MS = 5000;
 
 	let baseRowData = $state<AddonViewModel[]>([]);
 	// What the user has typed, and the value the grid filters on 200 ms later.
@@ -794,6 +798,39 @@
 	$effect(() => session.addonsChanged.subscribe(() => void onRefresh()));
 	$effect(() => session.rescanComplete.subscribe(() => void onRefresh()));
 	$effect(() => session.targetFileInstallComplete.subscribe(() => void onRefresh()));
+
+	// A WowUp push notification is the hub telling the app that an addon it tracks has a new
+	// release — the other way an update arrives with the app sitting open. push.svelte.ts
+	// parsed the notification and handed it to a listener registry that nobody had joined, so
+	// it went nowhere.
+	//
+	// Debounced because the hub sends one notification per addon and a batch would otherwise
+	// be one refresh each. Angular used debounceTime, which drops all but the last
+	// notification; the ids are accumulated here instead, so a batch whose *last* entry is an
+	// addon this client does not have still refreshes for the ones it does.
+	$effect(() => {
+		let timer: ReturnType<typeof setTimeout> | undefined;
+		let pending: string[] = [];
+
+		const unsubscribe = onAddonUpdatePush((updates) => {
+			pending.push(...updates.map((update) => update.addonId));
+			clearTimeout(timer);
+			timer = setTimeout(() => {
+				const ids = pending;
+				pending = [];
+				void (async () => {
+					// The hub pushes for every subscriber, so most notifications are about addons
+					// this client has not installed.
+					if (await addonService.hasAnyWithExternalAddonIds(ids)) await onRefresh();
+				})();
+			}, PUSH_REFRESH_DEBOUNCE_MS);
+		});
+
+		return () => {
+			clearTimeout(timer);
+			unsubscribe();
+		};
+	});
 
 	// The footer's per-screen text. Scoped to this route's lifetime: the cleanup clears it
 	// on the way out, which is what the tab-index guard used to approximate.

@@ -99,6 +99,23 @@ async function stubPreload(
 				rows = next;
 			};
 
+			// The main process pushes as well as answering: power events, push notifications and
+			// app-update state all arrive on rendererOn channels. The default stub dropped every
+			// registration, so nothing driven by an incoming event could be tested at all.
+			const handlers: Record<string, ((...a: unknown[]) => void)[]> = {};
+			const sent: { channel: string; args: unknown[] }[] = [];
+			(window as never as Record<string, unknown>)['__emitIpc'] = (
+				channel: string,
+				...args: unknown[]
+			) => {
+				for (const fn of handlers[channel] ?? []) fn({}, ...args);
+			};
+			(window as never as Record<string, unknown>)['__sentIpc'] = () => sent.map((s) => s.channel);
+
+			// How many times the grid has re-read the database — the cost a needless refresh pays.
+			let listFetches = 0;
+			(window as never as Record<string, unknown>)['__listFetches'] = () => listFetches;
+
 			(window as never as Record<string, unknown>)['wowup'] = {
 				rendererInvoke: (channel: string, ...args: unknown[]) => {
 					switch (channel) {
@@ -113,6 +130,7 @@ async function stubPreload(
 							return Promise.resolve();
 						case 'addons-get-all':
 						case 'addons-get-all-for-installation':
+							listFetches += 1;
 							return Promise.resolve(rows);
 						case 'addons-get-available-for-update':
 							return Promise.resolve(
@@ -122,14 +140,24 @@ async function stubPreload(
 							);
 						case 'addons-get-auto-update-enabled':
 							return Promise.resolve([]);
+						case 'addons-get-by-external-ids':
+							return Promise.resolve(
+								(rows as { externalId: string }[]).filter((a) =>
+									(args[0] as string[]).includes(a.externalId)
+								)
+							);
 						default:
 							return Promise.resolve(undefined);
 					}
 				},
-				rendererSend: () => {},
+				rendererSend: (channel: string, ...args: unknown[]) => sent.push({ channel, args }),
 				rendererSendSync: () => undefined,
-				rendererOn: () => {},
-				rendererOff: () => {},
+				rendererOn: (channel: string, fn: (...a: unknown[]) => void) => {
+					(handlers[channel] ??= []).push(fn);
+				},
+				rendererOff: (channel: string, fn: (...a: unknown[]) => void) => {
+					handlers[channel] = (handlers[channel] ?? []).filter((h) => h !== fn);
+				},
 				onRendererEvent: () => {},
 				openExternal: () => Promise.resolve(),
 				openPath: () => Promise.resolve('')
@@ -169,6 +197,12 @@ async function rowOrder(page: Page): Promise<string[]> {
 	);
 	return placed.map((r) => r.name);
 }
+
+const sentChannels = (page: Page): Promise<string[]> =>
+	page.evaluate(() => (window as never as Record<string, () => string[]>)['__sentIpc']());
+
+const listFetches = (page: Page): Promise<number> =>
+	page.evaluate(() => (window as never as Record<string, () => number>)['__listFetches']());
 
 // Status ordering is the first thing on screen and the reason the page opens on this sort:
 // AddonStatusSortOrder is declared Warning, Install, Update, UpToDate, Ignored, Unknown, so
@@ -309,6 +343,103 @@ test('the header click target fills the space ag-grid gives it', async ({ page }
 		});
 
 	expect(boxes.target).toEqual(boxes.wrapper);
+});
+
+// The other three ways the world changes underneath an open window. Each had a publisher in
+// the port and no subscriber, so the grid, and in one case the footer, simply never found out.
+
+test('a push notification for an installed addon refreshes the list', async ({ page }) => {
+	await page.clock.install();
+
+	const current = [addon('Alpha', 'A'), addon('Zulu', 'Z')];
+	await stubPreload(page, current);
+	await openMyAddons(page);
+	await page.clock.runFor(1000);
+	await expect.poll(() => rowOrder(page)).toEqual(['Alpha', 'Zulu']);
+
+	await page.evaluate(
+		(rows) => (window as never as Record<string, (r: unknown[]) => void>)['__setAddonRows'](rows),
+		[current[0], { ...current[1], latestVersion: '2.0.0' }]
+	);
+
+	// What the hub sends. addonId is the provider's id, matched against Addon.externalId.
+	await page.evaluate(() =>
+		(window as never as Record<string, (c: string, ...a: unknown[]) => void>)['__emitIpc'](
+			'push-notification',
+			{
+				action: 'addon-update',
+				sender: 'hub',
+				message: [{ provider: 'WowUpHub', addonName: 'Zulu', addonId: 'ext-Zulu' }]
+			}
+		)
+	);
+
+	// Debounced by 5s, because the hub sends one notification per addon.
+	await page.clock.runFor(6000);
+	await expect.poll(() => rowOrder(page)).toEqual(['Zulu', 'Alpha']);
+});
+
+test('a push notification for an addon this client lacks is ignored', async ({ page }) => {
+	await page.clock.install();
+	await stubPreload(page, [addon('Alpha', 'A')]);
+	await openMyAddons(page);
+	await page.clock.runFor(1000);
+
+	const before = await listFetches(page);
+	await page.evaluate(() =>
+		(window as never as Record<string, (c: string, ...a: unknown[]) => void>)['__emitIpc'](
+			'push-notification',
+			{
+				action: 'addon-update',
+				sender: 'hub',
+				message: [{ provider: 'WowUpHub', addonName: 'Nope', addonId: 'ext-Nope' }]
+			}
+		)
+	);
+	await page.clock.runFor(6000);
+
+	// The hub pushes to every subscriber, so most notifications are about somebody else's
+	// addons. Refreshing on those re-reads the whole database for nothing.
+	expect(await listFetches(page)).toBe(before);
+});
+
+test('waking from sleep restarts the background jobs', async ({ page }) => {
+	await page.clock.install();
+
+	const current = [addon('Alpha', 'A'), addon('Zulu', 'Z')];
+	await stubPreload(page, current);
+	await openMyAddons(page);
+	await page.clock.runFor(1000);
+	await expect.poll(() => rowOrder(page)).toEqual(['Alpha', 'Zulu']);
+
+	await page.evaluate(
+		(rows) => (window as never as Record<string, (r: unknown[]) => void>)['__setAddonRows'](rows),
+		[current[0], { ...current[1], latestVersion: '2.0.0' }]
+	);
+
+	// An hourly setInterval does not reliably survive suspend, so resume rebuilds both jobs —
+	// and starting the addon one runs it immediately, which is what shows up here.
+	await page.evaluate(() =>
+		(window as never as Record<string, (c: string) => void>)['__emitIpc']('power-monitor-resume')
+	);
+	await page.clock.runFor(1000);
+
+	await expect.poll(() => rowOrder(page)).toEqual(['Zulu', 'Alpha']);
+});
+
+test('the app checks for its own update on a timer', async ({ page }) => {
+	await page.clock.install();
+	await stubPreload(page);
+	await openMyAddons(page);
+	await page.clock.runFor(1000);
+
+	// Nothing has asked yet: the main process already checks once at launch.
+	expect(await sentChannels(page)).not.toContain('app-check-update');
+
+	// appUpdateIntervalMs is one hour. Without this the footer's update state only ever
+	// changed if the user clicked the button in it.
+	await page.clock.fastForward('01:00:01');
+	await expect.poll(() => sentChannels(page)).toContain('app-check-update');
 });
 
 test('renders installed addons as grid rows', async ({ page }) => {
