@@ -17,6 +17,9 @@ pub const ADDON_STORE_NAME: &str = "addons";
 pub const PREFERENCE_STORE_NAME: &str = "preferences";
 pub const SENSITIVE_STORE_NAME: &str = "sensitive";
 
+/// `COLLAPSE_TO_TRAY_PREFERENCE_KEY` in src/common/constants.ts:136.
+pub const COLLAPSE_TO_TRAY_PREFERENCE_KEY: &str = "collapse_to_tray";
+
 const STORE_NAMES: [&str; 3] = [ADDON_STORE_NAME, PREFERENCE_STORE_NAME, SENSITIVE_STORE_NAME];
 
 #[derive(Default)]
@@ -114,6 +117,11 @@ impl Stores {
 }
 
 impl Stores {
+    /// A single value, for Rust-side callers such as the close-to-tray check.
+    pub fn get(&self, app: &AppHandle, name: &str, key: &str) -> Result<Option<Value>, String> {
+        self.with(app, name, |map| map.get(key).cloned())
+    }
+
     /// All values in a store — used by the addon queries, which scan rather than key-lookup.
     pub fn values(&self, app: &AppHandle, name: &str) -> Result<Vec<Value>, String> {
         self.with(app, name, |map| map.values().cloned().collect())

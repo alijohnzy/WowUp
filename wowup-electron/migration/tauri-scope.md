@@ -581,6 +581,23 @@ Three things were checked before deciding what to do:
 So the ad panel restores the *free* path, and the way to do that honestly is a real child
 webview in the nav rail — Tauri's multi-webview, behind the `unstable` feature.
 
+**Two shell behaviours Electron got for free.**
+
+* **The webview's own context menu.** Electron shows none unless the app builds one, so
+  every right-click here is already owned — addon rows, grid headers, the menu backdrop.
+  WebKitGTK does show one, so a right-click produced the app's menu with a native
+  "Reload / Inspect Element" over the top, and on anything without a handler only the
+  native one. `suppressNativeContextMenu()` cancels it in the **capture** phase: component
+  handlers still run and still open their menus, and a handler calling `stopPropagation()`
+  cannot let the native menu slip past — which matters, because ag-grid's cell handler does
+  not `preventDefault()` itself.
+* **Close to tray.** `app/main.ts:482` intercepts `close` and hides the window when
+  `collapse_to_tray` is set, rather than exiting. Ported in `window.rs`, including the
+  `Quitting` flag that lets a real quit through — without it the tray's own Quit item would
+  hide the window instead of exiting. Note the preference is the *string* `"true"`
+  (`coerce_for_storage`), and the JS compares `!== "true"`, so an unset preference means
+  "really close".
+
 **Fixed: CurseForge folder matching.** `POST /v1/fingerprints` — the call that matches
 installed folders to addons — sends `content-type: application/json` and `x-api-key`, which
 forces a CORS preflight, and CurseForge answers `OPTIONS /v1/fingerprints` with **405 and no

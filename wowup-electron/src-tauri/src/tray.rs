@@ -38,6 +38,9 @@ fn restore_window(app: &AppHandle) {
         let _ = window.unminimize();
     }
     let _ = window.show();
+    // Undo what close-to-tray set on the way out, or the restored window has no taskbar
+    // entry and can only ever be raised from the tray again.
+    let _ = window.set_skip_taskbar(false);
     let _ = window.set_focus();
 }
 
@@ -82,7 +85,12 @@ pub fn create_tray_menu(
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id().as_ref() {
             "show" => restore_window(app),
-            "quit" => app.exit(0),
+            "quit" => {
+                // Otherwise close-to-tray intercepts the resulting close and the app hides
+                // instead of exiting — the tray's own Quit would do nothing.
+                app.state::<crate::window::Quitting>().set();
+                app.exit(0)
+            }
             _ => {}
         })
         .on_tray_icon_event(|tray, event| {

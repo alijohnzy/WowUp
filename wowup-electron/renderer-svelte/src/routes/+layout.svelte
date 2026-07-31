@@ -24,7 +24,14 @@
 	import Titlebar from '$lib/components/common/Titlebar.svelte';
 	import VerticalTabs from '$lib/components/common/VerticalTabs.svelte';
 	import WindowResizeEdges from '$lib/components/common/WindowResizeEdges.svelte';
-	import { isDesktop, isTauri, markShellOnDocument, on, platform } from '$lib/ipc';
+	import {
+		isDesktop,
+		isTauri,
+		markShellOnDocument,
+		on,
+		platform,
+		suppressNativeContextMenu
+	} from '$lib/ipc';
 	import { forwardConsoleToTauri } from '$lib/log-tauri';
 	import { configureAxiosForTauri } from '$lib/http';
 	import { addonService, onAddonInstalled, ScanUpdateType } from '$lib/state/addon.svelte';
@@ -350,6 +357,9 @@
 
 		if (isTauri()) {
 			forwardConsoleToTauri();
+			// WebKitGTK opens its own menu on right-click; Electron never did, and every
+			// right-click in this app already has an owner.
+			suppressNativeContextMenu();
 			// Before providers load: curseforge-v2 goes through axios, which defaults to XHR and
 			// would be the one transport still subject to the webview's CORS checks.
 			await configureAxiosForTauri();

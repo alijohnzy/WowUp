@@ -30,6 +30,8 @@
     "core:menu:default",
     "core:window:allow-show",
     "core:window:allow-unminimize",
+    "core:window:allow-hide",
+    "core:window:allow-set-skip-taskbar",
     {
       "identifier": "http:default",
       "allow": [

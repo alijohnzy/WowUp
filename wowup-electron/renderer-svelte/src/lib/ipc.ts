@@ -72,6 +72,30 @@ export function markShellOnDocument(): void {
 	document.documentElement.classList.toggle('electron', isElectron());
 }
 
+/**
+ * Stops the webview's own context menu from opening.
+ *
+ * Electron shows no context menu unless the app builds one, so every right-click in this app
+ * is already owned: addon rows, grid headers and the menu backdrop each open their own.
+ * WebKitGTK does show one, so under Tauri a right-click produced the app's menu with a
+ * native "Reload / Inspect Element" menu over the top — and on anything without a handler,
+ * such as the nav rail or empty grid space, only the native one.
+ *
+ * Registered in the **capture** phase so it runs before the component handlers. Those still
+ * run and still open their menus; this only removes the default action. Capture also means a
+ * handler calling `stopPropagation()` cannot let the native menu slip through, which matters
+ * because ag-grid's cell handler does not `preventDefault()` itself.
+ *
+ * Returns an unsubscribe.
+ */
+export function suppressNativeContextMenu(): () => void {
+	if (typeof document === 'undefined') return () => {};
+
+	const handler = (e: Event) => e.preventDefault();
+	document.addEventListener('contextmenu', handler, { capture: true });
+	return () => document.removeEventListener('contextmenu', handler, { capture: true });
+}
+
 function bridge(): WowUpBridge {
 	const b = typeof window !== 'undefined' ? window.wowup : undefined;
 	if (!b) throw new Error('Electron preload bridge unavailable (window.wowup is undefined)');

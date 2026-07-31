@@ -112,6 +112,7 @@ pub fn run() {
         )
         .manage(store::Stores::default())
         .manage(tray::TrayState::default())
+        .manage(window::Quitting::default())
         .invoke_handler(tauri::generate_handler![
             get_app_version,
             files::path_exists,
