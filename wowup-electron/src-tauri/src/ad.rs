@@ -53,19 +53,6 @@ const ALLOWED_HOSTS: &[&str] = &["addons.wago.io"];
 /// the slot comes back empty.
 const DEFAULT_AD_USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36";
 
-/// Blocks the ad frame from playing media, and nothing else.
-///
-/// A video ad makes WebKitGTK reach for GStreamer, and in a packaged AppImage it does not
-/// find it — "GStreamer element appsink not found", then a NULL instance passed to
-/// `g_signal_connect_data`, and the WebKitWebProcess goes down. As a separate window that
-/// only killed the ad; as an iframe it shares the app's web process, so it took the whole UI
-/// with it and left the window stuck on "Loading...".
-///
-/// Only `media-src` is set. Naming a single directive leaves everything else unrestricted,
-/// which matters: the ad's own scripts and frames have to keep loading, so anything touching
-/// `script-src` or `frame-src` here would blank the slot instead.
-const MEDIA_CSP: &str = "media-src 'none'";
-
 /// Port of `assets/preload/wago.js`, injected into the proxied document.
 ///
 /// `provideApiKey` is the whole contract the page codes against. It reaches the app by
@@ -137,7 +124,6 @@ pub async fn serve(request: Request<Vec<u8>>) -> Response<Vec<u8>> {
             .status(200)
             .header("Content-Type", "text/html; charset=utf-8")
             // Deliberately no X-Frame-Options: re-serving without it is the entire point.
-            .header("Content-Security-Policy", MEDIA_CSP)
             .body(body.into_bytes())
             .unwrap(),
         Err(e) => {
@@ -281,27 +267,6 @@ mod tests {
         let out = rewrite("<body>only</body>", &base);
         assert!(out.contains("<base href="));
         assert!(out.contains("only"));
-    }
-
-    /// A video ad crashed the shared web process, because WebKitGTK in an AppImage cannot
-    /// find GStreamer. Blocking media is what keeps an ad from being able to kill the app.
-    #[test]
-    fn media_is_blocked_but_nothing_else_is() {
-        assert_eq!(MEDIA_CSP, "media-src 'none'");
-        // A default-src or script-src here would stop the ad loading at all — the failure
-        // mode would flip from "crashes" to "permanently blank", which is not an improvement.
-        for directive in [
-            "default-src",
-            "script-src",
-            "frame-src",
-            "connect-src",
-            "img-src",
-        ] {
-            assert!(
-                !MEDIA_CSP.contains(directive),
-                "{directive} must not be restricted"
-            );
-        }
     }
 
     /// The token must not travel over IPC — the frame has no commands by design.

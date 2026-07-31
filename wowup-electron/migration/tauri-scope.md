@@ -564,11 +564,26 @@ command, which for a frame running third-party ad code is not acceptable.
 reach for GStreamer, which it could not find inside the AppImage — "GStreamer element appsink
 not found", then a NULL instance handed to `g_signal_connect_data`, and the WebKitWebProcess
 went down. As a separate window that killed only the ad; as an iframe it took the UI with it
-and left the app stuck on "Loading...". The proxy now answers `Content-Security-Policy:
-media-src 'none'`, which is the one directive that stops it — naming any of `default-src`,
-`script-src` or `frame-src` would blank the ad instead, turning a crash into a permanently
-empty slot. Note the plugins *are* installed system-wide; the AppImage's environment is what
-cannot see them, so this is not something a user can fix by installing a package.
+and left the app stuck on "Loading...".
+
+Blocking media (`Content-Security-Policy: media-src 'none'`) stopped the crash, and stopped
+the ad with it: `scripts/ad-frame-demo.mjs` rendered the frame outside the app and the console
+said `Loading media from 'data:video/mp4;base64,...'` — **the ad Wago serves in this slot is a
+video ad**, so blocking media blocks the only thing that fills it. The real fix is
+`bundle.linux.appimage.bundleMediaFramework`, which ships the GStreamer plugins with the
+AppImage (+~70MB here). With those present the video plays and there is no crash to work
+around.
+
+Two build notes. `bundleMediaFramework` needs **`patchelf`** on the build host, or the bundler
+stops at `failed to run linuxdeploy` with the real cause — `Error: patchelf not found` — buried
+in plugin output that only `--verbose` shows. And the plugins *are* installed system-wide on a
+normal desktop; it is the AppImage's environment that cannot see them, so this is not something
+a user can fix by installing a package.
+
+`scripts/ad-frame-demo.mjs` is the harness this came out of: it serves the same rewritten
+document the Rust handler serves and frames it as the nav rail does, so the frame can be looked
+at in seconds instead of a three-minute app rebuild. Keep its `rewrite()` in step with the Rust
+one, or it stops being evidence about the app.
 
 Three things had to be true before anything rendered, each hidden by the last:
 

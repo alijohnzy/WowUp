@@ -56,6 +56,11 @@
       "../assets/WowUpAddon/*": "assets/WowUpAddon/",
       "../assets/wowup_logo_purple.png": "assets/wowup_logo_purple.png",
       "../assets/wowup_logo_cf.png": "assets/wowup_logo_cf.png"
+    },
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": true
+      }
     }
   }
 }
