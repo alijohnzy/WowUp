@@ -49,14 +49,10 @@ function environmentFile(): string | undefined {
 	if (!flavour) return undefined;
 
 	const prod = process.env.NODE_ENV === 'production';
-	const name =
-		flavour === 'ow'
-			? prod
-				? 'environment.prod.ow.ts'
-				: 'environment.dev.ow.ts'
-			: prod
-				? 'environment.prod.ts'
-				: 'environment.dev.ts';
+	// 'tauri' is 'ow' plus the Wago ad frame: the ow flavour's ad is <owadview>, which only
+	// exists inside @overwolf/ow-electron. See src/environments/environment.prod.tauri.ts.
+	const suffix = flavour === 'ow' ? '.ow' : flavour === 'tauri' ? '.tauri' : '';
+	const name = `environment.${prod ? 'prod' : 'dev'}${suffix}.ts`;
 
 	return fileURLToPath(new URL(`../src/environments/${name}`, import.meta.url));
 }

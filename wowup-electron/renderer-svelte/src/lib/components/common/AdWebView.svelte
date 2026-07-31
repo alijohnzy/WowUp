@@ -13,7 +13,8 @@
 	// 0 to innerHTML, which stringifies to "0" and left a stray text node behind.
 
 	import { AppConfig } from '$config/environment';
-	import { on } from '$lib/ipc';
+	import { on, isTauri } from '$lib/ipc';
+	import { adFrame } from '$lib/services/ad-frame';
 	import { session } from '$lib/state/session.svelte';
 	import { confirmLinkNavigation } from '$lib/services/links';
 	import { getAssetFilePath } from '$lib/services/files';
@@ -98,7 +99,32 @@
 		return placeholder;
 	}
 
-	function adFrame(container: HTMLElement) {
+	// Tauri has no <webview> tag, so the frame is a child webview overlaid on the window and
+	// kept over this container. The trade-off is that it is not a document node: it cannot be
+	// styled, and it paints above everything, so it has to be closed rather than hidden.
+	function tauriAdFrame(container: HTMLElement) {
+		const untrack = adFrame.track(container);
+
+		adFrame
+			.open(container, options.pageUrl, options.userAgent)
+			.then(() => (ready = true))
+			.catch((e: unknown) => console.error('ad frame open failed', e));
+
+		return () => {
+			untrack();
+			ready = false;
+			void adFrame.close().catch((e: unknown) => console.error('ad frame close failed', e));
+		};
+	}
+
+	function adWebview(container: HTMLElement) {
+		// The CurseForge branch below needs <owadview>, which only @overwolf/ow-electron
+		// supplies, so under Tauri only the Wago frame can run at all. The tauri flavour
+		// enables Wago for exactly that reason — see environment.prod.tauri.ts.
+		if (isTauri()) {
+			return options.pageUrl ? tauriAdFrame(container) : undefined;
+		}
+
 		let placeholder: HTMLElement | undefined;
 
 		if (AppConfig.wago.enabled) {
@@ -120,7 +146,12 @@
 	// A provider can ask for a fresh ad after re-authenticating.
 	$effect(() =>
 		onUiMessage((msg) => {
-			if (msg.action === 'ad-frame-reload' && ready) tag?.reloadIgnoringCache();
+			if (msg.action !== 'ad-frame-reload' || !ready) return;
+			if (isTauri()) {
+				void adFrame.reload().catch((e: unknown) => console.error('ad frame reload failed', e));
+			} else {
+				tag?.reloadIgnoringCache();
+			}
 		})
 	);
 
@@ -138,7 +169,7 @@
 	);
 </script>
 
-<div class="webview-container" {@attach adFrame}></div>
+<div class="webview-container" {@attach adWebview}></div>
 
 <style>
 	.webview-container {

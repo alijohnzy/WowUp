@@ -45,6 +45,17 @@ const ALLOWED_WITHOUT_CONSTANT = new Set([
 	'zoom-changed'
 ]);
 
+// Channels that exist only under Tauri, so the Electron main process legitimately never
+// mentions them. They are still verified below — against the Rust command that serves them,
+// which is the same claim in the other shell's terms.
+const TAURI_ONLY = new Set([
+	// The ad frame is a Rust-side window; Electron uses a <webview> element and no IPC.
+	'ad-frame-open',
+	'ad-frame-close',
+	'ad-frame-reload',
+	'ad-frame-set-bounds'
+]);
+
 function sourceFiles(dir: string, acc: string[] = []): string[] {
 	for (const entry of readdirSync(dir)) {
 		const full = path.join(dir, entry);
@@ -95,6 +106,20 @@ function literalChannelUses(): { channel: string; file: string }[] {
 }
 
 /** Every string literal that appears anywhere in the main process sources. */
+/// Command names defined in the Tauri crate, as `#[tauri::command] pub fn <name>`.
+function rustCommands(): Set<string> {
+	const root = path.resolve(here, '../../../src-tauri/src');
+	const names = new Set<string>();
+	for (const file of readdirSync(root, { recursive: true, encoding: 'utf8' })) {
+		const full = path.join(root, file);
+		if (!/\.rs$/.test(file) || statSync(full).isDirectory()) continue;
+		for (const match of readFileSync(full, 'utf8').matchAll(/pub (?:async )?fn ([a-z0-9_]+)/g)) {
+			names.add(match[1]);
+		}
+	}
+	return names;
+}
+
 function mainProcessLiterals(): Set<string> {
 	const appRoot = path.resolve(here, '../../../app');
 	const values = new Set<string>();
@@ -135,9 +160,24 @@ describe('IPC channel names', () => {
 		).toEqual([]);
 	});
 
+	// Same guarantee as the Electron check above, for the shell that has no main process: a
+	// misspelled channel here would reject at runtime with "has no Tauri command".
+	it('every Tauri-only channel has a Rust command behind it', () => {
+		const commands = rustCommands();
+		const missing = [...TAURI_ONLY].filter(
+			(channel) => !commands.has(channel.replace(/-/g, '_'))
+		);
+		expect(
+			missing,
+			`Tauri-only channels with no matching #[tauri::command]:\n` +
+				missing.map((c) => `  ${c}`).join('\n')
+		).toEqual([]);
+	});
+
 	it('every literal channel is declared in constants.ts or explicitly allowed', () => {
 		const unknown = literalChannelUses().filter(
-			({ channel }) => !declared.has(channel) && !ALLOWED_WITHOUT_CONSTANT.has(channel)
+			({ channel }) =>
+				!declared.has(channel) && !ALLOWED_WITHOUT_CONSTANT.has(channel) && !TAURI_ONLY.has(channel)
 		);
 
 		expect(

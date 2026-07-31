@@ -4,6 +4,7 @@
 //! slice at a time; see `migration/tauri-scope.md` for the phase order. Only the Warcraft
 //! slice is live so far — every other IPC channel is still served by the Electron build.
 
+pub mod ad;
 pub mod addons;
 pub mod constants;
 pub mod files;
@@ -30,7 +31,13 @@ fn get_locale() -> String {
 /// The count is the number of addons with updates available. macOS and Linux only, which
 /// matches Electron — `setBadgeCount` is a no-op on Windows too.
 #[tauri::command]
-fn update_app_badge(window: tauri::WebviewWindow, count: Option<i64>) -> Result<(), String> {
+fn update_app_badge(app: tauri::AppHandle, count: Option<i64>) -> Result<(), String> {
+    // Resolved from the app rather than injected as a `WebviewWindow`: once the ad frame adds
+    // a second webview to the window, the calling webview is no longer *the* window's webview
+    // and Tauri rejects the injection with "current webview is not a WebviewWindow".
+    let window = app
+        .get_window("main")
+        .ok_or_else(|| "no main window".to_string())?;
     // 0 clears the badge rather than drawing a zero.
     let value = count.filter(|c| *c > 0);
     window.set_badge_count(value).map_err(|e| e.to_string())
@@ -154,6 +161,7 @@ pub fn run() {
                 .level_for("rustls", log::LevelFilter::Info)
                 .build(),
         )
+        .manage(ad::AdFrame::default())
         .manage(store::Stores::default())
         .manage(tray::TrayState::default())
         .manage(window::Quitting::default())
@@ -174,6 +182,10 @@ pub fn run() {
             files::stat_files,
             files::list_files,
             files::readdir,
+            ad::ad_frame_open,
+            ad::ad_frame_close,
+            ad::ad_frame_reload,
+            ad::ad_frame_set_bounds,
             install::download_file,
             install::unzip_file,
             scanner::curse_get_scan_results,

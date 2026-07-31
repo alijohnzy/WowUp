@@ -28,14 +28,26 @@ impl Quitting {
     }
 }
 
+/// Resolve the app window rather than letting Tauri inject it.
+///
+/// These took a `WebviewWindow` parameter, which Tauri fills from the webview that made the
+/// call. That stops working the moment the window holds more than one webview — the ad frame
+/// adds a second — and every titlebar button then failed with "current webview is not a
+/// WebviewWindow". Looking the window up by label is independent of who is calling.
+fn main_window(app: &AppHandle) -> Result<tauri::Window, String> {
+    app.get_window("main")
+        .ok_or_else(|| "no main window".to_string())
+}
+
 #[tauri::command]
-pub fn minimize_window(window: WebviewWindow) -> Result<(), String> {
-    window.minimize().map_err(|e| e.to_string())
+pub fn minimize_window(app: AppHandle) -> Result<(), String> {
+    main_window(&app)?.minimize().map_err(|e| e.to_string())
 }
 
 /// Electron's handler toggles, and the renderer calls it for both maximise and restore.
 #[tauri::command]
-pub fn maximize_window(window: WebviewWindow) -> Result<(), String> {
+pub fn maximize_window(app: AppHandle) -> Result<(), String> {
+    let window = main_window(&app)?;
     if window.is_maximized().map_err(|e| e.to_string())? {
         window.unmaximize().map_err(|e| e.to_string())
     } else {
@@ -44,30 +56,34 @@ pub fn maximize_window(window: WebviewWindow) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn close_window(window: WebviewWindow) -> Result<(), String> {
-    window.close().map_err(|e| e.to_string())
+pub fn close_window(app: AppHandle) -> Result<(), String> {
+    main_window(&app)?.close().map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn focus_window(window: WebviewWindow) -> Result<(), String> {
-    window.set_focus().map_err(|e| e.to_string())
+pub fn focus_window(app: AppHandle) -> Result<(), String> {
+    main_window(&app)?.set_focus().map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn window_is_maximized(window: WebviewWindow) -> Result<bool, String> {
-    window.is_maximized().map_err(|e| e.to_string())
+pub fn window_is_maximized(app: AppHandle) -> Result<bool, String> {
+    main_window(&app)?.is_maximized().map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn window_is_full_screen(window: WebviewWindow) -> Result<bool, String> {
-    window.is_fullscreen().map_err(|e| e.to_string())
+pub fn window_is_full_screen(app: AppHandle) -> Result<bool, String> {
+    main_window(&app)?
+        .is_fullscreen()
+        .map_err(|e| e.to_string())
 }
 
 /// The renderer offers a "leave fullscreen" button in its own titlebar, since a
 /// decorationless window has no other way out.
 #[tauri::command]
-pub fn leave_full_screen(window: WebviewWindow) -> Result<(), String> {
-    window.set_fullscreen(false).map_err(|e| e.to_string())
+pub fn leave_full_screen(app: AppHandle) -> Result<(), String> {
+    main_window(&app)?
+        .set_fullscreen(false)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -146,6 +162,8 @@ pub fn forward_window_events(window: &WebviewWindow) {
                 let _ = handle.hide();
                 // Otherwise the window keeps a taskbar entry it can no longer be raised from.
                 let _ = handle.set_skip_taskbar(true);
+                // The ad frame is its own window and does not follow its parent out of sight.
+                crate::ad::set_visible(handle.app_handle(), false);
                 return;
             }
         }
@@ -155,6 +173,17 @@ pub fn forward_window_events(window: &WebviewWindow) {
                 log::error!("failed to emit {channel}: {e}");
             }
         };
+
+        // The ad frame is a separate window overlaying this one, so it has to be re-placed
+        // whenever this one moves or resizes — otherwise it sits where the slot used to be.
+        if matches!(
+            event,
+            tauri::WindowEvent::Resized(_) | tauri::WindowEvent::Moved(_)
+        ) {
+            if let Err(e) = crate::ad::position_over_slot(handle.app_handle()) {
+                log::debug!("ad frame reposition: {e}");
+            }
+        }
 
         match event {
             tauri::WindowEvent::Resized(_) => {

@@ -71,6 +71,16 @@
 			: []
 	);
 
+	// Exactly one ad frame, however many providers ask for one. The Tauri flavour enables
+	// CurseForge and Wago together, and both set `adRequired` — rendering the list would give
+	// two frames, and since AdWebView picks its implementation from AppConfig rather than from
+	// the params, both would be Wago ones.
+	//
+	// Prefer a provider that actually has a page to show. CurseForge returns `pageUrl: ''`
+	// because its ad comes from Overwolf's <owadview> rather than a URL, so the fallback is
+	// what keeps the ow-electron build rendering its own ad.
+	let adParams = $derived(adPageParams.find((params) => params.pageUrl) ?? adPageParams[0]);
+
 	const isSelected = (path: RoutePath) => currentPath(page.route?.id) === path;
 
 	const isDisabled = (tab: Tab) =>
@@ -188,9 +198,11 @@
 				{t('ADS.AD_EXPLAINER_BUTTON')}
 			</button>
 			<div class="ad">
-				{#each adPageParams as params (params.pageUrl)}
-					<AdWebView options={params} />
-				{/each}
+				{#if adParams}
+					{#key adParams.pageUrl}
+						<AdWebView options={adParams} />
+					{/key}
+				{/if}
 			</div>
 		</div>
 	{/if}
