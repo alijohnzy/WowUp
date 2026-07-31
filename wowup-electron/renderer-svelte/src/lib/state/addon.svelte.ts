@@ -114,6 +114,16 @@ class Emitter<T> {
 class AddonService {
 	// State — read directly in templates instead of through `| async`.
 	anyUpdatesAvailable = $state(false);
+
+	/**
+	 * Bumped every time the set of updatable addons is re-counted.
+	 *
+	 * `anyUpdatesAvailable` is a boolean, so anything deriving from it only recomputes when
+	 * the answer flips. Installing one of three pending updates leaves it `true`, which left
+	 * the client selector's "N updates" badge showing the count from before the install —
+	 * it only caught up once the *last* update was installed and the flag went false.
+	 */
+	updatesRevision = $state(0);
 	syncing = $state(false);
 	scanUpdate = $state<ScanUpdate>({ type: ScanUpdateType.Unknown });
 	activeInstalls = $state<AddonUpdateEvent[]>([]);
@@ -155,6 +165,7 @@ class AddonService {
 
 	async #refreshUpdatesAvailable(): Promise<void> {
 		this.anyUpdatesAvailable = (await this.getAllAddonsAvailableForUpdate()).length > 0;
+		this.updatesRevision++;
 	}
 
 	// ---- install progress ---------------------------------------------------------

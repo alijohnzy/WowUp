@@ -107,6 +107,20 @@ pub async fn download_file(app: AppHandle, request: DownloadRequest) {
 }
 
 async fn perform_download(request: DownloadRequest) -> Result<String, String> {
+    // A relative folder resolves against the process working directory, which is nowhere the
+    // caller meant. In a packaged AppImage that is the read-only mount and this surfaced as
+    // "Read-only file system (os error 30)" on every install; run from a writable directory
+    // it would instead have silently scattered downloads next to the binary. The renderer
+    // only ever sends absolute paths, so anything else means the shell failed to hand over
+    // `userDataPath` — say that rather than the errno.
+    if !Path::new(&request.output_folder).is_absolute() {
+        return Err(format!(
+            "refusing to download to the relative path '{}' — the app data directory was not \
+             resolved before install",
+            request.output_folder
+        ));
+    }
+
     tokio::fs::create_dir_all(&request.output_folder)
         .await
         .map_err(|e| format!("{}: {e}", request.output_folder))?;
@@ -119,8 +133,11 @@ async fn perform_download(request: DownloadRequest) -> Result<String, String> {
     }
 
     // The nanoid prefix is what lets two downloads of the same file name coexist.
-    let save_path =
-        Path::new(&request.output_folder).join(format!("{}-{}", nanoid::nanoid!(), request.file_name));
+    let save_path = Path::new(&request.output_folder).join(format!(
+        "{}-{}",
+        nanoid::nanoid!(),
+        request.file_name
+    ));
     log::info!("[DownloadFile] '{url}' -> '{}'", save_path.display());
 
     let mut req = reqwest::Client::new().get(url.clone());
@@ -177,20 +194,26 @@ fn extract(zip_path: &str, target_dir: &str) -> Result<(), String> {
     let target = Path::new(target_dir);
 
     for i in 0..archive.len() {
-        let mut entry = archive.by_index(i).map_err(|e| format!("{zip_path}: {e}"))?;
+        let mut entry = archive
+            .by_index(i)
+            .map_err(|e| format!("{zip_path}: {e}"))?;
 
         // Zip-slip. The yauzl version joined the entry name onto the target directly, so an
         // archive containing `../../.bashrc` would write outside the addon folder. Addon zips
         // are third-party content downloaded over the network, so this is worth refusing
         // rather than inheriting.
         let Some(relative) = safe_entry_path(entry.name()) else {
-            log::warn!("[Unzip] refusing entry outside the target: {}", entry.name());
+            log::warn!(
+                "[Unzip] refusing entry outside the target: {}",
+                entry.name()
+            );
             continue;
         };
         let out_path = target.join(relative);
 
         if entry.is_dir() {
-            std::fs::create_dir_all(&out_path).map_err(|e| format!("{}: {e}", out_path.display()))?;
+            std::fs::create_dir_all(&out_path)
+                .map_err(|e| format!("{}: {e}", out_path.display()))?;
             continue;
         }
 
@@ -198,9 +221,11 @@ fn extract(zip_path: &str, target_dir: &str) -> Result<(), String> {
             std::fs::create_dir_all(parent).map_err(|e| format!("{}: {e}", parent.display()))?;
         }
 
-        let mut out = std::fs::File::create(&out_path).map_err(|e| format!("{}: {e}", out_path.display()))?;
+        let mut out =
+            std::fs::File::create(&out_path).map_err(|e| format!("{}: {e}", out_path.display()))?;
         std::io::copy(&mut entry, &mut out).map_err(|e| format!("{}: {e}", out_path.display()))?;
-        out.flush().map_err(|e| format!("{}: {e}", out_path.display()))?;
+        out.flush()
+            .map_err(|e| format!("{}: {e}", out_path.display()))?;
     }
 
     Ok(())
@@ -234,15 +259,19 @@ fn chmod_dir(dir: &Path) -> Result<(), String> {
 
         let mut stack = vec![dir.to_path_buf()];
         while let Some(current) = stack.pop() {
-            let entries = std::fs::read_dir(&current).map_err(|e| format!("{}: {e}", current.display()))?;
+            let entries =
+                std::fs::read_dir(&current).map_err(|e| format!("{}: {e}", current.display()))?;
             for entry in entries {
                 let entry = entry.map_err(|e| format!("{}: {e}", current.display()))?;
                 let path = entry.path();
                 if entry.file_type().map(|t| t.is_dir()).unwrap_or(false) {
                     stack.push(path);
                 } else {
-                    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(DEFAULT_FILE_MODE))
-                        .map_err(|e| format!("{}: {e}", path.display()))?;
+                    std::fs::set_permissions(
+                        &path,
+                        std::fs::Permissions::from_mode(DEFAULT_FILE_MODE),
+                    )
+                    .map_err(|e| format!("{}: {e}", path.display()))?;
                 }
             }
         }
@@ -268,10 +297,19 @@ mod tests {
 
     #[test]
     fn ordinary_entry_paths_are_kept() {
-        assert_eq!(safe_entry_path("WeakAuras/Core.lua"), Some(PathBuf::from("WeakAuras/Core.lua")));
-        assert_eq!(safe_entry_path("./WeakAuras/UI.xml"), Some(PathBuf::from("WeakAuras/UI.xml")));
+        assert_eq!(
+            safe_entry_path("WeakAuras/Core.lua"),
+            Some(PathBuf::from("WeakAuras/Core.lua"))
+        );
+        assert_eq!(
+            safe_entry_path("./WeakAuras/UI.xml"),
+            Some(PathBuf::from("WeakAuras/UI.xml"))
+        );
         // Windows-built archives sometimes use backslashes.
-        assert_eq!(safe_entry_path("WeakAuras\\Sub\\A.lua"), Some(PathBuf::from("WeakAuras/Sub/A.lua")));
+        assert_eq!(
+            safe_entry_path("WeakAuras\\Sub\\A.lua"),
+            Some(PathBuf::from("WeakAuras/Sub/A.lua"))
+        );
     }
 
     #[test]
@@ -300,7 +338,32 @@ mod tests {
             error: Some("boom".into()),
         })
         .unwrap();
-        assert!(err.contains("\"type\":3") && err.contains("\"error\":\"boom\""), "got {err}");
+        assert!(
+            err.contains("\"type\":3") && err.contains("\"error\":\"boom\""),
+            "got {err}"
+        );
+    }
+
+    /// A relative output folder means the shell never handed the renderer its data directory,
+    /// so `join(applicationFolderPath, 'downloads')` collapsed to bare `downloads`. Packaged
+    /// as an AppImage the working directory is the read-only mount, and every install failed
+    /// with a bare "Read-only file system (os error 30)" after four retries — no indication
+    /// that the path was the problem. Fail before the write, and name the actual cause.
+    #[tokio::test]
+    async fn download_refuses_a_relative_output_folder() {
+        let err = perform_download(DownloadRequest {
+            url: "https://example.invalid/a.zip".into(),
+            file_name: "a.zip".into(),
+            output_folder: "downloads".into(),
+            response_key: "k".into(),
+            auth: None,
+        })
+        .await
+        .expect_err("a relative output folder must not be written to");
+
+        assert!(err.contains("relative path 'downloads'"), "got {err}");
+        // Nothing should have been created next to the binary.
+        assert!(!Path::new("downloads").exists());
     }
 
     #[test]
@@ -356,7 +419,10 @@ mod tests {
         extract(&saved, out.to_str().unwrap()).expect("extract failed");
         chmod_dir(&out).expect("chmod failed");
 
-        let entries: Vec<_> = std::fs::read_dir(&out).unwrap().filter_map(Result::ok).collect();
+        let entries: Vec<_> = std::fs::read_dir(&out)
+            .unwrap()
+            .filter_map(Result::ok)
+            .collect();
         assert!(!entries.is_empty(), "extracted nothing");
     }
 
@@ -384,6 +450,9 @@ mod tests {
         extract(zip_path.to_str().unwrap(), out.to_str().unwrap()).unwrap();
 
         assert!(out.join("WeakAuras/Core.lua").is_file());
-        assert!(!root.join("escaped.lua").exists(), "zip-slip entry was written");
+        assert!(
+            !root.join("escaped.lua").exists(),
+            "zip-slip entry was written"
+        );
     }
 }

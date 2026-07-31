@@ -1,3 +1,5 @@
+import handlebars from 'handlebars';
+
 import * as path from '$lib/utils/path';
 
 import {
@@ -213,11 +215,10 @@ class WowUpAddonService {
 		const templateContents = await fileService.readFile(templatePath);
 
 		if (!this.compiledFiles[file.filename]) {
-			this.compiledFiles[file.filename] = (
-				window as unknown as {
-					libs: { handlebars: { compile: (t: string) => (d: unknown) => string } };
-				}
-			).libs.handlebars.compile(templateContents);
+			// Imported rather than read off `window.libs`, which only exists because Electron's
+			// preload puts it there (app/preload.ts:90). Tauri has no preload, so that access
+			// threw on every sync and the WowUp companion addon was never written.
+			this.compiledFiles[file.filename] = handlebars.compile(templateContents);
 		}
 
 		const fileData: string = this.compiledFiles[file.filename](wowUpAddonData).toString();

@@ -51,6 +51,11 @@
     "copyright": "WowUp LLC",
     "category": "Game",
     "shortDescription": "World of Warcraft addon updater",
-    "longDescription": "World of Warcraft addon updater"
+    "longDescription": "World of Warcraft addon updater",
+    "resources": {
+      "../assets/WowUpAddon/*": "assets/WowUpAddon/",
+      "../assets/wowup_logo_purple.png": "assets/wowup_logo_purple.png",
+      "../assets/wowup_logo_cf.png": "assets/wowup_logo_cf.png"
+    }
   }
 }

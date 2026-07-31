@@ -64,13 +64,26 @@ const IPC_SET_RELEASE_CHANNEL = 'set-release-channel';
 
 class WowUp {
 	readonly updaterName = UPDATER_NAME;
-	readonly applicationFolderPath: string =
-		(typeof window !== 'undefined' && window.userDataPath) || '';
-	readonly applicationLogsFolderPath: string =
-		(typeof window !== 'undefined' && window.logPath) || '';
-	readonly applicationDownloadsFolderPath: string = join(this.applicationFolderPath, 'downloads');
-	readonly applicationUpdaterPath: string = join(this.applicationFolderPath, UPDATER_NAME);
-	readonly wtfBackupFolder: string = join(this.applicationFolderPath, 'wtf_backups');
+	// Getters, not fields. This singleton is constructed when the module is first imported,
+	// which under Tauri is before the bootstrap has had a chance to inject the paths — as
+	// fields these would all snapshot '' and every derived path would come out relative,
+	// resolving against the read-only AppImage mount. Electron sets them in preload, so it
+	// is unaffected either way.
+	get applicationFolderPath(): string {
+		return (typeof window !== 'undefined' && window.userDataPath) || '';
+	}
+	get applicationLogsFolderPath(): string {
+		return (typeof window !== 'undefined' && window.logPath) || '';
+	}
+	get applicationDownloadsFolderPath(): string {
+		return join(this.applicationFolderPath, 'downloads');
+	}
+	get applicationUpdaterPath(): string {
+		return join(this.applicationFolderPath, UPDATER_NAME);
+	}
+	get wtfBackupFolder(): string {
+		return join(this.applicationFolderPath, 'wtf_backups');
+	}
 
 	availableVersion = $state('');
 

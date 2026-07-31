@@ -25,10 +25,14 @@
 
 	let { updates = false }: Props = $props();
 
-	// Recount whenever the installation list changes or an update becomes available. The second
-	// source is read for its dependency only — the count comes from the installations.
+	// Recount whenever the installation list changes or the updatable set is re-counted. The
+	// second source is read for its dependency only — the count comes from the installations.
+	//
+	// It tracks `updatesRevision` rather than `anyUpdatesAvailable` because the latter is a
+	// boolean: installing one of three pending updates leaves it `true`, so the badge kept
+	// showing the pre-install count until the last update was installed.
 	const counts = resource(
-		[() => warcraftInstallations.installations, () => addonService.anyUpdatesAvailable],
+		[() => warcraftInstallations.installations, () => addonService.updatesRevision],
 		async ([installations]) => {
 			const result: Record<string, number> = {};
 			for (const installation of installations) {

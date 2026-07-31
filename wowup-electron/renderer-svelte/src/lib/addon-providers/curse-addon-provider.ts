@@ -100,6 +100,31 @@ const GAME_TYPE_LISTS = [
 	}
 ];
 
+
+/**
+ * CurseForge returns `downloadUrl: null` for files whose author has opted out of
+ * third-party distribution, and its `/download-url` endpoint answers 403 with our key. The
+ * file is still served from the CDN at a path derived from its id, which is where the
+ * released WowUp gets these URLs — its addon store is full of them for exactly the files
+ * the API nulls.
+ *
+ * Without this, such an addon is stored with an empty `downloadUrl` and
+ * `installOrUpdateAddon` rejects it as "Addon not found or invalid" — the Update button
+ * appears, does nothing, and logs only that. Existing installs hide the problem because a
+ * stored URL is never overwritten with an empty one, so only fresh scans are affected.
+ *
+ * `8543831` -> `files/8543/831/…`; the trailing group is not zero-padded.
+ */
+export function cfDownloadUrl(fileId: number, fileName: string, apiUrl: string | undefined): string {
+	if (apiUrl) return apiUrl;
+	if (!Number.isFinite(fileId) || fileId <= 0 || !fileName) return '';
+
+	const head = Math.floor(fileId / 1000);
+	const tail = fileId % 1000;
+	// Addon file names contain spaces and parentheses often enough to matter.
+	return `https://edge.forgecdn.net/files/${head}/${tail}/${encodeURIComponent(fileName)}`;
+}
+
 export class CurseAddonProvider extends AddonProvider {
 	private readonly _circuitBreaker: CircuitBreakerWrapper;
 	private readonly _cf2Client: cfv2.CFV2Client;
@@ -605,7 +630,11 @@ export class CurseAddonProvider extends AddonProvider {
 			autoUpdateEnabled: false,
 			autoUpdateNotificationsEnabled: false,
 			clientType: installation.clientType,
-			downloadUrl: latestVersion?.downloadUrl ?? cfFile.downloadUrl ?? '',
+			downloadUrl: cfDownloadUrl(
+				latestVersion?.id ?? cfFile.id,
+				latestVersion?.fileName ?? cfFile.fileName,
+				latestVersion?.downloadUrl ?? cfFile.downloadUrl ?? undefined
+			),
 			externalUrl: cfAddon?.links?.websiteUrl ?? '',
 			externalId: cfAddon?.id.toString() ?? '',
 			gameVersion: gameVersions,
@@ -855,7 +884,7 @@ export class CurseAddonProvider extends AddonProvider {
 				return {
 					channelType: this.getChannelType(lf.releaseType),
 					version: lf.displayName,
-					downloadUrl: lf.downloadUrl,
+					downloadUrl: cfDownloadUrl(lf.id, lf.fileName, lf.downloadUrl ?? undefined),
 					folders: this.getFolderNames(lf),
 					gameVersion: getGameVersion(this.getGameVersion(lf)),
 					releaseDate: new Date(lf.fileDate),

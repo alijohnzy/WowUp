@@ -13,8 +13,8 @@ pub mod install;
 pub mod scanner;
 pub mod store;
 pub mod tray;
-pub mod window;
 pub mod warcraft;
+pub mod window;
 
 /// Port of `get-locale` (app/ipc-events.ts:272), Electron's `app.getLocale()`.
 ///
@@ -40,21 +40,30 @@ fn update_app_badge(window: tauri::WebviewWindow, count: Option<i64>) -> Result<
 #[tauri::command]
 fn is_default_protocol_client(app: tauri::AppHandle, protocol: String) -> Result<bool, String> {
     use tauri_plugin_deep_link::DeepLinkExt;
-    app.deep_link().is_registered(&protocol).map_err(|e| e.to_string())
+    app.deep_link()
+        .is_registered(&protocol)
+        .map_err(|e| e.to_string())
 }
 
 /// Port of `set-as-default-protocol-client` (app/ipc-events.ts:297).
 #[tauri::command]
 fn set_as_default_protocol_client(app: tauri::AppHandle, protocol: String) -> Result<(), String> {
     use tauri_plugin_deep_link::DeepLinkExt;
-    app.deep_link().register(&protocol).map_err(|e| e.to_string())
+    app.deep_link()
+        .register(&protocol)
+        .map_err(|e| e.to_string())
 }
 
 /// Port of `remove-as-default-protocol-client` (app/ipc-events.ts).
 #[tauri::command]
-fn remove_as_default_protocol_client(app: tauri::AppHandle, protocol: String) -> Result<(), String> {
+fn remove_as_default_protocol_client(
+    app: tauri::AppHandle,
+    protocol: String,
+) -> Result<(), String> {
     use tauri_plugin_deep_link::DeepLinkExt;
-    app.deep_link().unregister(&protocol).map_err(|e| e.to_string())
+    app.deep_link()
+        .unregister(&protocol)
+        .map_err(|e| e.to_string())
 }
 
 /// Port of the `get-asset-file-path` handler (app/ipc-events.ts:214).
@@ -68,7 +77,41 @@ fn get_asset_file_path(app: tauri::AppHandle, file_name: String) -> Result<Strin
         .path()
         .resource_dir()
         .map_err(|e| format!("no resource dir: {e}"))?;
-    Ok(dir.join("assets").join(file_name).to_string_lossy().into_owned())
+    Ok(dir
+        .join("assets")
+        .join(file_name)
+        .to_string_lossy()
+        .into_owned())
+}
+
+/// Tauri's answer to the `user-data-path` / `log-path` arguments Electron passes through
+/// preload (app/preload.ts:36) and hangs on `window` for the renderer to read.
+///
+/// Without these the renderer's `applicationFolderPath` is `''`, so every path derived from
+/// it — `downloads/`, `wtf_backups/`, the updater — comes out *relative* and resolves
+/// against the process working directory. In a packaged AppImage that is the read-only
+/// squashfs mount, so every addon install failed with "Read-only file system (os error 30)"
+/// after four retries.
+#[tauri::command]
+fn get_app_paths(app: tauri::AppHandle) -> Result<serde_json::Value, String> {
+    let resolver = app.path();
+    // Same directory the stores and the Electron import use, so a user's data stays in one
+    // place rather than splitting across two roots.
+    let user_data = resolver
+        .app_data_dir()
+        .map_err(|e| format!("no app data dir: {e}"))?;
+    let logs = resolver
+        .app_log_dir()
+        .map_err(|e| format!("no app log dir: {e}"))?;
+
+    // The renderer joins onto these immediately; creating them here means the first install
+    // does not race a missing parent.
+    let _ = std::fs::create_dir_all(&user_data);
+
+    Ok(serde_json::json!({
+        "userDataPath": user_data.to_string_lossy(),
+        "logPath": logs.to_string_lossy(),
+    }))
 }
 
 /// Port of the `get-app-version` handler in app/ipc-events.ts.
@@ -116,6 +159,7 @@ pub fn run() {
         .manage(window::Quitting::default())
         .invoke_handler(tauri::generate_handler![
             get_app_version,
+            get_app_paths,
             files::path_exists,
             files::read_file,
             files::read_file_buffer,

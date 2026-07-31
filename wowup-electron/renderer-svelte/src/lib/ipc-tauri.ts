@@ -272,3 +272,17 @@ export function platform(): string {
 			return osPlatform();
 	}
 }
+
+/**
+ * Fetch the paths Electron injects through preload (`window.userDataPath`, `window.logPath`)
+ * and hang them on `window` so the shell-agnostic code above can keep reading them.
+ *
+ * Must run before anything derives a path from them. Left unset they are `''`, and every
+ * derived path — `downloads/`, `wtf_backups/`, the updater — becomes relative and resolves
+ * against the working directory, which for a packaged AppImage is the read-only mount.
+ */
+export async function injectShellPaths(): Promise<void> {
+	const paths = await tauriInvoke<{ userDataPath: string; logPath: string }>('get_app_paths');
+	window.userDataPath = paths.userDataPath;
+	window.logPath = paths.logPath;
+}
