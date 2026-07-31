@@ -25,6 +25,7 @@
 	import VerticalTabs from '$lib/components/common/VerticalTabs.svelte';
 	import { isElectron, isTauri, on, platform } from '$lib/ipc';
 	import { forwardConsoleToTauri } from '$lib/log-tauri';
+	import { configureAxiosForTauri } from '$lib/http';
 	import { addonService, onAddonInstalled, ScanUpdateType } from '$lib/state/addon.svelte';
 	import { AddonInstallState } from '$lib/models/addon-install-state';
 	import { AppUpdateState } from '$common/wowup/models';
@@ -345,6 +346,9 @@
 		// packaged Tauri build, so a startup exception leaves no trace at all.
 		if (isTauri()) {
 			forwardConsoleToTauri();
+			// Before providers load: curseforge-v2 goes through axios, which defaults to XHR and
+			// would be the one transport still subject to the webview's CORS checks.
+			await configureAxiosForTauri();
 		}
 
 		// Language first: an unsupported saved locale must not break the rest of startup.

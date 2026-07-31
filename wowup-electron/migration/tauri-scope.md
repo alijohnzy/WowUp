@@ -152,10 +152,38 @@ the traffic. The plugin's fetch runs in Rust, so it bypasses CORS the same way
 `webSecurity: false` does today.
 
 This matters because **`app/main.ts:297` sets `webSecurity: false`.** Every provider call
-currently relies on CORS being off. Tauri has no such switch — the webview enforces CORS
-against `tauri://localhost`. Without routing through `plugin-http`, every provider breaks.
-That is the single highest-risk item in the whole migration, and `network.ts` is why it's
-cheap to fix.
+currently relies on CORS not being enforced. Tauri has no such switch — the webview
+enforces CORS against `tauri://localhost`.
+
+> **Correction (measured after the fact).** This section originally called that "the single
+> highest-risk item in the whole migration". **It is not.** Every host the providers
+> actually use already answers with permissive CORS headers, checked against the live APIs
+> with `Origin: tauri://localhost`:
+>
+> | host | `access-control-allow-origin` |
+> |---|---|
+> | `api.curseforge.com` | reflects the origin |
+> | `addons.wago.io` | `*` |
+> | `api.github.com` | `*` |
+> | `raider.io` | reflects the origin |
+>
+> (`api.wago.io` sends none, but no provider calls it — Wago uses `addons.wago.io`.)
+>
+> Confirmed end-to-end: a live CurseForge request from the Tauri webview returned
+> `200` **with the plugin-http routing disabled**. The providers would have worked
+> untouched.
+>
+> The swap is still worth keeping, for one reason that is not CORS: `webSecurity: false` is
+> strictly more permissive than any CORS policy, so leaving the requests in the webview
+> makes the app depend on four third parties never tightening their headers — and if one
+> does, the failure is an opaque network error with no status code, which the UI reports as
+> a generic provider failure. Routing through Rust is the actual parity match for
+> `webSecurity: false`.
+>
+> **This is also why the `http` capability allows `https://**` rather than a host
+> allowlist.** An allowlist would be a *new* failure mode rather than parity: a provider
+> that redirects to an unlisted CDN would fail where it currently succeeds. Narrowing it is
+> a deliberate hardening step to take with measurement, not a side effect of the port.
 
 Porting the providers to Rust would mean reimplementing CurseForge/Wago/GitHub response
 mapping, dependency resolution, and channel/flavour matching — the most bug-prone logic in
@@ -168,15 +196,22 @@ on **axios**, which in a browser bundle uses `XMLHttpRequest`. **Tauri's fetch s
 intercept XHR.** Ten live call sites (`:395 :428 :485 :510 :706 :715 :907 :924 :966 :1013`)
 would fail CORS.
 
-Three options, in order of preference:
+**Done, and simpler than expected — no custom adapter needed.** Axios 1.18 ships a `fetch`
+adapter that takes a caller-supplied implementation: `getFetch(config)` reads
+`config.env.fetch` when resolving, and `env` is absent from axios's merge map so it
+deep-merges from defaults. `curseforge-v2` passes no `env`, so it inherits:
 
-1. **Give axios a Tauri adapter.** `axios.defaults.adapter = <fetch-based adapter over
-   plugin-http>`. Axios supports custom adapters; ~20 lines. Keeps `cfv2` intact.
-2. Replace `cfv2` with direct `network.ts` calls — it's a thin typed wrapper over the CF v2
-   REST API; the types are worth keeping even if the client isn't.
-3. Proxy CF through a Rust command. Most work, least benefit.
+```ts
+axios.defaults.adapter = 'fetch';
+axios.defaults.env = { ...axios.defaults.env, fetch: httpFetch };
+```
 
-Go with (1); fall back to (2) if the adapter fights the bundler.
+Two lines in `configureAxiosForTauri()` (`src/lib/http.ts`), called from bootstrap before
+providers load. Verified against the live API from inside a Tauri window:
+`status=200 mods=1 name=DBM - Deadly Boss Mods (DBM-Core)`.
+
+Given the correction above, this is defence-in-depth rather than a fix for a live break —
+but it costs two lines and removes the XHR path as a thing to reason about.
 
 ### 2.2 Secret handling improves
 The CF API key is currently baked into the renderer bundle (hence
@@ -366,10 +401,11 @@ Verified end-to-end in a running Tauri window — every command round-tripped:
 21 Rust tests, 137 renderer tests, 88 E2E, `svelte-check` 0 errors, lint clean, and the
 Electron build still boots (`verify-boot.mjs`: 1 boot, 0 console errors).
 
-**Deferred out of Phase 0:** routing renderer HTTP through `plugin-http` (§2). It is a
-one-line change to `network.ts:37` plus two stragglers, but the axios adapter in §2.1 is
-the real work, and verifying it needs an `ow`-flavour build (the `wago` flavour ships
-`apiKey: ""` deliberately, so a CurseForge call cannot be exercised from it).
+**Also done:** renderer HTTP now goes through `$lib/http`'s `httpFetch` (§2), with
+`http-callers.spec.ts` guarding against a bare `fetch()` creeping back in, and axios
+pointed at the same transport for `curseforge-v2` (§2.1). Verified with a live CurseForge
+call from a Tauri window against an `ow`-flavour build — and, in the course of verifying
+it, the CORS premise turned out to be wrong; see the correction in §2.
 
 <details><summary>original plan</summary>
 Right call: 6 channels, already isolated behind

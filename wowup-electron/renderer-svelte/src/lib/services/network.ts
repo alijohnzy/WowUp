@@ -7,6 +7,7 @@
 
 import CircuitBreaker from 'opossum';
 import { AppConfig } from '$config/environment';
+import { httpFetch } from '$lib/http';
 
 const CACHE_CONTROL_HEADERS: Record<string, string> = {
 	'Cache-Control': 'no-cache',
@@ -34,7 +35,8 @@ async function request<T>(
 	timeoutMs: number,
 	parse: 'json' | 'text'
 ): Promise<T> {
-	const res = await fetch(url.toString(), {
+	// httpFetch, not fetch: under Tauri this has to leave the webview to escape CORS.
+	const res = await httpFetch(url.toString(), {
 		...init,
 		signal: AbortSignal.timeout(timeoutMs)
 	});

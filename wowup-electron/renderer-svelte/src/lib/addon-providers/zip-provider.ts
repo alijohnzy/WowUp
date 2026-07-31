@@ -1,3 +1,4 @@
+import { httpFetch } from '$lib/http';
 import * as _ from '$lib/utils/collection';
 import { basename, join } from '$lib/utils/path';
 
@@ -184,6 +185,6 @@ export class ZipAddonProvider extends AddonProvider {
 
 	private async getUrlInfo(addonUri: URL): Promise<Response> {
 		// Was HttpClient.head(...).toPromise(); fetch exposes the headers directly.
-		return await fetch(addonUri.toString(), { method: 'HEAD' });
+		return await httpFetch(addonUri.toString(), { method: 'HEAD' });
 	}
 }

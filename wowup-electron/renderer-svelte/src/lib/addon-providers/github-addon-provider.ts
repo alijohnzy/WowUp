@@ -1,3 +1,4 @@
+import { httpFetch } from '$lib/http';
 import * as _ from '$lib/utils/collection';
 
 import { ADDON_PROVIDER_GITHUB, PREF_GITHUB_PERSONAL_ACCESS_TOKEN } from '$common/constants';
@@ -608,7 +609,7 @@ export class GitHubAddonProvider extends AddonProvider {
 				headers.Accept = 'application/octet-stream';
 			}
 
-			const res = await fetch(url.toString(), { headers });
+			const res = await httpFetch(url.toString(), { headers });
 			if (!res.ok) throw new HttpError(res.status, url.toString(), res.headers);
 			return (expectBinary ? await res.arrayBuffer() : await res.json()) as T;
 		} catch (e) {
