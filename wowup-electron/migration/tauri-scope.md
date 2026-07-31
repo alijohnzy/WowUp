@@ -72,6 +72,23 @@ progress events to the renderer, so the shape carries over 1:1. **Drops `yauzl` 
 `adm-zip`.**
 
 ### Group C — Addon folder scanners · 2 channels → **custom Rust (hard, see §3.1)**
+
+> **This is why update detection does not work**, diagnosed 2026-07-31. The scan is what
+> reconciles `installedVersion` with what is actually in the AddOns folder; without it the
+> Tauri build is frozen on whatever data it imported. Measured against disk:
+>
+> | addon | on disk | Electron store | Tauri store |
+> |---|---|---|---|
+> | RaiderIO | v202607302012 | v202607290600 | v202607300600 |
+> | CooldownManagerCentered | 4.3.2 | 4.3.1 | 4.3.2 |
+> | Coolinator | **112** | 112 | **114** |
+>
+> Neither store matches disk, and Tauri believes Coolinator 114 is installed when 112 is —
+> so it will never offer that update. Everything upstream is fine: sync runs, the CurseForge
+> batch call returns 184 results, all 184 match their stored addon, and each one is written
+> back. The data it writes is just wrong at the source.
+>
+> The fingerprint half is done — see §3.1.
 `CURSE_GET_SCAN_RESULTS` · `WOWUP_GET_SCAN_RESULTS`
 `app/curse-folder-scanner.ts` (262) + `app/wowup-folder-scanner.ts` (219). **This is the
 native addon consumer.**
@@ -226,6 +243,11 @@ sitting in a JS chunk. Worth doing opportunistically, not worth blocking on.
 Stated plainly, as asked.
 
 ### 3.1 The native C++ addon — `native/curse.cc`
+**Done (`fingerprint.rs`).** Ported bit-exact, with golden values generated from the native
+addon it replaces — including a real 2,794-byte `.toc` and a high-byte case that catches the
+signed-`char` trap in the original C++. `node-addon-api`, `binding.gyp` and the native build
+step can come out of CI once the scanners that call it land.
+
 **Not mentioned anywhere in the brief or the plan docs.** `app/curse-folder-scanner.ts:14`
 does `require(path.join(app.getAppPath(), "build/Release/addon.node"))` and calls
 `nativeAddon.computeHash(buffer, length)` at `:238` and `:250`.

@@ -7,6 +7,7 @@
 pub mod addons;
 pub mod constants;
 pub mod files;
+pub mod fingerprint;
 pub mod import;
 pub mod store;
 pub mod tray;
@@ -93,7 +94,19 @@ pub fn run() {
                 .target(tauri_plugin_log::Target::new(
                     tauri_plugin_log::TargetKind::LogDir { file_name: None },
                 ))
-                .level(log::LevelFilter::Info)
+                // Debug, because the renderer narrates its addon sync with console.debug —
+                // at Info the sync is a black box, which is exactly the wrong place to be
+                // blind when addons stop reporting updates.
+                .level(log::LevelFilter::Debug)
+                // ...but only ours. reqwest logs a line per connection and hyper logs the
+                // wire, which buries the app's own output and puts request URLs in a file
+                // users attach to bug reports.
+                .level_for("tao", log::LevelFilter::Info)
+                .level_for("wry", log::LevelFilter::Info)
+                .level_for("reqwest", log::LevelFilter::Info)
+                .level_for("hyper", log::LevelFilter::Info)
+                .level_for("hyper_util", log::LevelFilter::Info)
+                .level_for("rustls", log::LevelFilter::Info)
                 .build(),
         )
         .manage(store::Stores::default())
