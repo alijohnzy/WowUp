@@ -16,10 +16,25 @@ import type { InstalledProduct, WowClientType } from 'wowup-lib-core';
 
 export const getBlizzardAgentPath = (): Promise<string> =>
 	invoke(IPC_WARCRAFT_GET_BLIZZARD_AGENT_PATH);
-export const getInstalledProducts = (
+
+/**
+ * Electron's IPC uses structured clone, so the main process's `Map` arrives as a `Map`.
+ * Tauri's is JSON, where a `Map` would arrive as `{}` — and since the only consumer calls
+ * `.get()`, every lookup would return undefined and the app would report no WoW installed
+ * rather than throwing.
+ *
+ * The Rust command therefore returns `[[clientType, product], …]`. `new Map()` accepts both
+ * that and an existing `Map` (it copies), so this one wrapper is correct on both backends.
+ */
+export const getInstalledProducts = async (
 	agentPath: string
 ): Promise<Map<WowClientType, InstalledProduct>> =>
-	invoke(IPC_WARCRAFT_GET_INSTALLED_PRODUCTS, agentPath);
+	new Map(
+		await invoke<Iterable<[WowClientType, InstalledProduct]>>(
+			IPC_WARCRAFT_GET_INSTALLED_PRODUCTS,
+			agentPath
+		)
+	);
 export const getExecutableName = (clientType: WowClientType): Promise<string> =>
 	invoke(IPC_WARCRAFT_GET_EXECUTABLE_NAME, clientType);
 export const getClientTypeForBinary = (binaryPath: string): Promise<WowClientType> =>

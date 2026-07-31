@@ -53,8 +53,12 @@ const TAB_INDEX_BY_PATH: Record<RoutePath, number> = {
  *
  * The rule is disabled in eslint.config.js with this reference. It is right in general; it is
  * wrong for a hash-routed app served off the filesystem.
+ *
+ * Under Tauri none of that applies: the app is served from tauri://localhost, history routing
+ * is on, and the address is the plain path. `__HASH_ROUTING__` is inlined at build time from
+ * BUILD_SHELL (see vite.config.ts), so only one branch survives into the bundle.
  */
-export const href = (path: RoutePath): string => `#${path}`;
+export const href = (path: RoutePath): string => (__HASH_ROUTING__ ? `#${path}` : path);
 
 /**
  * Which route is showing.

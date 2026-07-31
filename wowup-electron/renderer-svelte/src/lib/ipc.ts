@@ -1,10 +1,12 @@
-// Thin wrapper over the existing Electron preload bridge (app/preload.ts).
+// The renderer's only coupling to a desktop shell.
 //
-// The preload is framework-agnostic — it exposes `window.wowup` with no Angular in
-// sight — so the Svelte renderer reuses it unchanged. This file is the whole of what
-// `ElectronService` (367 LOC of Angular DI + 7 BehaviorSubjects) did for IPC.
+// Originally a thin wrapper over Electron's preload bridge (app/preload.ts). It now selects
+// between that and Tauri (src/lib/ipc-tauri.ts) at runtime, so both shells can be built from
+// one renderer while the migration proceeds — the same pattern the Angular/Svelte split
+// already uses. Everything above this file is shell-agnostic; see migration/tauri-scope.md.
 
 import type { IpcRendererEvent } from 'electron';
+import * as tauri from '$lib/ipc-tauri';
 
 interface WowUpBridge {
 	rendererInvoke: (channel: string, ...args: unknown[]) => Promise<unknown>;
@@ -29,11 +31,30 @@ declare global {
 		platform?: string;
 		userDataPath?: string;
 		logPath?: string;
+		/** Injected by Tauri's IPC bootstrap; presence is how we detect the shell. */
+		__TAURI_INTERNALS__?: unknown;
 	}
 }
 
 /** True when running inside Electron. False under Vitest/browser, so callers can stub. */
 export const isElectron = (): boolean => typeof window !== 'undefined' && !!window.wowup;
+
+/** True when running inside Tauri. */
+export const isTauri = (): boolean => typeof window !== 'undefined' && !!window.__TAURI_INTERNALS__;
+
+/**
+ * True when any desktop shell is present, i.e. when native features are available at all.
+ *
+ * Most existing `isElectron()` guards mean this rather than "Electron specifically" — they
+ * gate menus, tray, zoom, auto-update and push. They are being moved over to `isDesktop()`
+ * one phase at a time, as the Rust command behind each lands; a guard flipped early would
+ * invoke an unmigrated channel and throw. `migration/tauri-scope.md` tracks which remain.
+ */
+export const isDesktop = (): boolean => isElectron() || isTauri();
+
+// Electron is checked first so the existing E2E harness — which stubs `window.wowup` and
+// nothing else — keeps exercising the Electron path unchanged.
+const useTauri = (): boolean => !isElectron() && isTauri();
 
 function bridge(): WowUpBridge {
 	const b = typeof window !== 'undefined' ? window.wowup : undefined;
@@ -42,14 +63,17 @@ function bridge(): WowUpBridge {
 }
 
 export function invoke<T>(channel: string, ...args: unknown[]): Promise<T> {
+	if (useTauri()) return tauri.invoke<T>(channel, ...args);
 	return bridge().rendererInvoke(channel, ...args) as Promise<T>;
 }
 
 export function send(channel: string, ...args: unknown[]): void {
+	if (useTauri()) return tauri.send(channel, ...args);
 	bridge().rendererSend(channel, ...args);
 }
 
 export function sendSync<T>(channel: string, ...args: unknown[]): T {
+	if (useTauri()) return tauri.sendSync<T>(channel);
 	return bridge().rendererSendSync(channel, ...args) as T;
 }
 
@@ -63,16 +87,23 @@ export function on(
 	channel: string,
 	listener: (event: IpcRendererEvent, ...args: never[]) => void
 ): () => void {
+	if (useTauri()) return tauri.on(channel, listener as (e: unknown, ...a: never[]) => void);
 	const b = bridge();
 	b.rendererOn(channel, listener);
 	return () => b.rendererOff(channel, listener);
 }
 
-export const openExternal = (url: string): Promise<void> => bridge().openExternal(url);
-export const openPath = (path: string): Promise<string> => bridge().openPath(path);
+export const openExternal = (url: string): Promise<void> =>
+	useTauri() ? tauri.openExternal(url) : bridge().openExternal(url);
 
-export const platform = (): string =>
-	(typeof window !== 'undefined' && window.platform) || 'unknown';
+export const openPath = (path: string): Promise<string> =>
+	useTauri() ? tauri.openPath(path) : bridge().openPath(path);
+
+export const platform = (): string => {
+	if (useTauri()) return tauri.platform();
+	return (typeof window !== 'undefined' && window.platform) || 'unknown';
+};
+
 export const isWin = (): boolean => platform() === 'win32';
 export const isMac = (): boolean => platform() === 'darwin';
 export const isLinux = (): boolean => platform() === 'linux';

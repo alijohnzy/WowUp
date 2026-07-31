@@ -12,13 +12,23 @@
 // The window shows nothing and the main process reports a bare ERR_FAILED (-2), so this is worth
 // failing loudly on rather than rediscovering.
 //
-// The fallback always sits at the build root, so `/_app/` → `./_app/` is exact. This is only safe
-// because the app has no client-side routing: it is a single route whose "tabs" are state, so the
-// document URL never changes and relative URLs never go stale. Adding a second navigable route
-// means revisiting this.
+// The fallback always sits at the build root, so `/_app/` → `./_app/` is exact. The document URL
+// never changes despite there now being five routes, because `router.type: 'hash'` keeps the
+// route in the fragment — so relative URLs never go stale.
+//
+// Tauri is the opposite case and must be skipped: it serves the app from tauri://localhost, a
+// real origin with a root, where `/_app/…` is already correct. Rewriting to `./_app/…` there
+// made SvelteKit derive a base that turned goto() into a full-page navigation, and since
+// index.html redirects to /my-addons on mount, the app reloaded and redirected in a loop —
+// roughly thirty page loads a second, with nothing logged to say why.
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+
+if (process.env.BUILD_SHELL === 'tauri') {
+	console.log('relative-paths: skipped (BUILD_SHELL=tauri serves from a real origin)');
+	process.exit(0);
+}
 
 const indexPath = fileURLToPath(new URL('../build/index.html', import.meta.url));
 

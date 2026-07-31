@@ -19,29 +19,64 @@ import { fileURLToPath } from 'node:url';
 // plugin preferred process.env over parsing the file. Both halves are fixed; this pins it.
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const chunks = path.resolve(here, '../../build/_app/immutable/chunks');
+const immutable = path.resolve(here, '../../build/_app/immutable');
 
 const CF_KEY = /\$2[aby]\$\d{2}\$[A-Za-z0-9./]{40,}/;
+/** What the bundle holds for `apiKey`, however Rollup happened to minify around it. */
+const API_KEY_LITERAL = /apiKey\s*:\s*(["'`])(.*?)\1/g;
+
+/** Every emitted chunk, not just `chunks/` — which entry the config lands in is Rollup's call. */
+function bundleSources(): string[] {
+	const out: string[] = [];
+	const walk = (dir: string) => {
+		for (const entry of readdirSync(dir, { withFileTypes: true })) {
+			const full = path.join(dir, entry.name);
+			if (entry.isDirectory()) walk(full);
+			else if (entry.name.endsWith('.js')) out.push(readFileSync(full, 'utf8'));
+		}
+	};
+	walk(immutable);
+	return out;
+}
 
 describe('CurseForge API key in the built bundle', () => {
 	it('is bcrypt-shaped, or absent entirely', () => {
-		if (!existsSync(chunks)) {
+		if (!existsSync(immutable)) {
 			// Unit tests run without a build in CI; nothing to check.
 			expect(true).toBe(true);
 			return;
 		}
 
-		const sources = readdirSync(chunks)
-			.filter((f) => f.endsWith('.js'))
-			.map((f) => readFileSync(path.join(chunks, f), 'utf8'));
+		// Every `apiKey` literal has to be judged on its own. Asking whether the bundle
+		// contains *some* acceptable value is not the same question: the `wago` flavour ships
+		// `apiKey: ""` legitimately, and an any-of check lets that one empty literal vouch for
+		// a mangled key sitting in another chunk.
+		const values = bundleSources().flatMap((s) =>
+			[...s.matchAll(API_KEY_LITERAL)].map((m) => m[2])
+		);
 
-		const placeholder = sources.some((s) => s.includes('{{CURSEFORGE_API_KEY}}'));
-		const key = sources.map((s) => s.match(CF_KEY)?.[0]).find(Boolean);
+		// A build with no CurseForge config at all is not this test's business.
+		if (values.length === 0) {
+			expect(true).toBe(true);
+			return;
+		}
 
-		// Either the key was never supplied (placeholder intact, CurseForge features off) or it
-		// was supplied and must be well formed. What must never ship is a substituted-but-mangled
-		// value, which is neither and 403s on every request.
-		expect(placeholder || key !== undefined).toBe(true);
-		if (key) expect(key).toHaveLength(60);
+		for (const value of values) {
+			// Three valid states:
+			//   ""                        the `wago` flavour, which ships CurseForge off on purpose
+			//                             (environment.prod.ts / environment.dev.ts hardcode it)
+			//   {{CURSEFORGE_API_KEY}}    `ow` built without a key in the environment
+			//   $2a$10$…                  `ow` built with one, which must be well formed
+			//
+			// Anything else is a substituted-but-mangled key: it 403s on every CurseForge call
+			// while the addon list still renders from the local database, so nothing looks wrong.
+			if (value === '' || value === '{{CURSEFORGE_API_KEY}}') continue;
+
+			expect(
+				value,
+				`malformed CurseForge key baked into the bundle: ${value.length} chars`
+			).toMatch(CF_KEY);
+			expect(value).toHaveLength(60);
+		}
 	});
 });

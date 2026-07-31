@@ -1,0 +1,56 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "WowUp-CF-Tauri",
+  "version": "2.23.0",
+  "identifier": "io.wowupcf.tauri",
+  "build": {
+    "frontendDist": "../renderer-svelte/build",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "npm run tauri:renderer:dev",
+    "beforeBuildCommand": "npm run tauri:renderer:build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "WowUp CF",
+        "width": 1280,
+        "height": 720,
+        "minWidth": 940,
+        "minHeight": 700,
+        "resizable": true,
+        "center": true,
+        "decorations": false,
+        "dragDropEnabled": false,
+        "backgroundColor": "#444444"
+      }
+    ],
+    "security": {
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": []
+      }
+    },
+    "withGlobalTauri": false
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "appimage",
+      "deb",
+      "nsis",
+      "dmg"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "copyright": "WowUp LLC",
+    "category": "Utility",
+    "shortDescription": "World of Warcraft addon updater",
+    "longDescription": "World of Warcraft addon updater"
+  }
+}

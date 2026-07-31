@@ -83,7 +83,13 @@
     "svelte:ow:verify:boot": "node scripts/verify-boot.mjs --ow",
     "angular:appimage": "cross-env BUILD_FLAVOR=ow BUILD_RENDERER=angular npm run build:injectenv && tsc -p tsconfig.serve.json && ng build -c ow-production --base-href ./ && npx electron-builder build -c electron-build/electron-builder-angular.json --publish never",
     "svelte:package": "cross-env BUILD_FLAVOR=ow BUILD_RENDERER=svelte npm run build:injectenv && cross-env BUILD_FLAVOR=ow npm run svelte:ow:build && tsc -p tsconfig.serve.json && npx electron-builder build -c electron-build/electron-builder-svelte.json --publish never",
-    "svelte:verify:key": "node scripts/verify-cf-key.mjs"
+    "svelte:verify:key": "node scripts/verify-cf-key.mjs",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "tauri:test": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "tauri:renderer:build": "cd renderer-svelte && cross-env BUILD_SHELL=tauri BUILD_FLAVOR=wago NODE_ENV=production npm run build",
+    "tauri:renderer:dev": "cd renderer-svelte && cross-env BUILD_SHELL=tauri BUILD_FLAVOR=wago npm run dev"
   },
   "browserslist": [
     "chrome 98"
@@ -140,6 +146,7 @@
     "@ngx-translate/http-loader": "8.0.0",
     "@overwolf/ow-electron": "39.8.10",
     "@overwolf/ow-electron-builder": "26.9.0",
+    "@tauri-apps/cli": "2.11.4",
     "@types/adm-zip": "0.5.1",
     "@types/flat": "5.0.2",
     "@types/globrex": "0.1.2",

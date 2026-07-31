@@ -23,7 +23,8 @@
 	import Snackbar from '$lib/components/common/Snackbar.svelte';
 	import Titlebar from '$lib/components/common/Titlebar.svelte';
 	import VerticalTabs from '$lib/components/common/VerticalTabs.svelte';
-	import { isElectron, on, platform } from '$lib/ipc';
+	import { isElectron, isTauri, on, platform } from '$lib/ipc';
+	import { forwardConsoleToTauri } from '$lib/log-tauri';
 	import { addonService, onAddonInstalled, ScanUpdateType } from '$lib/state/addon.svelte';
 	import { AddonInstallState } from '$lib/models/addon-install-state';
 	import { AppUpdateState } from '$common/wowup/models';
@@ -340,6 +341,12 @@
 	}
 
 	async function bootstrap(): Promise<void> {
+		// Before anything that can fail: without this the webview console is unreachable in a
+		// packaged Tauri build, so a startup exception leaves no trace at all.
+		if (isTauri()) {
+			forwardConsoleToTauri();
+		}
+
 		// Language first: an unsupported saved locale must not break the rest of startup.
 		if (isElectron()) {
 			await wowup.initializeLanguage();

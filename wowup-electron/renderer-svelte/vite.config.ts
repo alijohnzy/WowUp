@@ -154,12 +154,21 @@ export default defineConfig({
 			// Electron loads the renderer off disk via file://, so this is a pure SPA:
 			// no server, no prerendering, relative asset paths.
 			adapter: adapter({ fallback: 'index.html', pages: 'build', assets: 'build' }),
-			paths: { relative: true },
-			// Electron loads the renderer over file://, so location.pathname is the absolute
-			// path to index.html — "/home/…/build/index.html", which matches no route and made
-			// the router 404 with "Not found:" while the layout rendered fine around it.
-			// Hash routing reads location.hash instead, which the filesystem path cannot corrupt.
-			router: { type: 'hash' },
+			// `relative: true` exists for Electron, which loads the renderer off file://, where an
+			// absolute /_app/… would resolve against the filesystem root. Tauri serves from
+			// tauri://localhost, i.e. a real origin with a root, so absolute paths are correct —
+			// and relative ones are actively wrong: SvelteKit derives `base` from the document
+			// location, and at tauri://localhost it derived a base that made goto() fall back to a
+			// full-page navigation. index.html redirects to /my-addons on mount, so that reloaded,
+			// redirected, and reloaded again — a boot loop, ~30 loads/second, no error logged.
+			paths: { relative: process.env.BUILD_SHELL !== 'tauri' },
+			// Hash routing exists because Electron loads the renderer off file://, where the
+			// document URL is a filesystem path and history routing cannot work. Tauri serves
+			// from tauri://localhost — a real origin — so history routing is available, and hash
+			// routing is actively harmful there: goto('#/x') against a non-special URL scheme
+			// fell back to a full-page navigation, and index.html redirects on mount, so the app
+			// reloaded in a loop.
+			router: { type: process.env.BUILD_SHELL === 'tauri' ? 'pathname' : 'hash' },
 			alias: {
 				// src/common/ contains zero Angular imports — constants, models and warcraft
 				// helpers shared with the main process. Both renderers consume it directly;
@@ -173,6 +182,23 @@ export default defineConfig({
 			}
 		})
 	],
+	// wowup-lib-core is Parcel-built CommonJS whose re-exports go through a runtime
+	// `$parcel$exportWildcard` helper. Vite's dev-time CJS interop detects named exports by
+	// static analysis, which that helper defeats, so every named import from the package is a
+	// missing binding in dev — `SyntaxError: Importing binding name 'getTocForGameType' is not
+	// found`, thrown before the app mounts. Production is unaffected because Rollup resolves
+	// the wildcard at build time, which is why this only ever showed up on the dev server.
+	//
+	// Linked (`file:`) dependencies are excluded from pre-bundling by default; naming it here
+	// opts it back in, and esbuild does resolve the wildcard.
+	optimizeDeps: {
+		include: ['wowup-lib-core']
+	},
+	// routes.ts needs to know which router is in play to build an address, and the router is
+	// chosen at build time. Inlined as a literal so the dead branch is dropped from the bundle.
+	define: {
+		__HASH_ROUTING__: JSON.stringify(process.env.BUILD_SHELL !== 'tauri')
+	},
 	build: {
 		// Needed for the emitted-span bundle attribution in migration/baseline.
 		sourcemap: true

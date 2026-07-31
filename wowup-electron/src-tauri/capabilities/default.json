@@ -1,0 +1,60 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Permissions for the main WowUp window.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "core:window:allow-start-dragging",
+    "core:window:allow-minimize",
+    "core:window:allow-maximize",
+    "core:window:allow-unmaximize",
+    "core:window:allow-close",
+    "core:window:allow-set-focus",
+    "core:window:allow-is-maximized",
+    "core:window:allow-is-fullscreen",
+    "core:window:allow-set-fullscreen",
+    "core:webview:allow-set-webview-zoom",
+    "os:default",
+    "opener:default",
+    "store:default",
+    "log:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "https://*.curseforge.com/*"
+        },
+        {
+          "url": "https://api.curseforge.com/*"
+        },
+        {
+          "url": "https://addons-ecs.forgesvc.net/*"
+        },
+        {
+          "url": "https://*.wago.io/*"
+        },
+        {
+          "url": "https://api.github.com/*"
+        },
+        {
+          "url": "https://github.com/*"
+        },
+        {
+          "url": "https://*.githubusercontent.com/*"
+        },
+        {
+          "url": "https://raider.io/*"
+        },
+        {
+          "url": "https://*.wowup.io/*"
+        },
+        {
+          "url": "https://wowup.io/*"
+        }
+      ]
+    }
+  ]
+}
