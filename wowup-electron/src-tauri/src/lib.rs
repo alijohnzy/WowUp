@@ -6,8 +6,10 @@
 
 pub mod addons;
 pub mod constants;
+pub mod files;
 pub mod import;
 pub mod store;
+pub mod tray;
 pub mod window;
 pub mod warcraft;
 
@@ -95,8 +97,16 @@ pub fn run() {
                 .build(),
         )
         .manage(store::Stores::default())
+        .manage(tray::TrayState::default())
         .invoke_handler(tauri::generate_handler![
             get_app_version,
+            files::path_exists,
+            files::read_file,
+            files::read_file_buffer,
+            files::list_directories,
+            files::get_latest_dir_update_time,
+            files::readdir,
+            tray::create_tray_menu,
             window::minimize_window,
             window::maximize_window,
             window::close_window,

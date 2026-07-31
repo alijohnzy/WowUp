@@ -28,10 +28,17 @@ import {
 	IPC_GET_APP_VERSION,
 	IPC_GET_ASSET_FILE_PATH,
 	IPC_CLOSE_WINDOW,
+	IPC_CREATE_TRAY_MENU_CHANNEL,
 	IPC_FOCUS_WINDOW,
 	IPC_GET_LOCALE,
 	IPC_MAXIMIZE_WINDOW,
 	IPC_MINIMIZE_WINDOW,
+	IPC_GET_LATEST_DIR_UPDATE_TIME,
+	IPC_LIST_DIRECTORIES_CHANNEL,
+	IPC_PATH_EXISTS_CHANNEL,
+	IPC_READ_FILE_BUFFER_CHANNEL,
+	IPC_READ_FILE_CHANNEL,
+	IPC_READDIR,
 	IPC_QUIT_APP,
 	IPC_RESTART_APP,
 	IPC_WINDOW_IS_FULLSCREEN,
@@ -106,7 +113,16 @@ export const CHANNEL_PARAMS: Readonly<Record<string, readonly string[]>> = {
 	[IPC_WINDOW_IS_FULLSCREEN]: [],
 	[IPC_WINDOW_LEAVE_FULLSCREEN]: [],
 	[IPC_RESTART_APP]: [],
-	[IPC_QUIT_APP]: []
+	[IPC_QUIT_APP]: [],
+	[IPC_CREATE_TRAY_MENU_CHANNEL]: ['config'],
+
+	// Phase 1 — filesystem (Group A), as far as the addon scanner needs.
+	[IPC_PATH_EXISTS_CHANNEL]: ['filePath'],
+	[IPC_READDIR]: ['dirPath'],
+	[IPC_READ_FILE_CHANNEL]: ['filePath'],
+	[IPC_READ_FILE_BUFFER_CHANNEL]: ['filePath'],
+	[IPC_LIST_DIRECTORIES_CHANNEL]: ['filePath', 'scanSymlinks'],
+	[IPC_GET_LATEST_DIR_UPDATE_TIME]: ['dirPath']
 };
 
 /** `warcraft-get-executable-name` -> `warcraft_get_executable_name`. */

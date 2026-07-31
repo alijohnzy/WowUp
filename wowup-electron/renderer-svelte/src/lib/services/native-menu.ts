@@ -7,10 +7,12 @@
 
 import { IPC_CREATE_APP_MENU_CHANNEL, IPC_CREATE_TRAY_MENU_CHANNEL } from '$common/constants';
 import type { MenuConfig, SystemTrayConfig } from '$common/wowup/models';
-import { invoke, isElectron } from '$lib/ipc';
+import { invoke, isDesktop, isElectron } from '$lib/ipc';
 import { t } from '$lib/i18n.svelte';
 
 export async function createAppMenu(): Promise<void> {
+	// create-app-menu has no Tauri command yet (Group I); Tauri also has no menu bar on a
+	// decorationless window, so there is nothing to show even once it lands.
 	if (!isElectron()) return;
 
 	const config: MenuConfig = {
@@ -45,7 +47,7 @@ export async function createAppMenu(): Promise<void> {
 }
 
 export async function createSystemTray(): Promise<void> {
-	if (!isElectron()) return;
+	if (!isDesktop()) return;
 
 	// The original requested only QUIT_ACTION and SHOW_ACTION from the translate service, so
 	// checkUpdateLabel arrived undefined and the main process fell back to its English

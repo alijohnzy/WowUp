@@ -23,6 +23,7 @@
 	import Snackbar from '$lib/components/common/Snackbar.svelte';
 	import Titlebar from '$lib/components/common/Titlebar.svelte';
 	import VerticalTabs from '$lib/components/common/VerticalTabs.svelte';
+	import WindowResizeEdges from '$lib/components/common/WindowResizeEdges.svelte';
 	import { isDesktop, isTauri, markShellOnDocument, on, platform } from '$lib/ipc';
 	import { forwardConsoleToTauri } from '$lib/log-tauri';
 	import { configureAxiosForTauri } from '$lib/http';
@@ -432,6 +433,10 @@
   left, routed content in the middle, footer along the bottom. AnimatedLogo covers the
   pre-load state that Angular expressed as `*ngIf="(showPreLoad$ | async) === true"`.
 -->
+<!-- Outside .app-root: these are position:fixed and must sit above everything, including
+     the dialog host and any portalled popup. -->
+<WindowResizeEdges />
+
 <div class="app-root {theme.current} {platform()}">
 	{#if ready}
 		<Titlebar />

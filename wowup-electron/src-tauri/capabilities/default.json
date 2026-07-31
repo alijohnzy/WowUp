@@ -22,6 +22,14 @@
     "store:default",
     "log:default",
     "deep-link:default",
+    "core:window:allow-start-resize-dragging",
+    "core:window:allow-set-size",
+    "core:window:allow-is-minimized",
+    "core:window:allow-set-badge-count",
+    "core:tray:default",
+    "core:menu:default",
+    "core:window:allow-show",
+    "core:window:allow-unminimize",
     {
       "identifier": "http:default",
       "allow": [

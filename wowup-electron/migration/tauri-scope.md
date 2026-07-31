@@ -477,6 +477,32 @@ Three things this surfaced that the plan did not have:
    false`, that plus the unmigrated window channels meant the title bar could neither move
    the window nor close it.
 
+**Also migrated after first use of the real app:** the tray (Group I), window resize grips,
+and the filesystem channels the addon scanner needs — `path-exists`, `readdir`, `read-file`,
+`read-file-buffer`, `list-directories`, `get-latest-dir-update-time` (Group A, partial).
+`list-directories` accepts `scanSymlinks` and ignores it; symlinked addon folders
+(`use_symlink_mode`) still need the `getSymlinkDirs` walk.
+
+**Resizing had to be rebuilt, not ported.** Electron's `titleBarStyle: 'hidden'` hides the
+title bar but keeps the native frame, so the OS still resized the window. Tauri's nearest
+equivalent, `decorations: false`, removes the frame entirely — the window was stuck at
+1280x720 unless maximised. `WindowResizeEdges.svelte` puts eight zones at the edges that
+hand off to `startResizeDragging`, so the window manager runs the resize natively.
+
+**Wago is blocked on §3.4, and it is now visible.** Get Addons reports "error contacting
+Wago" and the log shows `[wago] no token received after timeout` followed by `HTTP 401`. The
+Wago API token is not a credential the app holds — the ad page at
+`addons.wago.io/wowup_ad` calls `window.wago.provideApiKey(token)` against the function
+`assets/preload/wago.js` exposes, and `app/wago-handler.ts` forwards it. No `<webview>`, no
+token, no Wago.
+
+That flow *is* reproducible in Tauri: a `WebviewWindow` with an `initialization_script`
+defining `window.wago.provideApiKey` would capture it. **Deliberately not done**, because
+doing it in a hidden window takes Wago's API access while denying them the ad impression
+that pays for it — the panel says "This ad supports addon creators". Making the ad visible
+means embedding a second webview in the nav rail (Tauri's multi-webview, currently behind
+the `unstable` feature) or asking Wago for a headless token path. That is a product call.
+
 **Known open:** two unhandled rejections per sync — `The resource id … is invalid` — from a
 plugin-http response body. Ruled out: the fetch call itself, `network.ts`'s body read, the
 axios adapter (disabling it changes nothing), and the invoke path (patching
