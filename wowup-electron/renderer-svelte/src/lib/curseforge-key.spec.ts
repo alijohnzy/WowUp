@@ -55,28 +55,28 @@ describe('CurseForge API key in the built bundle', () => {
 			[...s.matchAll(API_KEY_LITERAL)].map((m) => m[2])
 		);
 
-		// A build with no CurseForge config at all is not this test's business.
-		if (values.length === 0) {
-			expect(true).toBe(true);
-			return;
-		}
+		// Three valid states:
+		//   ""                        the `wago` flavour, which ships CurseForge off on purpose
+		//                             (environment.prod.ts / environment.dev.ts hardcode it)
+		//   {{CURSEFORGE_API_KEY}}    `ow` built without a key in the environment
+		//   $2a$10$… (60 chars)       `ow` built with one, which must be well formed
+		//
+		// Anything else is a substituted-but-mangled key: it 403s on every CurseForge call
+		// while the addon list still renders from the local database, so nothing looks wrong.
+		//
+		// Collected rather than asserted in the loop, so that a build where every value is
+		// legitimately skipped still asserts — vitest runs with `requireAssertions: true`,
+		// and a loop of `continue`s reaches the end having asserted nothing, which fails as
+		// surely as a real mismatch would.
+		const malformed = values.filter(
+			(v) => v !== '' && v !== '{{CURSEFORGE_API_KEY}}' && !(CF_KEY.test(v) && v.length === 60)
+		);
 
-		for (const value of values) {
-			// Three valid states:
-			//   ""                        the `wago` flavour, which ships CurseForge off on purpose
-			//                             (environment.prod.ts / environment.dev.ts hardcode it)
-			//   {{CURSEFORGE_API_KEY}}    `ow` built without a key in the environment
-			//   $2a$10$…                  `ow` built with one, which must be well formed
-			//
-			// Anything else is a substituted-but-mangled key: it 403s on every CurseForge call
-			// while the addon list still renders from the local database, so nothing looks wrong.
-			if (value === '' || value === '{{CURSEFORGE_API_KEY}}') continue;
-
-			expect(
-				value,
-				`malformed CurseForge key baked into the bundle: ${value.length} chars`
-			).toMatch(CF_KEY);
-			expect(value).toHaveLength(60);
-		}
+		expect(
+			malformed,
+			`malformed CurseForge key(s) baked into the bundle: ${malformed
+				.map((v) => `${v.length} chars starting ${JSON.stringify(v.slice(0, 4))}`)
+				.join(', ')}`
+		).toEqual([]);
 	});
 });

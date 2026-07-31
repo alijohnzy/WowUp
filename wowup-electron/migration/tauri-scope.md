@@ -370,18 +370,68 @@ Phase 0 is done and committed (`d0f8392c`). Four things were not visible from re
    Fixed with `optimizeDeps.include`. **This affected `npm run svelte:dev` too** — it is not
    a Tauri problem, it was just never hit because the dev server is rarely used.
 
-### The one thing Phase 0 did not solve
+### Two bugs with one symptom, which is why the first diagnosis was wrong
 
-The **production embedded-asset path does not boot on this machine** (Arch, WebKitGTK
-2.52.5): module scripts served over `tauri://localhost` fail with *"Importing a module
-script failed"*, alongside *"IPC custom protocol failed, Tauri will now use the postMessage
-interface instead"*. The same bundle loads correctly over `http://` (verified in both
-Chromium and the Tauri dev server), so this is the custom protocol, not the build.
+The boot loop was reported mid-session as an unresolved WebKitGTK 2.52 problem —
+*"Importing a module script failed"* plus *"IPC custom protocol failed, Tauri will now use
+the postMessage interface instead"*. **That was wrong.** There was no WebKitGTK bug. There
+were two independent defects that both present as "the app reloads forever, nothing
+logged":
 
-Everything above was therefore verified against `tauri dev` and against a debug binary once
-the routing fixes landed — the vertical slice is proven, but **packaging is not**. This
-needs settling before Phase 1 ends, since it may be a WebKitGTK 2.52 regression rather than
-anything in this repo. It is the single largest open risk after §3.4.
+1. **Relative asset paths.** `./_app/…` under `tauri://localhost` failed to resolve, so the
+   entry module never loaded → *"Importing a module script failed"*.
+2. **Hash routing on a custom scheme.** `goto('#/x')` degraded to a full-page navigation,
+   and `+page.svelte` redirects on mount → reload, redirect, reload.
+
+Fixing (1) left the loop in place, because (2) was still there — which is what made the
+first fix look ineffective and sent the diagnosis toward the webview. Both are fixed and
+both fixes are conditional on `BUILD_SHELL`, so Electron is untouched.
+
+Current state of the embedded-asset (production) path on the same machine: **1 page load,
+0 module failures, 0 IPC protocol warnings**, bootstrap runs to completion, and a live
+CurseForge request returns 200. The custom protocol was never the problem.
+
+The lesson worth keeping: two bugs sharing one symptom defeats the usual
+change-one-thing-and-retest loop, because a correct fix looks like a failed one. Injecting a
+probe on every page load (`on_page_load` → `webview.eval`) is what separated them — it cost
+one rebuild and would have saved four.
+
+`scripts/verify-tauri-boot.mjs` now encodes the check, because neither defect produces
+anything on stdout — WebKitGTK does not forward the webview console to the host, so the
+failure mode is a live process and an unpainted window. It asserts on the app's own log:
+exactly one page load, no module failures, no unexpected renderer errors. Verified to fail
+by rebuilding the renderer the Electron way and watching it report 135 page loads.
+
+### 3c. Packaging — done
+
+`npm run tauri:build` produces a working AppImage, and it boots:
+
+```
+$ npm run tauri:verify:boot -- --appimage
+page loads 1 · module failures 0 · ipc protocol warnings 0 · unexpected errors 0
+OK: renderer booted once and ran.
+```
+
+| | AppImage |
+|---|---|
+| Electron (`release-svelte/`) | 130.7 MB |
+| Tauri | 103.8 MB |
+| | **−26.9 MB (−20.6%)** |
+
+Two things had to be settled, neither of them about this app:
+
+- **`NO_STRIP=1` is required**, now baked into the `tauri:build` script. `linuxdeploy`
+  bundles a `strip` too old to parse `.relr.dyn` (`SHT_RELR`, ELF section type 0x13), which
+  every current distro emits for packed relative relocations. It fails on ~40 system
+  libraries and aborts the entire bundle with only `failed to run linuxdeploy` — the real
+  error appears solely under `--verbose`. Note this inflates the artifact: the 20.6% saving
+  above is *with stripping off*, so the real margin is larger.
+- **`bundle.category`** was `Utility`; `electron-builder-svelte.json` declares `Game`.
+  Corrected.
+
+Still to do for full packaging parity: the `wowup://` protocol association (comes with
+`plugin-deep-link`, Group I), Windows and macOS bundles (untested — this was a Linux host),
+and updater signing (§3.2).
 
 ---
 
