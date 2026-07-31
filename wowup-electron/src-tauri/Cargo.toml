@@ -23,6 +23,8 @@ serde_repr = "0.1"
 serde_json = "1"
 log = "0.4"
 tokio = { version = "1", features = ["fs"] }
+# glob matching for list-files / list-entries, which the JS did with globrex.
+globset = "0.4"
 
 # Plugin set. Deliberately minimal — each phase adds its own.
 tauri-plugin-log = "2"

@@ -247,3 +247,309 @@ mod tests {
         assert!(err.contains("/nonexistent/AddOns"), "got {err}");
     }
 }
+
+// ---------------------------------------------------------------------------
+// Mutating operations and metadata — the rest of Group A that install/remove needs.
+// ---------------------------------------------------------------------------
+
+use serde::Serialize;
+
+/// `fsp.mkdir(path, { recursive: true })` — port of `create-directory`.
+#[tauri::command]
+pub async fn create_directory(directory_path: String) -> Result<bool, String> {
+    log::info!("[CreateDirectory] '{directory_path}'");
+    tokio::fs::create_dir_all(&directory_path)
+        .await
+        .map_err(|e| format!("{directory_path}: {e}"))?;
+    Ok(true)
+}
+
+/// Port of `delete-directory`, which removes a file *or* a directory tree.
+///
+/// Named for directories but used for both — addon removal deletes folders, and the
+/// download path deletes single files.
+#[tauri::command]
+pub async fn delete_directory(file_path: String) -> Result<bool, String> {
+    log::info!("[FileRemove] {file_path}");
+
+    let meta = match tokio::fs::symlink_metadata(&file_path).await {
+        Ok(m) => m,
+        // Already gone is success: removal is idempotent in the JS too (`remove` swallows
+        // ENOENT), and failing here would block an addon uninstall that half-completed.
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(true),
+        Err(e) => return Err(format!("{file_path}: {e}")),
+    };
+
+    // symlink_metadata, so a symlinked addon folder is unlinked rather than followed and
+    // its target deleted.
+    let result = if meta.is_dir() && !meta.is_symlink() {
+        tokio::fs::remove_dir_all(&file_path).await
+    } else {
+        tokio::fs::remove_file(&file_path).await
+    };
+
+    result.map_err(|e| format!("{file_path}: {e}"))?;
+    Ok(true)
+}
+
+/// Port of `write-file` — UTF-8 text.
+#[tauri::command]
+pub async fn write_file(file_path: String, contents: String) -> Result<(), String> {
+    tokio::fs::write(&file_path, contents)
+        .await
+        .map_err(|e| format!("{file_path}: {e}"))
+}
+
+/// Mirrors `CopyFileRequest` (src/common/models/copy-file-request.ts).
+///
+/// The renderer invokes copy-file with one object rather than positional arguments, so this
+/// takes the object. `destinationFileChmod` is accepted and ignored: it exists because the
+/// Electron path chmod'd the copy, which matters on Unix for files extracted from a zip —
+/// worth doing when unzip lands, not before.
+#[derive(Debug, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CopyFileRequest {
+    pub source_file_path: String,
+    pub destination_file_path: String,
+}
+
+/// Port of `copy-file`, which copies a file or recursively copies a directory.
+#[tauri::command]
+pub async fn copy_file(request: CopyFileRequest) -> Result<bool, String> {
+    let CopyFileRequest {
+        source_file_path,
+        destination_file_path,
+    } = request;
+    log::info!("[FileCopy] '{source_file_path}' -> '{destination_file_path}'");
+
+    let meta = tokio::fs::symlink_metadata(&source_file_path)
+        .await
+        .map_err(|e| format!("{source_file_path}: {e}"))?;
+
+    if meta.is_dir() {
+        copy_dir_recursive(&source_file_path, &destination_file_path).await?;
+    } else {
+        if let Some(parent) = std::path::Path::new(&destination_file_path).parent() {
+            tokio::fs::create_dir_all(parent)
+                .await
+                .map_err(|e| format!("{}: {e}", parent.display()))?;
+        }
+        tokio::fs::copy(&source_file_path, &destination_file_path)
+            .await
+            .map_err(|e| format!("{source_file_path} -> {destination_file_path}: {e}"))?;
+    }
+    Ok(true)
+}
+
+/// Iterative rather than recursive: `async fn` cannot recurse without boxing, and an addon
+/// tree is arbitrarily deep.
+async fn copy_dir_recursive(from: &str, to: &str) -> Result<(), String> {
+    let mut stack = vec![(
+        std::path::PathBuf::from(from),
+        std::path::PathBuf::from(to),
+    )];
+
+    while let Some((src, dst)) = stack.pop() {
+        tokio::fs::create_dir_all(&dst)
+            .await
+            .map_err(|e| format!("{}: {e}", dst.display()))?;
+
+        let mut entries = tokio::fs::read_dir(&src)
+            .await
+            .map_err(|e| format!("{}: {e}", src.display()))?;
+
+        while let Some(entry) = entries
+            .next_entry()
+            .await
+            .map_err(|e| format!("{}: {e}", src.display()))?
+        {
+            let target = dst.join(entry.file_name());
+            let ty = entry
+                .file_type()
+                .await
+                .map_err(|e| format!("{}: {e}", entry.path().display()))?;
+
+            if ty.is_dir() {
+                stack.push((entry.path(), target));
+            } else {
+                tokio::fs::copy(entry.path(), &target)
+                    .await
+                    .map_err(|e| format!("{}: {e}", entry.path().display()))?;
+            }
+        }
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_home_dir() -> Result<String, String> {
+    // `os.homedir()`. Reading the env directly rather than via a path API, because the JS
+    // did and WoW paths are stored relative to whatever it returned.
+    #[cfg(target_os = "windows")]
+    let home = std::env::var_os("USERPROFILE");
+    #[cfg(not(target_os = "windows"))]
+    let home = std::env::var_os("HOME");
+
+    home.map(|h| h.to_string_lossy().into_owned())
+        .ok_or_else(|| "no home directory in the environment".to_string())
+}
+
+/// Port of `show-directory` — `shell.openPath`, i.e. reveal in the file manager.
+#[tauri::command]
+pub async fn show_directory(app: tauri::AppHandle, file_path: String) -> Result<String, String> {
+    use tauri_plugin_opener::OpenerExt;
+    match app.opener().open_path(&file_path, None::<&str>) {
+        Ok(()) => Ok(String::new()),
+        // shell.openPath resolves to an error *string* rather than rejecting.
+        Err(e) => Ok(e.to_string()),
+    }
+}
+
+/// Mirrors `FsStats` (wowup-lib/src/ipc.ts:1).
+///
+/// The `Date` fields cross as ISO strings: Tauri's IPC is JSON, so a real Date cannot
+/// survive, and `new Date(string)` is what the renderer does with them anyway.
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FsStats {
+    pub is_file: bool,
+    pub is_directory: bool,
+    pub is_block_device: bool,
+    pub is_character_device: bool,
+    pub is_symbolic_link: bool,
+    #[serde(rename = "isFIFO")]
+    pub is_fifo: bool,
+    pub is_socket: bool,
+    pub dev: u64,
+    pub ino: u64,
+    pub mode: u32,
+    pub nlink: u64,
+    pub uid: u32,
+    pub gid: u32,
+    pub rdev: u64,
+    pub size: u64,
+    pub blksize: u64,
+    pub blocks: u64,
+    pub atime_ms: f64,
+    pub mtime_ms: f64,
+    pub ctime_ms: f64,
+    pub birthtime_ms: f64,
+}
+
+fn to_millis(t: std::io::Result<std::time::SystemTime>) -> f64 {
+    t.ok()
+        .and_then(|s| s.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_secs_f64() * 1000.0)
+        .unwrap_or(0.0)
+}
+
+/// Port of `stat-files` — a map of path -> stats.
+#[tauri::command]
+pub async fn stat_files(
+    file_paths: Vec<String>,
+) -> Result<std::collections::HashMap<String, FsStats>, String> {
+    let mut out = std::collections::HashMap::new();
+
+    for path in file_paths {
+        // `fsp.stat` follows symlinks, so a symlinked addon folder reports as a directory.
+        let meta = tokio::fs::metadata(&path)
+            .await
+            .map_err(|e| format!("{path}: {e}"))?;
+        let link_meta = tokio::fs::symlink_metadata(&path).await.ok();
+
+        #[cfg(unix)]
+        let stats = {
+            use std::os::unix::fs::{FileTypeExt, MetadataExt};
+            FsStats {
+                is_file: meta.is_file(),
+                is_directory: meta.is_dir(),
+                is_block_device: meta.file_type().is_block_device(),
+                is_character_device: meta.file_type().is_char_device(),
+                is_symbolic_link: link_meta.map(|m| m.is_symlink()).unwrap_or(false),
+                is_fifo: meta.file_type().is_fifo(),
+                is_socket: meta.file_type().is_socket(),
+                dev: meta.dev(),
+                ino: meta.ino(),
+                mode: meta.mode(),
+                nlink: meta.nlink(),
+                uid: meta.uid(),
+                gid: meta.gid(),
+                rdev: meta.rdev(),
+                size: meta.size(),
+                blksize: meta.blksize(),
+                blocks: meta.blocks(),
+                atime_ms: to_millis(meta.accessed()),
+                mtime_ms: to_millis(meta.modified()),
+                ctime_ms: meta.ctime() as f64 * 1000.0,
+                birthtime_ms: to_millis(meta.created()),
+            }
+        };
+
+        #[cfg(not(unix))]
+        let stats = FsStats {
+            is_file: meta.is_file(),
+            is_directory: meta.is_dir(),
+            is_block_device: false,
+            is_character_device: false,
+            is_symbolic_link: link_meta.map(|m| m.is_symlink()).unwrap_or(false),
+            is_fifo: false,
+            is_socket: false,
+            dev: 0,
+            ino: 0,
+            mode: 0,
+            nlink: 0,
+            uid: 0,
+            gid: 0,
+            rdev: 0,
+            size: meta.len(),
+            blksize: 0,
+            blocks: 0,
+            atime_ms: to_millis(meta.accessed()),
+            mtime_ms: to_millis(meta.modified()),
+            ctime_ms: to_millis(meta.modified()),
+            birthtime_ms: to_millis(meta.created()),
+        };
+
+        out.insert(path, stats);
+    }
+
+    Ok(out)
+}
+
+/// `globrex(filter)` in the JS — a shell glob, matched against the entry *name*.
+fn glob_matcher(filter: &str) -> Result<globset::GlobMatcher, String> {
+    globset::Glob::new(filter)
+        .map_err(|e| format!("bad filter {filter:?}: {e}"))
+        .map(|g| g.compile_matcher())
+}
+
+/// Port of `list-files` — names in `source_path` matching `filter`.
+///
+/// A missing directory yields an empty list rather than an error, as in the JS: the caller
+/// asks about addon folders that may not exist.
+#[tauri::command]
+pub async fn list_files(source_path: String, filter: String) -> Result<Vec<String>, String> {
+    if !path_exists(source_path.clone()).await? {
+        return Ok(Vec::new());
+    }
+
+    let matcher = glob_matcher(&filter)?;
+    let mut entries = tokio::fs::read_dir(&source_path)
+        .await
+        .map_err(|e| format!("{source_path}: {e}"))?;
+
+    let mut names = Vec::new();
+    while let Some(entry) = entries
+        .next_entry()
+        .await
+        .map_err(|e| format!("{source_path}: {e}"))?
+    {
+        let name = entry.file_name().to_string_lossy().into_owned();
+        if matcher.is_match(&name) {
+            names.push(name);
+        }
+    }
+
+    names.sort();
+    Ok(names)
+}

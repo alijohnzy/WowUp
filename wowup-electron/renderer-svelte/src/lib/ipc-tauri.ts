@@ -33,7 +33,15 @@ import {
 	IPC_GET_LOCALE,
 	IPC_MAXIMIZE_WINDOW,
 	IPC_MINIMIZE_WINDOW,
+	IPC_COPY_FILE_CHANNEL,
+	IPC_CREATE_DIRECTORY_CHANNEL,
+	IPC_DELETE_DIRECTORY_CHANNEL,
+	IPC_GET_HOME_DIR,
 	IPC_GET_LATEST_DIR_UPDATE_TIME,
+	IPC_LIST_FILES_CHANNEL,
+	IPC_SHOW_DIRECTORY,
+	IPC_STAT_FILES_CHANNEL,
+	IPC_WRITE_FILE_CHANNEL,
 	IPC_LIST_DIRECTORIES_CHANNEL,
 	IPC_PATH_EXISTS_CHANNEL,
 	IPC_READ_FILE_BUFFER_CHANNEL,
@@ -122,7 +130,17 @@ export const CHANNEL_PARAMS: Readonly<Record<string, readonly string[]>> = {
 	[IPC_READ_FILE_CHANNEL]: ['filePath'],
 	[IPC_READ_FILE_BUFFER_CHANNEL]: ['filePath'],
 	[IPC_LIST_DIRECTORIES_CHANNEL]: ['filePath', 'scanSymlinks'],
-	[IPC_GET_LATEST_DIR_UPDATE_TIME]: ['dirPath']
+	[IPC_GET_LATEST_DIR_UPDATE_TIME]: ['dirPath'],
+	[IPC_CREATE_DIRECTORY_CHANNEL]: ['directoryPath'],
+	[IPC_DELETE_DIRECTORY_CHANNEL]: ['filePath'],
+	[IPC_WRITE_FILE_CHANNEL]: ['filePath', 'contents'],
+	[IPC_GET_HOME_DIR]: [],
+	[IPC_SHOW_DIRECTORY]: ['filePath'],
+	[IPC_STAT_FILES_CHANNEL]: ['filePaths'],
+	[IPC_LIST_FILES_CHANNEL]: ['sourcePath', 'filter'],
+	// copy-file is invoked with one object argument (services/files.ts:77), not positionals,
+	// so the Rust command takes a single `request` and destructures it there.
+	[IPC_COPY_FILE_CHANNEL]: ['request']
 };
 
 /** `warcraft-get-executable-name` -> `warcraft_get_executable_name`. */

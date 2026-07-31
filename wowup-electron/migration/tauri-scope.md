@@ -489,6 +489,27 @@ equivalent, `decorations: false`, removes the frame entirely — the window was 
 1280x720 unless maximised. `WindowResizeEdges.svelte` puts eight zones at the edges that
 hand off to `startResizeDragging`, so the window manager runs the resize natively.
 
+### Remaining channel surface, measured
+
+`renderer-svelte` invokes 88 of the 94 channels. **17 commands are still unmigrated**, plus
+6 events Rust does not yet emit:
+
+| group | channels |
+|---|---|
+| install/update | `download-file`, `unzip-file` |
+| filesystem | `list-entries`, `list-dir-recursive`, `get-directory-tree` |
+| zoom | `get-zoom-factor`, `set-zoom-factor`, `set-zoom-limits` |
+| app update | `app-check-update`, `app-install-update` (+ `app-update-state` event) |
+| push | `push-init`, `push-subscribe`, `push-unregister` (+ `push-notification`) |
+| login items | `get-login-item-settings`, `set-login-item-settings` |
+| menu / overwolf | `create-app-menu`, `ow-open-cmp` |
+| power monitor | the four `power-monitor-*` events |
+| zoom menu | `menu-zoom-in` / `-out` / `-reset` events |
+
+`download-file` and `unzip-file` are the ones that matter: without them an addon cannot be
+installed or updated, which is the app's whole purpose. They need `reqwest` streaming with
+progress events and the `zip` crate — a coherent chunk of work rather than a gap to plug.
+
 **Wago is blocked on §3.4, and it is now visible.** Get Addons reports "error contacting
 Wago" and the log shows `[wago] no token received after timeout` followed by `HTTP 401`. The
 Wago API token is not a credential the app holds — the ad page at
@@ -496,12 +517,23 @@ Wago API token is not a credential the app holds — the ad page at
 `assets/preload/wago.js` exposes, and `app/wago-handler.ts` forwards it. No `<webview>`, no
 token, no Wago.
 
-That flow *is* reproducible in Tauri: a `WebviewWindow` with an `initialization_script`
-defining `window.wago.provideApiKey` would capture it. **Deliberately not done**, because
-doing it in a hidden window takes Wago's API access while denying them the ad impression
-that pays for it — the panel says "This ad supports addon creators". Making the ad visible
-means embedding a second webview in the nav rail (Tauri's multi-webview, currently behind
-the `unstable` feature) or asking Wago for a headless token path. That is a product call.
+Three things were checked before deciding what to do:
+
+1. **An `<iframe>` will not work.** `addons.wago.io/wowup_ad` answers with
+   `x-frame-options: SAMEORIGIN`, so it refuses to load inside the app's own webview. That
+   rules out the cheap fix — which would otherwise have been neat, since Tauri 2.11 has
+   `initialization_script_for_all_frames` and could have injected `window.wago` into it.
+2. **A hidden webview would work, and should not be used.** Capturing the token without
+   rendering the ad takes Wago's API access while denying the impression that pays for it —
+   the panel reads "This ad supports addon creators". That is a product decision, not an
+   implementation detail.
+3. **Wago is not actually blocked for a user who has a token.** Options → Addons has a Wago
+   access-token field (`AddonSection.svelte:86` → `PREF_WAGO_ACCESS_KEY` in the sensitive
+   store), and the provider prefers it over the ad token. Pasting one there makes Wago work
+   under Tauri today.
+
+So the ad panel restores the *free* path, and the way to do that honestly is a real child
+webview in the nav rail — Tauri's multi-webview, behind the `unstable` feature.
 
 **Known open:** two unhandled rejections per sync — `The resource id … is invalid` — from a
 plugin-http response body. Ruled out: the fetch call itself, `network.ts`'s body read, the
