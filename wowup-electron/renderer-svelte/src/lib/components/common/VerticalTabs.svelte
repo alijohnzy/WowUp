@@ -335,10 +335,16 @@
 	}
 
 	/* vertical-tabs.component.scss: `border-left: 0.5em solid var(--background-primary)`. */
+	/* The accent bar alone, as in the original. vertical-tabs.component.scss:100 has the
+	   background-color commented out and brightens the label instead — the port had added a
+	   filled block and bold text, which read as a highlight box the original never had.
+	   Bold also reflowed the label, since 600 is wider than the base weight. */
 	.tab.selected {
 		border-left-color: var(--background-primary);
-		background: var(--overlay-selected);
-		font-weight: 600;
+	}
+
+	.tab.selected .tab-title {
+		color: var(--text-1);
 	}
 
 	.tab.disabled {
