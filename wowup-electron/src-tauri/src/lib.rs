@@ -265,6 +265,17 @@ pub fn run() {
             // The window is decorationless, so its own titlebar is the only way to move or
             // close it; these events keep the maximise glyph in step with the real state.
             if let Some(main) = app.get_webview_window("main") {
+                // Applied explicitly. The window came up with no _NET_WM_ICON at all, so the
+                // window manager fell back to matching WM_CLASS ("wowup") against the icon
+                // theme — where nothing of that name is installed, since an AppImage is not
+                // desktop-integrated until something integrates it. Alt-tab drew whatever
+                // generic icon it had. Setting the property means the icon travels with the
+                // window and needs no installed theme entry.
+                if let Some(icon) = app.default_window_icon().cloned() {
+                    if let Err(e) = main.set_icon(icon) {
+                        log::warn!("could not set the window icon: {e}");
+                    }
+                }
                 window::forward_window_events(&main);
             }
             Ok(())
