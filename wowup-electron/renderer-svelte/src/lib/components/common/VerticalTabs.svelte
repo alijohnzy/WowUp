@@ -244,7 +244,7 @@
 		width: 200px;
 		/* Reserves the space the fixed logo occupies, so the first tab is not underneath it.
 		   vertical-tabs.component.scss: padding-top: calc(1em + 50px). */
-		padding: calc(1em + 50px) 0 0.5rem;
+		padding: var(--rail-top-inset) 0 0.5rem;
 		transition: width 120ms ease;
 	}
 
@@ -345,6 +345,7 @@
 
 	.tab.selected .tab-title {
 		color: var(--text-1);
+		font-weight: 600;
 	}
 
 	.tab.disabled {
@@ -358,6 +359,10 @@
 	}
 
 	.tab-title {
+		/* Dimmed, so selecting one actually reads as a change. The port left this inheriting
+		   the rail's --text-1, which made selected and unselected identical — the original
+		   marks the current tab by brightening it (vertical-tabs.component.scss:113). */
+		color: var(--text-2);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;

@@ -16,6 +16,14 @@
  * theme-dependent, hence :root rather than the per-variant blocks below. */
 :root {
 	--list-gutter: 1.5rem;
+
+	/* How far down a page's content starts.
+	 *
+	 * The rail's first tab has to clear the logo fixed over its top-left corner, which is
+	 * where this number comes from (vertical-tabs.component.scss: padding-top: calc(1em +
+	 * 50px)). The page toolbar opposite it is given the same height, so the first tab and the
+	 * top of the list land on the same line instead of a dozen pixels apart. */
+	--rail-top-inset: calc(1em + 50px);
 }
 
 /* ---- theme variants ------------------------------------------------------------------ */

@@ -1108,8 +1108,11 @@
 		align-items: flex-end;
 		gap: 1rem;
 		/* Same gutter as the grid's cells, so the selector lines up with the column it heads
-		   and the buttons with the last column. */
-		padding: 0.75rem var(--list-gutter);
+		   and the buttons with the last column. The height matches the rail's top inset so the
+		   list starts level with the first nav tab. */
+		padding: 0 var(--list-gutter) 0.55rem;
+		height: var(--rail-top-inset);
+		box-sizing: border-box;
 		flex: none;
 	}
 
