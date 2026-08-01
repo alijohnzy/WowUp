@@ -9,6 +9,15 @@
  * in app.component.html via [ngClass]="[currentTheme, platform]".
  */
 
+/* The horizontal inset shared by a page's toolbar and the list under it.
+ *
+ * They have to be one value or they drift: ag-theme-material's own cell padding is 24px and
+ * the toolbars used 1rem, so the client selector sat 8px left of the column it heads. Not
+ * theme-dependent, hence :root rather than the per-variant blocks below. */
+:root {
+	--list-gutter: 1.5rem;
+}
+
 /* ---- theme variants ------------------------------------------------------------------ */
 
 .default-theme {
@@ -269,6 +278,8 @@
  * Measured before the fix: --ag-background-color resolved to "#fff" and .ag-row to
  * rgb(255,255,255) on a dark theme. */
 .ag-theme-material.ag-theme-material {
+	/* Aligns the first column's content with the toolbar above it. */
+	--ag-cell-horizontal-padding: var(--list-gutter);
 	--ag-foreground-color: var(--text-1);
 	--ag-disabled-foreground-color: color-mix(in srgb, var(--text-1) 38%, transparent);
 	--ag-secondary-foreground-color: color-mix(in srgb, var(--text-1) 54%, transparent);

@@ -1107,7 +1107,9 @@
 		display: flex;
 		align-items: flex-end;
 		gap: 1rem;
-		padding: 0.75rem 1rem;
+		/* Same gutter as the grid's cells, so the selector lines up with the column it heads
+		   and the buttons with the last column. */
+		padding: 0.75rem var(--list-gutter);
 		flex: none;
 	}
 
