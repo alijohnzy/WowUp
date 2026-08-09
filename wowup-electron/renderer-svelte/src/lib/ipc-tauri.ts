@@ -139,7 +139,7 @@ export const CHANNEL_PARAMS: Readonly<Record<string, readonly string[]>> = {
 	[IPC_RESTART_APP]: [],
 	[IPC_QUIT_APP]: [],
 	[IPC_CREATE_TRAY_MENU_CHANNEL]: ['config'],
-	[IPC_SET_TRAY_UPDATE_COUNT]: ['count', 'label'],
+	[IPC_SET_TRAY_UPDATE_COUNT]: ['count', 'label', 'state', 'addons'],
 
 	// Phase 1 — filesystem (Group A), as far as the addon scanner needs.
 	[IPC_PATH_EXISTS_CHANNEL]: ['filePath'],

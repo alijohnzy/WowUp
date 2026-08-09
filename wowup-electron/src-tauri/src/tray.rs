@@ -8,7 +8,7 @@
 use serde::Deserialize;
 use std::sync::Mutex;
 use tauri::image::Image;
-use tauri::menu::{MenuBuilder, MenuItem, MenuItemBuilder};
+use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::{TrayIcon, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager, State, Wry};
 
@@ -17,7 +17,7 @@ use tauri::{AppHandle, Emitter, Manager, State, Wry};
 const IPC_TRAY_UPDATE_ALL: &str = "tray-update-all";
 
 /// Mirrors `SystemTrayConfig` (src/common/wowup/models.ts:55).
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SystemTrayConfig {
     pub show_label: String,
@@ -34,17 +34,19 @@ pub struct SystemTrayConfig {
 
 /// Holds the tray so it is not dropped — a `TrayIcon` unregisters itself when freed, which
 /// is what makes a naive implementation flash an icon and then lose it.
-///
-/// The menu item is held for the same reason plus one more: relabelling it as the count
-/// changes is far cheaper than rebuilding the tray, and rebuilding makes the icon flicker.
 #[derive(Default)]
 pub struct TrayState {
     tray: Mutex<Option<TrayIcon>>,
-    update_all: Mutex<Option<MenuItem<Wry>>>,
-    /// The count the icon currently shows. Startup pushes the same number several times —
-    /// tray creation, the selected-client effect and the badge sum all call in — and
-    /// re-setting the icon each time repaints the tray for nothing.
-    shown: Mutex<Option<u32>>,
+    /// What the icon currently shows. Startup pushes the same number several times — tray
+    /// creation, the selected-client effect and the badge sum all call in — and re-setting
+    /// the icon each time repaints the tray for nothing.
+    ///
+    /// Keyed on the state as well as the count: a run starting does not change how many
+    /// updates there are, only their colour, and memoising on the count alone would drop it.
+    shown: Mutex<Option<(u32, BadgeState, Vec<String>)>>,
+    /// The translated labels, kept so the menu can be rebuilt when the addon list changes
+    /// without asking the renderer to send them again.
+    config: Mutex<Option<SystemTrayConfig>>,
 }
 
 fn restore_window(app: &AppHandle) {
@@ -63,6 +65,66 @@ fn restore_window(app: &AppHandle) {
     let _ = window.set_focus();
 }
 
+/// Build the tray menu.
+///
+/// The pending addons go in as disabled items under the action. That is not where a tooltip
+/// would go, but Linux has no tooltip to put them in: `TrayIcon::set_tooltip` is a no-op in
+/// tray-icon's GTK backend, and menu items carry no tooltip at all. The menu is the only
+/// surface that can show them.
+fn build_menu(
+    app: &AppHandle,
+    config: &SystemTrayConfig,
+    count: u32,
+    addons: &[String],
+) -> Result<tauri::menu::Menu<Wry>, String> {
+    let name = app.package_info().name.clone();
+
+    let title = MenuItemBuilder::with_id("title", &name)
+        .enabled(false)
+        .build(app)
+        .map_err(|e| e.to_string())?;
+    let show = MenuItemBuilder::with_id("show", nonempty(&config.show_label, "Show"))
+        .build(app)
+        .map_err(|e| e.to_string())?;
+    let update_all = MenuItemBuilder::with_id(
+        "update-all",
+        nonempty(&config.update_all_label, "Update All"),
+    )
+    // Nothing to update means nothing to click.
+    .enabled(count > 0)
+    .build(app)
+    .map_err(|e| e.to_string())?;
+    let quit = MenuItemBuilder::with_id("quit", nonempty(&config.quit_label, "Quit"))
+        .build(app)
+        .map_err(|e| e.to_string())?;
+
+    let mut builder = MenuBuilder::new(app)
+        .items(&[&title, &show])
+        .separator()
+        .items(&[&update_all]);
+
+    // Disabled, and indented so they read as a list belonging to the item above rather than
+    // as more things to click.
+    let mut listed = Vec::new();
+    for addon in addons {
+        listed.push(
+            MenuItemBuilder::with_id(format!("addon-{addon}"), format!("    {addon}"))
+                .enabled(false)
+                .build(app)
+                .map_err(|e| e.to_string())?,
+        );
+    }
+    for item in &listed {
+        builder = builder.item(item);
+    }
+
+    builder
+        .separator()
+        .items(&[&quit])
+        .build()
+        .map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 pub fn create_tray_menu(
     app: AppHandle,
@@ -70,36 +132,7 @@ pub fn create_tray_menu(
     config: SystemTrayConfig,
 ) -> Result<bool, String> {
     let name = app.package_info().name.clone();
-
-    // A disabled first item showing the app name, matching the Electron menu.
-    let title = MenuItemBuilder::with_id("title", &name)
-        .enabled(false)
-        .build(&app)
-        .map_err(|e| e.to_string())?;
-    let show = MenuItemBuilder::with_id("show", nonempty(&config.show_label, "Show"))
-        .build(&app)
-        .map_err(|e| e.to_string())?;
-    // Starts disabled: the renderer sends the count right after this, and an enabled item
-    // reading "Update All" with nothing to update would run a no-op.
-    let update_all = MenuItemBuilder::with_id(
-        "update-all",
-        nonempty(&config.update_all_label, "Update All"),
-    )
-    .enabled(false)
-    .build(&app)
-    .map_err(|e| e.to_string())?;
-    let quit = MenuItemBuilder::with_id("quit", nonempty(&config.quit_label, "Quit"))
-        .build(&app)
-        .map_err(|e| e.to_string())?;
-
-    let menu = MenuBuilder::new(&app)
-        .items(&[&title, &show])
-        .separator()
-        .items(&[&update_all])
-        .separator()
-        .items(&[&quit])
-        .build()
-        .map_err(|e| e.to_string())?;
+    let menu = build_menu(&app, &config, 0, &[])?;
 
     let icon = app
         .default_window_icon()
@@ -145,7 +178,7 @@ pub fn create_tray_menu(
 
     // Replacing the previous one: the renderer calls this again when the language changes.
     *state.tray.lock().map_err(|e| e.to_string())? = Some(tray);
-    *state.update_all.lock().map_err(|e| e.to_string())? = Some(update_all);
+    *state.config.lock().map_err(|e| e.to_string())? = Some(config);
     // The new icon carries no badge, whatever the old one showed.
     *state.shown.lock().map_err(|e| e.to_string())? = None;
 
@@ -198,14 +231,14 @@ mod tests {
     #[test]
     fn no_badge_when_there_is_nothing_to_update() {
         let base = blank(64, 64);
-        let out = draw_badge(&base, 64, 64, 0);
+        let out = draw_badge(&base, 64, 64, 0, BadgeState::Pending);
         assert_eq!(out, base);
     }
 
     #[test]
     fn a_badge_is_drawn_when_updates_exist() {
         let base = blank(64, 64);
-        let out = draw_badge(&base, 64, 64, 3);
+        let out = draw_badge(&base, 64, 64, 3, BadgeState::Pending);
         assert_eq!(out.len(), base.len(), "the buffer must keep its dimensions");
         assert!(painted(&out) > 0, "nothing was drawn");
     }
@@ -218,7 +251,7 @@ mod tests {
     #[test]
     fn the_badge_sits_in_the_bottom_right() {
         let (w, h) = (64u32, 64u32);
-        let out = draw_badge(&blank(w, h), w, h, 5);
+        let out = draw_badge(&blank(w, h), w, h, 5, BadgeState::Pending);
 
         let mut far_corner = 0;
         let mut bottom_right = 0;
@@ -255,8 +288,8 @@ mod tests {
     #[test]
     fn different_counts_draw_differently() {
         let base = blank(64, 64);
-        let one = draw_badge(&base, 64, 64, 1);
-        let eight = draw_badge(&base, 64, 64, 8);
+        let one = draw_badge(&base, 64, 64, 1, BadgeState::Pending);
+        let eight = draw_badge(&base, 64, 64, 8, BadgeState::Pending);
         assert_ne!(one, eight);
     }
 
@@ -265,7 +298,7 @@ mod tests {
     #[test]
     fn badge_scales_to_the_icon_it_is_given() {
         for dim in [16u32, 22, 32, 64, 512] {
-            let out = draw_badge(&blank(dim, dim), dim, dim, 9);
+            let out = draw_badge(&blank(dim, dim), dim, dim, 9, BadgeState::Pending);
             assert_eq!(out.len(), (dim * dim * 4) as usize, "size {dim}");
             assert!(painted(&out) > 0, "nothing drawn at {dim}px");
         }
@@ -283,7 +316,7 @@ mod tests {
         let (cx, cy, radius) = badge_geometry(w, h);
 
         for count in [1u32, 4, 8, 10] {
-            let out = draw_badge(&blank(w, h), w, h, count);
+            let out = draw_badge(&blank(w, h), w, h, count, BadgeState::Pending);
             for y in 0..h {
                 for x in 0..w {
                     let i = ((y * w + x) * 4) as usize;
@@ -301,6 +334,40 @@ mod tests {
                 }
             }
         }
+    }
+
+    /// A run has to be visibly distinct from updates merely waiting, which is the whole point
+    /// of the colour.
+    #[test]
+    fn each_state_draws_a_different_colour() {
+        let base = blank(64, 64);
+        let pending = draw_badge(&base, 64, 64, 4, BadgeState::Pending);
+        let running = draw_badge(&base, 64, 64, 4, BadgeState::Running);
+        let done = draw_badge(&base, 64, 64, 4, BadgeState::Done);
+
+        assert_ne!(pending, running);
+        assert_ne!(running, done);
+        assert_ne!(pending, done);
+    }
+
+    /// White on amber is unreadable at the size this is actually drawn, so the running badge
+    /// uses dark text. Guards against someone tidying the three states into one colour pair.
+    #[test]
+    fn the_amber_badge_uses_dark_text() {
+        let (fill, text) = BadgeState::Running.colours();
+        let luma = |c: [u8; 4]| 0.299 * c[0] as f32 + 0.587 * c[1] as f32 + 0.114 * c[2] as f32;
+        assert!(
+            luma(fill) - luma(text) > 100.0,
+            "amber fill and its text are too close in brightness to read"
+        );
+    }
+
+    /// The renderer omits it on the ordinary path, and that has to mean "updates waiting".
+    #[test]
+    fn a_missing_state_means_pending() {
+        assert_eq!(BadgeState::default(), BadgeState::Pending);
+        let parsed: BadgeState = serde_json::from_str(r#""running""#).unwrap();
+        assert_eq!(parsed, BadgeState::Running);
     }
 
     /// Guards the `+` glyph, which is the one that is easy to leave out of the table.
@@ -333,6 +400,35 @@ mod tests {
 // The digits are hand-rolled 3x5 bitmaps rather than a font. A tray icon is around 22px on
 // screen, so glyphs land at roughly 8px tall — at that size a rasterised font is a blur, and
 // pulling in a font crate plus an embedded typeface to produce it is a poor trade.
+
+/// What the badge is saying, which decides its colour.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum BadgeState {
+    /// Updates are waiting.
+    #[default]
+    Pending,
+    /// An update run is in progress.
+    Running,
+    /// The run finished. Shown briefly before the badge clears.
+    Done,
+}
+
+impl BadgeState {
+    /// Fill and text colour.
+    ///
+    /// The text colour is not always white: on amber it has to be dark, or the digit is
+    /// unreadable at the size the badge is actually drawn.
+    fn colours(self) -> ([u8; 4], [u8; 4]) {
+        const WHITE: [u8; 4] = [255, 255, 255, 255];
+        const NEAR_BLACK: [u8; 4] = [33, 33, 33, 255];
+        match self {
+            BadgeState::Pending => ([220, 53, 69, 255], WHITE),
+            BadgeState::Running => ([255, 193, 7, 255], NEAR_BLACK),
+            BadgeState::Done => ([40, 167, 69, 255], WHITE),
+        }
+    }
+}
 
 /// 3x5 bitmaps for the glyphs a badge can contain, row-major, one bit per pixel.
 const GLYPHS: [(char, [u8; 5]); 11] = [
@@ -393,7 +489,7 @@ fn badge_geometry(width: u32, height: u32) -> (f32, f32, f32) {
 ///
 /// Returns the icon untouched when the count is zero — nothing to say, and a badge drawn with
 /// "0" in it would be worse than none.
-fn draw_badge(rgba: &[u8], width: u32, height: u32, count: u32) -> Vec<u8> {
+fn draw_badge(rgba: &[u8], width: u32, height: u32, count: u32, state: BadgeState) -> Vec<u8> {
     let mut out = rgba.to_vec();
     if count == 0 || width == 0 || height == 0 {
         return out;
@@ -427,9 +523,8 @@ fn draw_badge(rgba: &[u8], width: u32, height: u32, count: u32) -> Vec<u8> {
 
     // Filled disc with a lighter rim, which is what keeps it visible against both light and
     // dark panels.
-    const FILL: [u8; 4] = [220, 53, 69, 255];
+    let (fill, text_colour) = state.colours();
     const RIM: [u8; 4] = [255, 255, 255, 255];
-    const TEXT: [u8; 4] = [255, 255, 255, 255];
 
     let y0 = (cy - radius).floor() as i64;
     let y1 = (cy + radius).ceil() as i64;
@@ -441,7 +536,7 @@ fn draw_badge(rgba: &[u8], width: u32, height: u32, count: u32) -> Vec<u8> {
             let dy = y as f32 + 0.5 - cy;
             let d = (dx * dx + dy * dy).sqrt();
             if d <= radius - rim {
-                put(&mut out, x, y, FILL);
+                put(&mut out, x, y, fill);
             } else if d <= radius {
                 put(&mut out, x, y, RIM);
             }
@@ -465,7 +560,7 @@ fn draw_badge(rgba: &[u8], width: u32, height: u32, count: u32) -> Vec<u8> {
                 let py1 = (origin_y + (row + 1) as f32 * scale).round() as i64;
                 for py in py0..py1.max(py0 + 1) {
                     for px in px0..px1.max(px0 + 1) {
-                        put(&mut out, px, py, TEXT);
+                        put(&mut out, px, py, text_colour);
                     }
                 }
             }
@@ -482,10 +577,13 @@ fn draw_badge(rgba: &[u8], width: u32, height: u32, count: u32) -> Vec<u8> {
 #[tauri::command]
 pub fn set_tray_update_count(
     app: AppHandle,
-    state: State<'_, TrayState>,
+    tray_state: State<'_, TrayState>,
     count: u32,
     label: String,
+    state: Option<BadgeState>,
+    addons: Vec<String>,
 ) -> Result<(), String> {
+    let state = state.unwrap_or_default();
     // Pending updates cannot be conjured on demand, which makes the badge awkward to look at
     // deliberately — the count is whatever the user's addons happen to need. This forces one:
     //   WOWUP_TRAY_COUNT=4 ./WowUp-CF-Tauri.AppImage
@@ -496,37 +594,48 @@ pub fn set_tray_update_count(
         Some(forced) => forced,
         None => count,
     };
-    let label = if std::env::var_os("WOWUP_TRAY_COUNT").is_some() {
-        format!("Update All ({count})")
+    let (label, addons) = if std::env::var_os("WOWUP_TRAY_COUNT").is_some() {
+        // Synthesised names too, so the menu list can be looked at without waiting for real
+        // updates — the list is the part that is awkward to see otherwise.
+        (
+            format!("Update All ({count})"),
+            (1..=count).map(|i| format!("Test Addon {i}")).collect(),
+        )
     } else {
-        label
+        (label, addons)
     };
 
-    if let Some(item) = state.update_all.lock().map_err(|e| e.to_string())?.as_ref() {
-        item.set_text(nonempty(&label, "Update All"))
-            .map_err(|e| e.to_string())?;
-        // Nothing to update means nothing to click.
-        item.set_enabled(count > 0).map_err(|e| e.to_string())?;
-    }
+    let config = tray_state.config.lock().map_err(|e| e.to_string())?.clone();
 
-    let mut shown = state.shown.lock().map_err(|e| e.to_string())?;
-    if *shown == Some(count) {
+    let mut shown = tray_state.shown.lock().map_err(|e| e.to_string())?;
+    // The list is part of the key: the same number of updates can be a different set of
+    // addons, and the menu has to follow.
+    if shown.as_ref() == Some(&(count, state, addons.clone())) {
         return Ok(());
     }
 
-    if let Some(tray) = state.tray.lock().map_err(|e| e.to_string())?.as_ref() {
+    if let Some(tray) = tray_state.tray.lock().map_err(|e| e.to_string())?.as_ref() {
+        // Rebuilt rather than relabelled: the pending addons are menu items, so the menu
+        // changes shape as the list does.
+        if let Some(config) = config {
+            let mut config = config;
+            config.update_all_label = nonempty(&label, "Update All").to_string();
+            let menu = build_menu(&app, &config, count, &addons)?;
+            tray.set_menu(Some(menu)).map_err(|e| e.to_string())?;
+        }
+
         let base = app
             .default_window_icon()
             .cloned()
             .ok_or_else(|| "no bundled window icon to badge".to_string())?;
 
-        let badged = draw_badge(base.rgba(), base.width(), base.height(), count);
+        let badged = draw_badge(base.rgba(), base.width(), base.height(), count, state);
         tray.set_icon(Some(Image::new_owned(badged, base.width(), base.height())))
             .map_err(|e| e.to_string())?;
     }
 
-    *shown = Some(count);
-    log::debug!("tray update count {count}");
+    *shown = Some((count, state, addons));
+    log::debug!("tray update count {count} ({state:?})");
     Ok(())
 }
 
@@ -547,9 +656,13 @@ mod badge_preview {
         let info = reader.next_frame(&mut buf).unwrap();
         let rgba = &buf[..info.buffer_size()];
 
-        for count in [1u32, 4, 9, 42] {
-            let out = draw_badge(rgba, info.width, info.height, count);
-            let path = format!("/tmp/badge-{count}.raw");
+        for (state, name) in [
+            (BadgeState::Pending, "pending"),
+            (BadgeState::Running, "running"),
+            (BadgeState::Done, "done"),
+        ] {
+            let out = draw_badge(rgba, info.width, info.height, 4, state);
+            let path = format!("/tmp/badge-{name}.raw");
             std::fs::write(&path, &out).unwrap();
             println!("{path} {}x{}", info.width, info.height);
         }

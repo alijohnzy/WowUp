@@ -37,6 +37,7 @@
 	import { invoke } from '$lib/ipc';
 	import * as addonUtils from '$lib/utils/addon';
 	import { updateAllTooltipText } from '$lib/utils/update-tooltip';
+	import { withTrayRunState } from '$lib/services/native-menu';
 	import { stringIncludes } from '$lib/utils/string';
 	import { join } from '$lib/utils/path';
 
@@ -454,34 +455,39 @@
 				return;
 			}
 
-			// Shown once before the per-addon detail takes over, so the spinner is never blank
-			// while the first update is being prepared.
-			spinnerMessage = i18n.t('PAGES.MY_ADDONS.SPINNER.UPDATING', {
-				updateCount: updatedCt,
-				addonCount: addons.length
-			});
-
-			for (const addon of addons) {
-				if (!addon.id) continue;
-				updatedCt += 1;
-
-				const installation = installations.find((inst) => inst.id === addon.installationId);
-				if (!installation) {
-					console.warn('Installation not found');
-					continue;
-				}
-
-				spinnerMessage = i18n.t('PAGES.MY_ADDONS.SPINNER.UPDATING_WITH_ADDON_NAME', {
+			// From here on something is actually being installed, so the tray badge turns amber
+			// and then green. Wrapping only this part keeps a run that had nothing to do from
+			// flashing a colour at the user.
+			await withTrayRunState(async () => {
+				// Shown once before the per-addon detail takes over, so the spinner is never blank
+				// while the first update is being prepared.
+				spinnerMessage = i18n.t('PAGES.MY_ADDONS.SPINNER.UPDATING', {
 					updateCount: updatedCt,
-					addonCount: addons.length,
-					clientType: installation.displayName,
-					addonName: addon.name
+					addonCount: addons.length
 				});
 
-				await addonService.updateAddon(addon);
-			}
+				for (const addon of addons) {
+					if (!addon.id) continue;
+					updatedCt += 1;
 
-			await loadAddons();
+					const installation = installations.find((inst) => inst.id === addon.installationId);
+					if (!installation) {
+						console.warn('Installation not found');
+						continue;
+					}
+
+					spinnerMessage = i18n.t('PAGES.MY_ADDONS.SPINNER.UPDATING_WITH_ADDON_NAME', {
+						updateCount: updatedCt,
+						addonCount: addons.length,
+						clientType: installation.displayName,
+						addonName: addon.name
+					});
+
+					await addonService.updateAddon(addon);
+				}
+
+				await loadAddons();
+			});
 		} catch (err) {
 			// operationError$ in the Angular component fed a snackbar; failures here were
 			// otherwise only visible in the console.

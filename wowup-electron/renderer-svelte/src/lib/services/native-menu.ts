@@ -14,7 +14,7 @@ import type { MenuConfig, SystemTrayConfig } from '$common/wowup/models';
 import { invoke, isDesktop, isElectron, isTauri } from '$lib/ipc';
 import { addonService } from '$lib/state/addon.svelte';
 import { session } from '$lib/state/session.svelte';
-import { t } from '$lib/i18n.svelte';
+import { t, i18n } from '$lib/i18n.svelte';
 
 export async function createAppMenu(): Promise<void> {
 	// create-app-menu has no Tauri command yet (Group I); Tauri also has no menu bar on a
@@ -80,6 +80,12 @@ function updateAllLabel(count: number): string {
 	return count > 0 ? `${label} (${count})` : label;
 }
 
+/** What the badge is saying, which decides its colour. Mirrors BadgeState in tray.rs. */
+export type TrayBadgeState = 'pending' | 'running' | 'done';
+
+/** Names listed under the tray's Update All. Long lists make the menu unusable. */
+const TRAY_MAX_ADDONS = 10;
+
 /**
  * Show the number of pending updates on the tray icon and in its menu.
  *
@@ -89,17 +95,54 @@ function updateAllLabel(count: number): string {
  *
  * Electron's tray has no such item, so this is a no-op there rather than a missing channel.
  */
-export async function syncTrayUpdateCount(): Promise<void> {
+export async function syncTrayUpdateCount(state: TrayBadgeState = 'pending'): Promise<void> {
 	if (!isTauri()) return;
 
 	try {
 		const installation = session.getSelectedWowInstallation();
-		const count = installation
-			? (await addonService.getAllAddonsAvailableForUpdate(installation)).length
-			: 0;
+		const addons = installation
+			? await addonService.getAllAddonsAvailableForUpdate(installation)
+			: [];
 
-		await invoke(IPC_SET_TRAY_UPDATE_COUNT, count, updateAllLabel(count));
+		const names = addons.map((addon) => addon.name).slice(0, TRAY_MAX_ADDONS);
+		if (addons.length > names.length) {
+			names.push(
+				i18n.t('PAGES.MY_ADDONS.UPDATE_ALL_TOOLTIP_MORE', {
+					count: addons.length - names.length
+				})
+			);
+		}
+
+		await invoke(
+			IPC_SET_TRAY_UPDATE_COUNT,
+			addons.length,
+			updateAllLabel(addons.length),
+			state,
+			names
+		);
 	} catch (e) {
 		console.error('Failed to update the tray count', e);
 	}
 }
+
+/**
+ * Colour the badge for the duration of an update run: amber while it works, green when it
+ * finishes, then back to whatever is actually left — which after a successful run is nothing,
+ * so the badge clears itself.
+ */
+export async function withTrayRunState<T>(run: () => Promise<T>): Promise<T> {
+	await syncTrayUpdateCount('running');
+	try {
+		const result = await run();
+		await syncTrayUpdateCount('done');
+		// Long enough to register as "that worked" without lingering as a status light.
+		setTimeout(() => void syncTrayUpdateCount(), DONE_BADGE_MS);
+		return result;
+	} catch (e) {
+		// Back to pending: the run failed, so whatever is left really is still waiting.
+		await syncTrayUpdateCount();
+		throw e;
+	}
+}
+
+const DONE_BADGE_MS = 4000;
