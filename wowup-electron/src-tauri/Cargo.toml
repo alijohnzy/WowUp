@@ -56,6 +56,8 @@ tauri-plugin-autostart = "2.5.1"
 # after it, which turned the plugins into dev-only and failed the build with
 # "Permission os:default not found".
 [dev-dependencies]
+# Decoding the icon for the badge preview test only.
+png = "0.17"
 tokio = { version = "1", features = ["fs", "macros", "rt-multi-thread"] }
 
 [features]

@@ -16,6 +16,7 @@ import { invoke, isElectron } from '$lib/ipc';
 import { getAssetFilePath } from '$lib/services/files';
 import { i18n } from '$lib/i18n.svelte';
 import { addonService } from '$lib/state/addon.svelte';
+import { syncTrayUpdateCount } from '$lib/services/native-menu';
 import { electron } from '$lib/state/electron.svelte';
 import { session } from '$lib/state/session.svelte';
 import { wowup } from '$lib/state/wowup.svelte';
@@ -54,6 +55,10 @@ export async function updateBadgeCount(): Promise<void> {
 	} catch (e) {
 		console.error('Failed to update badge count', e);
 	}
+
+	// Same triggers, so the tray never disagrees with the taskbar about whether anything is
+	// pending. The counts themselves differ by design — see syncTrayUpdateCount.
+	await syncTrayUpdateCount();
 }
 
 async function logoPath(): Promise<string> {

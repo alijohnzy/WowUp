@@ -89,6 +89,11 @@ class Session {
 	// getAddonsHiddenColumns$ is not here: it is declared in session.service.ts and never
 	// subscribed or emitted on either side. Get Addons owns its own column state.
 	readonly debugAdFrame = new Emitter<boolean>();
+	/**
+	 * The tray's Update All was chosen. My Addons owns the routine — it drives the page
+	 * spinner and reloads the grid — so the tray asks rather than reimplementing it.
+	 */
+	readonly updateAllRequested = new Emitter<boolean>();
 
 	#selectedDetailTabType: DetailsTabType = 'description';
 	#initialized = false;
@@ -128,6 +133,7 @@ class Session {
 	notifyTargetFileInstallComplete = (): void => this.targetFileInstallComplete.emit(true);
 	notifyAddonsChanged = (): void => this.addonsChanged.emit(true);
 	rescanCompleted = (): void => this.rescanComplete.emit(true);
+	requestUpdateAll = (): void => this.updateAllRequested.emit(true);
 	autoUpdateComplete = (): void => void (this.autoUpdateCompleteAt = Date.now());
 
 	// ---- details tab --------------------------------------------------------------------

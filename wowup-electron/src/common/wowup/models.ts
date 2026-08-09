@@ -56,6 +56,8 @@ export interface SystemTrayConfig {
   showLabel: string;
   quitLabel: string;
   checkUpdateLabel: string;
+  /** Already formatted with the count, e.g. "Update All (4)". Tauri only. */
+  updateAllLabel?: string;
 }
 
 export type PushAction = "addon-update";

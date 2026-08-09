@@ -13,8 +13,11 @@
 		IPC_MENU_ZOOM_OUT_CHANNEL,
 		IPC_MENU_ZOOM_RESET_CHANNEL,
 		IPC_POWER_MONITOR_RESUME,
-		IPC_POWER_MONITOR_UNLOCK
+		IPC_POWER_MONITOR_UNLOCK,
+		IPC_TRAY_UPDATE_ALL
 	} from '$common/constants';
+	import { goto } from '$app/navigation';
+	import { href, ROUTES } from '$lib/routes';
 	import { getProtocol, getProtocolParts } from '$lib/utils/string';
 	import AnimatedLogo from '$lib/components/common/AnimatedLogo.svelte';
 	import InstallFromProtocolDialog from '$lib/components/addons/InstallFromProtocolDialog.svelte';
@@ -47,7 +50,7 @@
 		stopAutoUpdate,
 		updateBadgeCount
 	} from '$lib/services/auto-update';
-	import { createAppMenu, createSystemTray } from '$lib/services/native-menu';
+	import { createAppMenu, createSystemTray, syncTrayUpdateCount } from '$lib/services/native-menu';
 	import { changeLogs } from '$lib/data/changelogs';
 	import { AppConfig } from '$config/environment';
 	import {
@@ -179,6 +182,13 @@
 		})
 	);
 
+	// The tray count is for the selected client, so switching clients changes it even though
+	// nothing about the addons did.
+	$effect(() => {
+		void session.selectedWowInstallation?.id;
+		void syncTrayUpdateCount();
+	});
+
 	// Removing an addon changes the pending-update count too, and so does a sync or scan — those
 	// are what discover that an update exists in the first place.
 	$effect(() => addonService.addonRemoved.subscribe(() => void updateBadgeCount()));
@@ -194,7 +204,13 @@
 		const offs = [
 			on(IPC_MENU_ZOOM_IN_CHANNEL, () => void zoom.applyZoom(ZoomDirection.ZoomIn)),
 			on(IPC_MENU_ZOOM_OUT_CHANNEL, () => void zoom.applyZoom(ZoomDirection.ZoomOut)),
-			on(IPC_MENU_ZOOM_RESET_CHANNEL, () => void zoom.applyZoom(ZoomDirection.ZoomReset))
+			on(IPC_MENU_ZOOM_RESET_CHANNEL, () => void zoom.applyZoom(ZoomDirection.ZoomReset)),
+			// Routed through the page rather than run here: My Addons owns the update routine
+			// and the progress it reports. Navigating first means the spinner is on screen for
+			// a run the user started from outside the window.
+			on(IPC_TRAY_UPDATE_ALL, () => {
+				void goto(href(ROUTES.myAddons)).then(() => session.requestUpdateAll());
+			})
 		];
 		return () => offs.forEach((off) => off());
 	});

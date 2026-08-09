@@ -797,6 +797,9 @@
 	// protocol link, and a rescan from Options all left the previous list on screen.
 	$effect(() => session.addonsChanged.subscribe(() => void onRefresh()));
 	$effect(() => session.rescanComplete.subscribe(() => void onRefresh()));
+	// The tray's Update All. Same routine as the button, so the spinner, the error snackbar
+	// and the grid reload all behave identically however it was started.
+	$effect(() => session.updateAllRequested.subscribe(() => onUpdateAll()));
 	$effect(() => session.targetFileInstallComplete.subscribe(() => void onRefresh()));
 
 	// A WowUp push notification is the hub telling the app that an addon it tracks has a new

@@ -5,9 +5,15 @@
 // and ships a flat config object over IPC. That is the whole job, so it is a function
 // rather than part of the app shell.
 
-import { IPC_CREATE_APP_MENU_CHANNEL, IPC_CREATE_TRAY_MENU_CHANNEL } from '$common/constants';
+import {
+	IPC_CREATE_APP_MENU_CHANNEL,
+	IPC_CREATE_TRAY_MENU_CHANNEL,
+	IPC_SET_TRAY_UPDATE_COUNT
+} from '$common/constants';
 import type { MenuConfig, SystemTrayConfig } from '$common/wowup/models';
-import { invoke, isDesktop, isElectron } from '$lib/ipc';
+import { invoke, isDesktop, isElectron, isTauri } from '$lib/ipc';
+import { addonService } from '$lib/state/addon.svelte';
+import { session } from '$lib/state/session.svelte';
 import { t } from '$lib/i18n.svelte';
 
 export async function createAppMenu(): Promise<void> {
@@ -55,12 +61,45 @@ export async function createSystemTray(): Promise<void> {
 	const config: SystemTrayConfig = {
 		quitLabel: t('APP.SYSTEM_TRAY.QUIT_ACTION'),
 		checkUpdateLabel: t('APP.SYSTEM_TRAY.CHECK_UPDATE'),
-		showLabel: t('APP.SYSTEM_TRAY.SHOW_ACTION')
+		showLabel: t('APP.SYSTEM_TRAY.SHOW_ACTION'),
+		updateAllLabel: updateAllLabel(0)
 	};
 
 	try {
 		await invoke(IPC_CREATE_TRAY_MENU_CHANNEL, config);
+		// The item is built disabled and unnumbered; this is what fills it in.
+		await syncTrayUpdateCount();
 	} catch (e) {
 		console.error('Failed to create tray', e);
+	}
+}
+
+/** "Update All" while there is nothing to do, "Update All (4)" when there is. */
+function updateAllLabel(count: number): string {
+	const label = t('PAGES.MY_ADDONS.UPDATE_ALL_BUTTON');
+	return count > 0 ? `${label} (${count})` : label;
+}
+
+/**
+ * Show the number of pending updates on the tray icon and in its menu.
+ *
+ * Counted for the *selected* installation, not across all of them, because the tray item
+ * runs the same routine as the Update All button — which only touches the selected client.
+ * A total would promise more than clicking delivers.
+ *
+ * Electron's tray has no such item, so this is a no-op there rather than a missing channel.
+ */
+export async function syncTrayUpdateCount(): Promise<void> {
+	if (!isTauri()) return;
+
+	try {
+		const installation = session.getSelectedWowInstallation();
+		const count = installation
+			? (await addonService.getAllAddonsAvailableForUpdate(installation)).length
+			: 0;
+
+		await invoke(IPC_SET_TRAY_UPDATE_COUNT, count, updateAllLabel(count));
+	} catch (e) {
+		console.error('Failed to update the tray count', e);
 	}
 }

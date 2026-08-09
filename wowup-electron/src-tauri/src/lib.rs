@@ -209,6 +209,7 @@ pub fn run() {
             scanner::curse_get_scan_results,
             scanner::wowup_get_scan_results,
             tray::create_tray_menu,
+            tray::set_tray_update_count,
             window::minimize_window,
             window::maximize_window,
             window::close_window,

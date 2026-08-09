@@ -29,6 +29,7 @@ import {
 	IPC_GET_ASSET_FILE_PATH,
 	IPC_CLOSE_WINDOW,
 	IPC_CREATE_TRAY_MENU_CHANNEL,
+	IPC_SET_TRAY_UPDATE_COUNT,
 	IPC_FOCUS_WINDOW,
 	IPC_GET_LOCALE,
 	IPC_MAXIMIZE_WINDOW,
@@ -138,6 +139,7 @@ export const CHANNEL_PARAMS: Readonly<Record<string, readonly string[]>> = {
 	[IPC_RESTART_APP]: [],
 	[IPC_QUIT_APP]: [],
 	[IPC_CREATE_TRAY_MENU_CHANNEL]: ['config'],
+	[IPC_SET_TRAY_UPDATE_COUNT]: ['count', 'label'],
 
 	// Phase 1 — filesystem (Group A), as far as the addon scanner needs.
 	[IPC_PATH_EXISTS_CHANNEL]: ['filePath'],
