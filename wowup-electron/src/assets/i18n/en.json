@@ -500,7 +500,8 @@
         "UPDATE_ALL_CLIENTS_BUTTON": "Update All Clients",
         "UPDATE_RETAIL_CLASSIC_BUTTON": "Update Retail/Classic"
       },
-      "WTF_BACKUP_BUTTON": "Interface Settings Backup"
+      "WTF_BACKUP_BUTTON": "Interface Settings Backup",
+      "UPDATE_ALL_TOOLTIP_MORE": "…and {{count}} more"
     },
     "NEWS": {
       "NEWS_LINK_COPY_TOAST": "News link copied to clipboard",

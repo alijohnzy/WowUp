@@ -36,6 +36,7 @@
 	import { t, i18n } from '$lib/i18n.svelte';
 	import { invoke } from '$lib/ipc';
 	import * as addonUtils from '$lib/utils/addon';
+	import { updateAllTooltipText } from '$lib/utils/update-tooltip';
 	import { stringIncludes } from '$lib/utils/string';
 	import { join } from '$lib/utils/path';
 
@@ -159,6 +160,28 @@
 		session.enableControls && rowData.some((row) => addonUtils.needsUpdate(row.addon))
 	);
 	let enableUpdateExtra = $derived(session.enableControls && addonService.anyUpdatesAvailable);
+
+	// Exactly what pressing the button will act on, filtered the same way
+	// updateAllWithSpinner does. Deriving it from a different rule is how a tooltip ends up
+	// promising an addon the run then skips.
+	let pendingUpdates = $derived(
+		baseRowData
+			.map((row) => row.addon)
+			.filter(
+				(addon) =>
+					addon !== undefined &&
+					!addon.isIgnored &&
+					(addonUtils.needsUpdate(addon) || addonUtils.needsInstall(addon))
+			)
+	);
+
+	let updateAllTooltip = $derived(
+		updateAllTooltipText(
+			t('PAGES.MY_ADDONS.UPDATE_ALL_BUTTON_TOOLTIP'),
+			pendingUpdates.map((addon) => addon?.name ?? ''),
+			(count) => i18n.t('PAGES.MY_ADDONS.UPDATE_ALL_TOOLTIP_MORE', { count })
+		)
+	);
 
 	let hasSelectedInstallation = $derived(session.selectedWowInstallation !== undefined);
 
@@ -878,7 +901,7 @@
 				<div class="split-button">
 					<button
 						class="wu-btn wu-btn-primary menu-button"
-						title={t('PAGES.MY_ADDONS.UPDATE_ALL_BUTTON_TOOLTIP')}
+						title={updateAllTooltip}
 						disabled={!enableUpdateAll}
 						onclick={onUpdateAll}
 					>
