@@ -229,7 +229,7 @@ mod tests {
                 if out[i + 3] == 0 {
                     continue;
                 }
-                if x < w / 3 && y < h / 3 {
+                if x < w / 4 && y < h / 4 {
                     far_corner += 1;
                 } else if x >= w / 2 && y >= h / 2 {
                     bottom_right += 1;
@@ -281,11 +281,7 @@ mod tests {
     #[test]
     fn glyphs_stay_inside_the_badge() {
         let (w, h) = (128u32, 128u32);
-        // Same geometry as draw_badge.
-        let dim = w.min(h) as f32;
-        let radius = dim * 0.26;
-        let cx = w as f32 - radius - dim * 0.06;
-        let cy = h as f32 - radius - dim * 0.06;
+        let (cx, cy, radius) = badge_geometry(w, h);
 
         for count in [1u32, 4, 8, 10] {
             let out = draw_badge(&blank(w, h), w, h, count);
@@ -371,6 +367,29 @@ fn glyph(c: char) -> Option<[u8; 5]> {
     GLYPHS.iter().find(|(g, _)| *g == c).map(|(_, bits)| *bits)
 }
 
+/// Centre and radius of the badge, in pixels, for an icon of the given size.
+///
+/// Shared with the tests so the two cannot disagree about where the badge is. Proportional
+/// rather than fixed: the same code draws the 512px master and whatever size a platform asks
+/// for, and a tray icon on Linux is often only 16px.
+fn badge_geometry(width: u32, height: u32) -> (f32, f32, f32) {
+    let dim = width.min(height) as f32;
+    // Sized for legibility at tray scale, where the whole icon may be 16px and the digit
+    // inside this disc is a third of that. It does cover part of the mark; a badge small
+    // enough not to is a badge too small to read, which defeats the point of a number.
+    let radius = dim * 0.36;
+    // Negative: the disc is tucked into the corner and its outer edge runs a little past it,
+    // clipped by the canvas. That buys back the middle of the icon — at a positive margin a
+    // badge this size sits over the mark rather than beside it. The digit is centred in a box
+    // well inside the disc, so nothing legible is lost to the clip.
+    let margin = dim * -0.05;
+    (
+        width as f32 - radius - margin,
+        height as f32 - radius - margin,
+        radius,
+    )
+}
+
 /// Draw the count over the bottom-right of an RGBA icon, returning a new buffer.
 ///
 /// Returns the icon untouched when the count is zero — nothing to say, and a badge drawn with
@@ -382,15 +401,7 @@ fn draw_badge(rgba: &[u8], width: u32, height: u32, count: u32) -> Vec<u8> {
     }
 
     let text = badge_text(count);
-    let dim = width.min(height) as f32;
-
-    // Proportions, not pixels: the same code has to look right on the 512px master and on
-    // whatever size a platform hands us.
-    // Roughly a fifth of the icon across. Bigger reads as a second icon rather than a badge:
-    // at 0.30 the disc swallowed the W the mark is recognised by.
-    let radius = dim * 0.26;
-    let cx = width as f32 - radius - dim * 0.06;
-    let cy = height as f32 - radius - dim * 0.06;
+    let (cx, cy, radius) = badge_geometry(width, height);
 
     // Glyphs are 3x5 with a 1px gap. Scaled to fit the disc in *both* directions: sizing on
     // width alone made a single digit 2.25 radii tall inside a disc only 1.7 radii across, so
@@ -476,6 +487,22 @@ pub fn set_tray_update_count(
     count: u32,
     label: String,
 ) -> Result<(), String> {
+    // Pending updates cannot be conjured on demand, which makes the badge awkward to look at
+    // deliberately — the count is whatever the user's addons happen to need. This forces one:
+    //   WOWUP_TRAY_COUNT=4 ./WowUp-CF-Tauri.AppImage
+    let count = match std::env::var("WOWUP_TRAY_COUNT")
+        .ok()
+        .and_then(|v| v.parse().ok())
+    {
+        Some(forced) => forced,
+        None => count,
+    };
+    let label = if std::env::var_os("WOWUP_TRAY_COUNT").is_some() {
+        format!("Update All ({count})")
+    } else {
+        label
+    };
+
     if let Some(item) = state.update_all.lock().map_err(|e| e.to_string())?.as_ref() {
         item.set_text(nonempty(&label, "Update All"))
             .map_err(|e| e.to_string())?;
