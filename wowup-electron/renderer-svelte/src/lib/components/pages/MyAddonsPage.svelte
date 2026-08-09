@@ -899,14 +899,18 @@
 
 			<div class="button-container">
 				<div class="split-button">
-					<button
-						class="wu-btn wu-btn-primary menu-button"
-						title={updateAllTooltip}
-						disabled={!enableUpdateAll}
-						onclick={onUpdateAll}
-					>
-						{t('PAGES.MY_ADDONS.UPDATE_ALL_BUTTON')}
-					</button>
+					<!-- The title sits on the wrapper, not the button: a disabled control gets no
+					     pointer events in WebKit and so shows no tooltip, and "nothing to update"
+					     is exactly when the reason is worth reading. -->
+					<span class="update-all-host" title={updateAllTooltip}>
+						<button
+							class="wu-btn wu-btn-primary menu-button"
+							disabled={!enableUpdateAll}
+							onclick={onUpdateAll}
+						>
+							{t('PAGES.MY_ADDONS.UPDATE_ALL_BUTTON')}
+						</button>
+					</span>
 					<button
 						class="wu-btn wu-btn-primary chip"
 						aria-label={t('PAGES.MY_ADDONS.UPDATE_ALL_BUTTON')}
@@ -1181,6 +1185,16 @@
 		display: flex;
 		align-items: stretch;
 		gap: 1px;
+	}
+
+	/* Transparent to layout — it stands where the button did inside the split button. */
+	.update-all-host {
+		display: flex;
+	}
+
+	/* Lets the hover reach the wrapper, which is what carries the tooltip. */
+	.update-all-host > button:disabled {
+		pointer-events: none;
 	}
 
 	.split-button .chip {

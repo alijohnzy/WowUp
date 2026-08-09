@@ -116,10 +116,9 @@ pub fn create_tray_menu(
         .on_menu_event(|app, event| match event.id().as_ref() {
             "show" => restore_window(app),
             "update-all" => {
-                // Show the window first: the update runs in the renderer and reports progress
-                // on the My Addons page, so starting it against a hidden window would leave
-                // the user with no sign anything was happening.
-                restore_window(app);
+                // Deliberately does not restore the window. The point of running it from the
+                // tray is not having to look at the app; the renderer works the same hidden,
+                // and the badge going down is the confirmation.
                 if let Err(e) = app.emit(IPC_TRAY_UPDATE_ALL, ()) {
                     log::error!("could not forward the tray update-all: {e}");
                 }
