@@ -224,7 +224,27 @@ jobs:
           CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
         run: |
           cd ./wowup-electron
-          npm run tauri:build
+
+          # Retried because the bundling step downloads its own tooling — NSIS and
+          # nsis_tauri_utils.dll on Windows, linuxdeploy on Linux — from GitHub releases, and
+          # that transfer is not always completed: the first run of this workflow compiled the
+          # crate in six minutes and then died on `io: Peer disconnected` fetching a DLL.
+          #
+          # Cheap to retry: the Rust artifacts are already built, so a second attempt goes
+          # almost straight back to bundling.
+          for attempt in 1 2 3; do
+            if npm run tauri:build; then
+              built=1
+              break
+            fi
+            echo "::warning::tauri build failed on attempt ${attempt}"
+            [ "$attempt" = 3 ] || sleep 20
+          done
+
+          if [ "${built:-0}" != 1 ]; then
+            echo "::error::tauri build failed three times."
+            exit 1
+          fi
 
       # Tauri has no portable target, but it does not need one: the executable plus the
       # `assets/` directory the build stages next to it is a working copy, because
@@ -273,7 +293,10 @@ jobs:
       - name: Summarise
         if: steps.gate.outputs.run == 'true' && !cancelled()
         run: |
-          cd ./wowup-electron/src-tauri/target/release/bundle
+          # No cd: this runs after a failed build too, and stepping into a directory the build
+          # never created turned one failure into a second, more confusing one. Globs that
+          # match nothing simply fall through the -f test.
+          bundle=wowup-electron/src-tauri/target/release/bundle
           {
             echo "### ${{ matrix.label }}"
             echo
@@ -282,7 +305,8 @@ jobs:
             found=0
             echo '| file | size |'
             echo '|---|---:|'
-            for f in nsis/*.exe appimage/*.AppImage deb/*.deb ../../../../portable/*.zip; do
+            for f in "$bundle"/nsis/*.exe "$bundle"/appimage/*.AppImage "$bundle"/deb/*.deb \
+                     wowup-electron/portable/*.zip; do
               [ -f "$f" ] || continue
               found=1
               echo "| \`$(basename "$f")\` | $(( $(stat -c%s "$f" 2>/dev/null || stat -f%z "$f") / 1048576 )) MB |"
