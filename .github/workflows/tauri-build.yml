@@ -127,11 +127,11 @@ jobs:
 
       - name: Checkout
         if: steps.gate.outputs.run == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Use Node.js
         if: steps.gate.outputs.run == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 24.x
 
@@ -321,7 +321,7 @@ jobs:
       # still hands over the installer it already produced.
       - name: Upload installers
         if: ${{ !cancelled() && steps.gate.outputs.run == 'true' && steps.build.outcome == 'success' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: WowUp-CF-Tauri-${{ matrix.key }}-${{ steps.gate.outputs.ref }}
           path: ${{ matrix.artifacts }}
@@ -341,12 +341,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # merge-multiple flattens both platforms into one directory, so the release gets the
       # installers rather than a folder per platform.
       - name: Download installers
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: dist
           pattern: WowUp-CF-Tauri-*
