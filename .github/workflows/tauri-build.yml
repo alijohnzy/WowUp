@@ -260,14 +260,22 @@ jobs:
           version=$(node -p "require('./src-tauri/tauri.conf.json').version")
           release=src-tauri/target/release
 
-          if [ ! -f "$release/${name}.exe" ]; then
-            echo "::error::No $release/${name}.exe — the portable build has nothing to package."
+          # The binary is named after the *Cargo package* (wowup.exe), not productName — the
+          # build says so: "Built application at: ...\target\release\wowup.exe". Found by glob
+          # rather than by either name, so renaming the crate or the product cannot silently
+          # break this. Only the app's own executable sits at the top of target/release;
+          # build scripts and dependencies are in subdirectories.
+          shopt -s nullglob
+          exes=("$release"/*.exe)
+          if [ ${#exes[@]} -ne 1 ]; then
+            echo "::error::Expected exactly one executable in $release, found ${#exes[@]}: ${exes[*]}"
             exit 1
           fi
 
           stage="portable/${name}-${version}-portable"
           mkdir -p "$stage"
-          cp "$release/${name}.exe" "$stage/"
+          # Renamed to the product name, so the portable copy looks like an installed one.
+          cp "${exes[0]}" "$stage/${name}.exe"
           # Absent only if bundle.resources is emptied; the app would then fail to write the
           # companion addon at runtime, which is worth failing the build over.
           if [ -d "$release/assets" ]; then
