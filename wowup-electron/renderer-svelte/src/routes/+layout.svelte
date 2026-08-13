@@ -36,7 +36,7 @@
 		suppressNativeContextMenu
 	} from '$lib/ipc';
 	import { forwardConsoleToTauri } from '$lib/log-tauri';
-	import { injectShellPaths } from '$lib/ipc-tauri';
+	import { injectShellGlobals } from '$lib/ipc-tauri';
 	import { configureAxiosForTauri } from '$lib/http';
 	import { addonService, onAddonInstalled, ScanUpdateType } from '$lib/state/addon.svelte';
 	import { AddonInstallState } from '$lib/models/addon-install-state';
@@ -374,10 +374,10 @@
 
 		if (isTauri()) {
 			forwardConsoleToTauri();
-			// Before any path is derived from them. Electron supplies these via preload; left
-			// unset they are '', so `downloads/` and friends come out relative and resolve
-			// against the read-only AppImage mount, failing every install with os error 30.
-			await injectShellPaths();
+			// Before any path is built or derived. Electron supplies these via preload; left
+			// unset, `downloads/` and friends come out relative and resolve against the
+			// read-only AppImage mount, and `join()` emits the wrong separator on Windows.
+			await injectShellGlobals();
 			// WebKitGTK opens its own menu on right-click; Electron never did, and every
 			// right-click in this app already has an owner.
 			suppressNativeContextMenu();

@@ -21,7 +21,7 @@ import { preferenceStorage } from '$lib/services/storage';
 import { electron } from '$lib/state/electron.svelte';
 import { warcraft } from '$lib/state/warcraft.svelte';
 import { i18n } from '$lib/i18n.svelte';
-import { join } from '$lib/utils/path';
+import { join, samePath } from '$lib/utils/path';
 
 const DEFAULT_NAME_TOKEN = '{defaultName}';
 
@@ -41,12 +41,55 @@ class WarcraftInstallations {
 		if (this.#initialized) return;
 		this.#initialized = true;
 
+		await this.#dedupeStoredInstallations();
+
 		try {
 			this.blizzardAgentPath = await warcraft.getBlizzardAgentPath();
 		} catch (e) {
 			console.error('Failed to get blizzard agent path', e);
 		}
 		await this.importWowInstallations(this.blizzardAgentPath);
+	}
+
+	/**
+	 * Collapse installations that name the same folder in different spellings.
+	 *
+	 * Runs on every launch rather than behind a migration flag: it is cheap, and the store it
+	 * repairs can be written by an older build at any time — a user moving between the Tauri
+	 * and Electron apps, or importing from one into the other.
+	 *
+	 * The first spelling wins and keeps its id, so its addons stay attached; the duplicates'
+	 * addons are orphaned and pruned by `reconcileOrphanAddons` on the same startup. That is
+	 * the right way round: the survivor is the one already on screen.
+	 */
+	async #dedupeStoredInstallations(): Promise<void> {
+		const stored = await this.getWowInstallationsAsync();
+
+		const kept: WowInstallation[] = [];
+		let changed = false;
+
+		for (const installation of stored) {
+			const existing = kept.find((k) => samePath(k.location, installation.location));
+			if (existing) {
+				console.warn(
+					`Dropping duplicate installation ${installation.location} — same folder as ${existing.location}`
+				);
+				// A duplicate may be the one the user had selected; do not lose the selection.
+				existing.selected ||= installation.selected;
+				changed = true;
+				continue;
+			}
+
+			// Rewrite in the host's own spelling even when there is no duplicate to drop:
+			// a lone `C:/…` entry is what the next import would duplicate.
+			const native = join(installation.location);
+			changed ||= native !== installation.location;
+			installation.location = native;
+			kept.push(installation);
+		}
+
+		if (!changed) return;
+		await this.setWowInstallations(kept);
 	}
 
 	/**
@@ -154,7 +197,9 @@ class WarcraftInstallations {
 
 	async addInstallation(installation: WowInstallation, notify = true): Promise<void> {
 		const existing = await this.getWowInstallationsAsync();
-		if (existing.some((inst) => inst.location === installation.location)) {
+		// Compared as paths, not as strings: the same folder arrives spelled differently
+		// depending on whether it came from the file dialog, the Blizzard agent, or `join`.
+		if (existing.some((inst) => samePath(inst.location, installation.location))) {
 			throw new Error(`Installation already exists: ${installation.location}`);
 		}
 
@@ -213,7 +258,9 @@ class WarcraftInstallations {
 			defaultAutoUpdate: false,
 			label,
 			displayName: await this.#getDisplayName(label, typeName),
-			location: applicationPath,
+			// Through `join` so a dialog path is stored in the same spelling an imported one
+			// would be, and the two compare equal.
+			location: join(applicationPath),
 			selected: false
 		};
 	}
@@ -235,7 +282,10 @@ class WarcraftInstallations {
 				: DEFAULT_NAME_TOKEN;
 
 			const fullProductPath = await this.#getFullProductPath(product.location, product.clientType);
-			if (current.some((inst) => inst.location === fullProductPath)) continue;
+			// `addInstallation` re-checks this across every client type; here it only saves the
+			// work. Both compare as paths — a string comparison re-imported the same folder on
+			// every launch, so deleting it never stuck.
+			if (current.some((inst) => samePath(inst.location, fullProductPath))) continue;
 
 			try {
 				await this.addInstallation(

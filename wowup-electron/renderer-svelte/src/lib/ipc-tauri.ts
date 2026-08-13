@@ -304,14 +304,22 @@ export function platform(): string {
 }
 
 /**
- * Fetch the paths Electron injects through preload (`window.userDataPath`, `window.logPath`)
- * and hang them on `window` so the shell-agnostic code above can keep reading them.
+ * Set the globals Electron injects through preload (app/preload.ts:36) so the shell-agnostic
+ * code above can keep reading them from `window`.
  *
- * Must run before anything derives a path from them. Left unset they are `''`, and every
- * derived path — `downloads/`, `wtf_backups/`, the updater — becomes relative and resolves
- * against the working directory, which for a packaged AppImage is the read-only mount.
+ * Must run before anything derives a path. Two things break otherwise:
+ *
+ *   - `userDataPath`/`logPath` left unset are `''`, so every derived path — `downloads/`,
+ *     `wtf_backups/`, the updater — becomes relative and resolves against the working
+ *     directory, which for a packaged AppImage is the read-only mount.
+ *   - `platform` left unset makes `utils/path.ts` emit `/` on Windows, so the app's own
+ *     paths disagree with every path that comes back from the OS. That is what listed one
+ *     WoW folder twice — `C:\…\Wow.exe` from the file dialog and `C:/…/Wow.exe` from the
+ *     Blizzard agent import — and re-added it on every launch, because the check for "already
+ *     have this one" is a string comparison.
  */
-export async function injectShellPaths(): Promise<void> {
+export async function injectShellGlobals(): Promise<void> {
+	window.platform = platform();
 	const paths = await tauriInvoke<{ userDataPath: string; logPath: string }>('get_app_paths');
 	window.userDataPath = paths.userDataPath;
 	window.logPath = paths.logPath;

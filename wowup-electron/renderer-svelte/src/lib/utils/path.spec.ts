@@ -1,6 +1,15 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import nodePath from 'node:path';
-import { basename, dirname, extname, isAbsolute, join, split } from './path';
+import {
+	basename,
+	dirname,
+	extname,
+	isAbsolute,
+	join,
+	normalizePath,
+	samePath,
+	split
+} from './path';
 
 // These run under the vitest "server" project (node environment), where `window` is
 // undefined, so the helpers take their POSIX branch. That lets us assert directly against
@@ -86,5 +95,61 @@ describe('split', () => {
 	it('splits on either separator and drops empties', () => {
 		expect(split('/a/b/c')).toEqual(['a', 'b', 'c']);
 		expect(split('C:\\a\\b')).toEqual(['C:', 'a', 'b']);
+	});
+});
+
+describe('samePath', () => {
+	it('folds separators', () => {
+		expect(samePath('/home/user/wow', '\\home\\user\\wow')).toBe(true);
+	});
+
+	it('ignores a trailing separator', () => {
+		expect(samePath('/home/user/wow/', '/home/user/wow')).toBe(true);
+	});
+
+	it('does not fold case off Windows, where two such folders are two folders', () => {
+		expect(samePath('/home/user/WoW', '/home/user/wow')).toBe(false);
+	});
+
+	it('matches nothing when either side is missing', () => {
+		expect(samePath(undefined, '/a')).toBe(false);
+		expect(samePath('/a', '')).toBe(false);
+	});
+});
+
+// The node environment leaves `window` undefined, so everything above takes the POSIX
+// branch. These stub it to reach the Windows one — which is the only branch the reported
+// bug ever ran in.
+describe('on Windows', () => {
+	afterEach(() => vi.unstubAllGlobals());
+
+	const onWindows = () => vi.stubGlobal('window', { platform: 'win32' });
+
+	it('joins with the native separator', () => {
+		onWindows();
+		expect(join('C:\\Games\\WoW\\_retail_', 'Interface', 'AddOns')).toBe(
+			'C:\\Games\\WoW\\_retail_\\Interface\\AddOns'
+		);
+	});
+
+	/**
+	 * The two spellings a single WoW folder had in the bug report: the left from the Electron
+	 * data import (Node's `path.join`), the right from this app's own `join` while
+	 * `window.platform` went unset under Tauri. They were listed as two separate games.
+	 */
+	it('recognises the two spellings one folder was listed under', () => {
+		onWindows();
+		expect(
+			samePath(
+				'C:\\Program Files (x86)\\World of Warcraft\\_retail_\\Wow.exe',
+				'C:/Program Files (x86)/World of Warcraft/_retail_/Wow.exe'
+			)
+		).toBe(true);
+	});
+
+	it('folds case, which the filesystem does not distinguish', () => {
+		onWindows();
+		expect(samePath('C:\\Games\\WoW', 'c:\\games\\wow')).toBe(true);
+		expect(normalizePath('C:\\Games\\WoW')).toBe('c:/games/wow');
 	});
 });

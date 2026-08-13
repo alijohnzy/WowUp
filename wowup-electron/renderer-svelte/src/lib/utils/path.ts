@@ -70,3 +70,25 @@ export function isAbsolute(p: string): boolean {
 
 /** Split a path into its segments, on either separator. */
 export const split = (p: string): string[] => p.split(SEP_RE).filter(Boolean);
+
+/**
+ * Do two paths name the same location?
+ *
+ * Separators are folded because the same WoW folder reaches us spelled both ways — the file
+ * dialog and the Blizzard agent database return native `C:\…` paths, while anything this app
+ * builds itself goes through `join`. Case is folded on Windows only, where the filesystem
+ * does not distinguish it; folding it on Linux would merge two genuinely different folders.
+ *
+ * Used for installation identity. Comparing the raw strings listed one WoW folder twice, and
+ * because the import runs on every launch it came back after being deleted.
+ */
+export function samePath(a: string | undefined, b: string | undefined): boolean {
+	if (!a || !b) return false;
+	return normalizePath(a) === normalizePath(b);
+}
+
+/** A path in comparison form: trailing separators dropped, separators and case folded. */
+export function normalizePath(p: string): string {
+	const folded = p.replace(/\\/g, '/').replace(/\/+$/, '');
+	return isWindows() ? folded.toLowerCase() : folded;
+}
