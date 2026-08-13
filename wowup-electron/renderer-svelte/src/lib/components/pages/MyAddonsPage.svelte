@@ -59,6 +59,7 @@
 	import { onAddonUpdatePush } from '$lib/state/push.svelte';
 	import { addonProviders } from '$lib/state/addon-providers.svelte';
 	import { handleRemoveAddon } from '$lib/services/addon-ui';
+	import { wowUpAddon } from '$lib/services/wowup-addon';
 	import { dialogs } from '$lib/state/dialogs.svelte';
 	import { session } from '$lib/state/session.svelte';
 	import { snackbar } from '$lib/state/snackbar.svelte';
@@ -525,6 +526,16 @@
 		session.setEnableControls(false);
 		try {
 			await addonService.syncClient(installation);
+			// Rewrite wowup_data_addon/data.lua, which is what the in-game "Addon Update
+			// Notifications" addon reads on /reload. Without this the file is only current
+			// after a boot, an install, or the hourly auto-update tick — so checking for
+			// updates here and then alt-tabbing into the game showed nothing.
+			//
+			// Not allowed to fail the refresh: a companion problem must not cost the user
+			// their addon list. The Angular original wrapped the whole handler in one catch.
+			await wowUpAddon
+				.updateForInstallation(installation)
+				.catch((e: unknown) => console.error('companion addon sync failed', e));
 			await loadAddons();
 		} finally {
 			isLoading = false;
