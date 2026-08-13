@@ -29,8 +29,21 @@
 #   but is not worth relying on.
 #
 # ARTIFACTS
-#   The key is baked into the built renderer. Artifacts on a public repository are downloadable
-#   by anyone with the run URL, so nothing is uploaded unless you tick the box.
+#   The finished apps are attached to the run and downloadable from its Summary page, under
+#   "Artifacts", as WowUp-CF-Svelte-<platform>-<branch>.zip. Kept for 7 days.
+#
+#   Read this before running it on a public repository. The build bakes CURSEFORGE_API_KEY into
+#   the renderer bundle — that is what makes the app work — and artifacts on a public repo can be
+#   downloaded by ANYONE with the run URL, no account needed. Anyone who does can extract the key
+#   from the bundle. This is the same exposure any distributed WowUp build has, except the key
+#   would be yours rather than the project's.
+#
+#   Three ways to handle it, in the order I would consider them:
+#     - Leave it, and rotate the key at CurseForge if it is ever abused. Lowest friction.
+#     - Untick "Attach the built apps" for runs you only want to see pass. The checks, the boot
+#       verification and the key verification all still run; only the download goes away.
+#     - Make the repository private, which limits downloads to people with repo access. Note the
+#       free tier's 500 MB artifact storage — one all-platform run is roughly 400 MB.
 
 name: Build Svelte App
 
@@ -43,9 +56,9 @@ on:
         default: 'all'
         options: ['all', 'linux', 'windows', 'macos']
       upload_artifacts:
-        description: 'Upload the built apps. They contain the CurseForge key — on a public repo anyone can download them.'
+        description: 'Attach the built apps to the run so they can be downloaded. They embed the CurseForge key — see ARTIFACTS in the workflow file.'
         type: boolean
-        default: false
+        default: true
       run_e2e:
         description: 'Run the Playwright end-to-end suite (Linux only, adds a few minutes).'
         type: boolean
@@ -94,6 +107,11 @@ jobs:
             echo "run=false" >> "$GITHUB_OUTPUT"
             echo "Not requested — skipping ${{ matrix.label }}."
           fi
+
+          # Artifact names may not contain a slash, and branch names here routinely do
+          # (migrate/svelte5). Unsanitised, upload-artifact rejects the name outright — after
+          # the ten-minute build has already run.
+          echo "ref=${GITHUB_REF_NAME//\//-}" >> "$GITHUB_OUTPUT"
 
       # Fails immediately and says why, rather than building for ten minutes and producing an app
       # whose every CurseForge request 403s.
@@ -217,21 +235,32 @@ jobs:
                 echo "| \`$(basename "$f")\` | $(( $(stat -c%s "$f" 2>/dev/null || stat -f%z "$f") / 1048576 )) MB |"
               done
               echo
-              echo "Uploaded: ${{ inputs.upload_artifacts && 'yes' || 'no — tick “Upload the built apps” to get them' }}"
+              if [ "${{ inputs.upload_artifacts }}" = "true" ]; then
+                echo "Download from the **Artifacts** section of this run's summary:"
+                echo "\`WowUp-CF-Svelte-${{ matrix.key }}-${{ steps.gate.outputs.ref }}.zip\` (kept 7 days)."
+              else
+                echo "Not uploaded — re-run with **Attach the built apps** ticked to download them."
+              fi
             else
               echo 'No artifacts produced.'
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # Off unless asked for: these contain the CurseForge key, and artifacts on a public
-      # repository can be downloaded by anyone with the run URL.
+      # compression-level 0 because every one of these is already a compressed container —
+      # an AppImage, an NSIS installer, a dmg. Re-deflating ~130 MB gains almost nothing and
+      # costs minutes of runner time on each of three platforms.
+      #
+      # Seven days rather than the 90-day default: the build embeds the CurseForge key, this
+      # repository is public, and artifacts on a public repo are downloadable by anyone with
+      # the run URL. Short retention narrows that window. See ARTIFACTS at the top.
       - name: Upload apps
         if: steps.gate.outputs.run == 'true' && inputs.upload_artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: WowUp-CF-Svelte-${{ matrix.key }}-${{ github.ref_name }}
+          name: WowUp-CF-Svelte-${{ matrix.key }}-${{ steps.gate.outputs.ref }}
           path: ${{ matrix.artifacts }}
           retention-days: 7
+          compression-level: 0
           if-no-files-found: error
 
       # Screenshots and traces only — no key.
