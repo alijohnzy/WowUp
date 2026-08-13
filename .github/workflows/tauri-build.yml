@@ -1,0 +1,382 @@
+# Builds the Tauri app and, optionally, publishes it to the Releases tab.
+#
+# The Tauri counterpart to svelte-branch-build.yml. Same renderer, different shell:
+#
+#   Windows  NSIS installer + portable zip  (unsigned)
+#   Linux    AppImage + deb                 (unsigned)
+#
+# The portable zip is the raw executable plus the `assets/` directory Tauri stages beside it,
+# which is what `resource_dir()` resolves to on Windows — so the WowUp companion addon
+# templates and the logos are found the same way they are in an installed copy. Unzip and run;
+# nothing is written outside the app's own data directory.
+#
+# One difference from the installer: the NSIS bundle ships the WebView2 bootstrapper, the zip
+# does not. Windows 10 and 11 include WebView2, so this only matters on an older or stripped
+# install, where the portable build will fail to open a window.
+#
+# Unsigned means Windows SmartScreen will warn on first run — "Windows protected your PC",
+# More info → Run anyway. Signing needs a certificate; wire one in if these ever go to people
+# who did not build them.
+#
+# SECRET SETUP
+#   Settings → Secrets and variables → Actions → Repository secrets → New repository secret
+#     Name:   CURSEFORGE_API_KEY
+#     Value:  the key, unquoted
+#
+#   A *repository* secret, not an *environment* secret — see svelte-branch-build.yml for why.
+#
+# ── READ THIS BEFORE TICKING "Publish to the Releases tab" ────────────────────────────────
+#
+#   The build bakes CURSEFORGE_API_KEY into the renderer bundle. That is what makes the app
+#   work, and it is true of any distributed WowUp build.
+#
+#   A release is not the same exposure as a run artifact. This repository is PUBLIC, so:
+#     - artifacts expire (7 days here) and need the run URL; a release is permanent, listed on
+#       the repo's front page, and indexed
+#     - anyone who downloads the installer can extract the key from the bundle
+#
+#   So the key in any published release should be one you are willing to rotate, and rotating
+#   it is the remedy if it is ever abused. If that is not acceptable, leave the release box
+#   unticked: the build still runs and still attaches the installers to the run, which is
+#   enough for testing.
+#
+#   Making the repository private removes the exposure but also the point of a releases tab.
+# ──────────────────────────────────────────────────────────────────────────────────────────
+
+name: Build Tauri App
+
+on:
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: 'Which platforms to build'
+        type: choice
+        default: 'windows'
+        options: ['windows', 'linux', 'all']
+      publish_release:
+        description: 'Publish to the Releases tab. The installers embed the CurseForge key and a release is public and permanent — read the header first.'
+        type: boolean
+        default: false
+      prerelease:
+        description: 'Mark the release as a pre-release.'
+        type: boolean
+        default: true
+      tag:
+        description: 'Release tag. Blank generates one from the version and run number, which cannot collide with an existing tag.'
+        type: string
+        default: ''
+
+jobs:
+  build:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+
+    # A Tauri build compiles the Rust crate from scratch on a cold cache, which is slower than
+    # the Electron equivalent. Still far short of the six-hour default.
+    timeout-minutes: 60
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Pinned to match the upstream release workflow.
+          - os: windows-2022
+            label: Windows (NSIS + portable)
+            key: windows
+            artifacts: |
+              wowup-electron/src-tauri/target/release/bundle/nsis/*.exe
+              wowup-electron/portable/*.zip
+          - os: ubuntu-22.04
+            label: Linux (AppImage + deb)
+            key: linux
+            artifacts: |
+              wowup-electron/src-tauri/target/release/bundle/appimage/*.AppImage
+              wowup-electron/src-tauri/target/release/bundle/deb/*.deb
+
+    steps:
+      - name: Skip platforms not requested
+        id: gate
+        run: |
+          if [ "${{ inputs.platforms }}" = "all" ] || [ "${{ inputs.platforms }}" = "${{ matrix.key }}" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Not requested — skipping ${{ matrix.label }}."
+          fi
+
+          # Artifact names may not contain a slash, and this branch has one (migrate/tauri).
+          echo "ref=${GITHUB_REF_NAME//\//-}" >> "$GITHUB_OUTPUT"
+
+      # Fails immediately rather than after a Rust compile, and says how to fix it.
+      - name: Check the secret is readable
+        if: steps.gate.outputs.run == 'true'
+        env:
+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+        run: |
+          if [ -z "${CURSEFORGE_API_KEY}" ]; then
+            echo "::error::CURSEFORGE_API_KEY is empty."
+            echo "Set it as a REPOSITORY secret: Settings → Secrets and variables → Actions →"
+            echo "Repository secrets → New repository secret."
+            exit 1
+          fi
+          echo "Secret is present (${#CURSEFORGE_API_KEY} characters)."
+
+      - name: Checkout
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+
+      - name: Rust toolchain
+        if: steps.gate.outputs.run == 'true'
+        uses: dtolnay/rust-toolchain@stable
+
+      # Without this every run recompiles the whole dependency tree, which is most of the
+      # build time. Keyed on the crate directory so the two platforms do not share a cache.
+      - name: Cache Rust build
+        if: steps.gate.outputs.run == 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: wowup-electron/src-tauri
+
+      # webkit2gtk is the webview Tauri renders in on Linux; librsvg is needed to build the
+      # tray and window icons.
+      #
+      # patchelf is not optional here: bundle.linux.appimage.bundleMediaFramework is on, and
+      # without patchelf linuxdeploy fails with "failed to run linuxdeploy" — the real cause,
+      # "Error: patchelf not found", only appears under --verbose.
+      #
+      # The gstreamer plugins are what bundleMediaFramework collects. They are what lets the
+      # ad frame play a video ad instead of taking the webview down with it.
+      - name: Linux build dependencies
+        if: steps.gate.outputs.run == 'true' && matrix.key == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libgstreamer1.0-dev \
+            libgstreamer-plugins-base1.0-dev \
+            gstreamer1.0-plugins-good \
+            gstreamer1.0-plugins-bad \
+            gstreamer1.0-libav
+
+      # wowup-electron depends on the local wowup-lib-core package, so the library is compiled
+      # before the app installs.
+      - name: Build wowup-lib
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          cd ./wowup-lib
+          npm ci
+          npm run build
+
+      - name: Install app dependencies
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          cd ./wowup-electron
+          npm ci
+
+      - name: Install renderer dependencies
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          cd ./wowup-electron/renderer-svelte
+          npm ci
+
+      # The renderer and the Rust crate are platform-independent, so checking them once is
+      # enough. Linux is chosen because it is the cheaper runner.
+      - name: Typecheck
+        if: steps.gate.outputs.run == 'true' && matrix.key == 'linux'
+        run: |
+          cd ./wowup-electron/renderer-svelte
+          npm run check
+
+      - name: Renderer tests
+        if: steps.gate.outputs.run == 'true' && matrix.key == 'linux'
+        run: |
+          cd ./wowup-electron/renderer-svelte
+          npx vitest run
+
+      - name: Rust tests
+        if: steps.gate.outputs.run == 'true' && matrix.key == 'linux'
+        run: |
+          cd ./wowup-electron/src-tauri
+          cargo test
+
+      # tauri:build runs the renderer build itself, through beforeBuildCommand, in the tauri
+      # flavour — CurseForge for addons plus the Wago ad frame.
+      - name: Build app
+        id: build
+        if: steps.gate.outputs.run == 'true'
+        env:
+          # Read by renderer-svelte/vite.config.ts. Passed as an env var rather than sourced
+          # from a file: a key of the form "$2a$10$…" loses its $-segments to shell expansion
+          # if it is ever `source`d, producing a silently invalid key and a 403 on every call.
+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+        run: |
+          cd ./wowup-electron
+          npm run tauri:build
+
+      # Tauri has no portable target, but it does not need one: the executable plus the
+      # `assets/` directory the build stages next to it is a working copy, because
+      # `resource_dir()` on Windows is the executable's own directory.
+      #
+      # Assembled from target/release rather than from the repo, so the contents follow
+      # bundle.resources automatically instead of drifting from it.
+      - name: Assemble the portable zip
+        if: steps.gate.outputs.run == 'true' && matrix.key == 'windows' && steps.build.outcome == 'success'
+        run: |
+          cd ./wowup-electron
+          name=$(node -p "require('./src-tauri/tauri.conf.json').productName")
+          version=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          release=src-tauri/target/release
+
+          if [ ! -f "$release/${name}.exe" ]; then
+            echo "::error::No $release/${name}.exe — the portable build has nothing to package."
+            exit 1
+          fi
+
+          stage="portable/${name}-${version}-portable"
+          mkdir -p "$stage"
+          cp "$release/${name}.exe" "$stage/"
+          # Absent only if bundle.resources is emptied; the app would then fail to write the
+          # companion addon at runtime, which is worth failing the build over.
+          if [ -d "$release/assets" ]; then
+            cp -r "$release/assets" "$stage/"
+          else
+            echo "::error::No $release/assets — resources were not staged, so the portable build would be broken."
+            exit 1
+          fi
+
+          cd portable
+          7z a -tzip "${name}-${version}-portable.zip" "${name}-${version}-portable" >/dev/null
+          rm -rf "${name}-${version}-portable"
+          ls -l
+
+      # The renderer bundle is the same one the verifier reads for the Electron build, so this
+      # catches a key that arrived mangled rather than missing.
+      - name: Verify the key was baked into the bundle
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          cd ./wowup-electron
+          npm run svelte:verify:key
+
+      - name: Summarise
+        if: steps.gate.outputs.run == 'true' && !cancelled()
+        run: |
+          cd ./wowup-electron/src-tauri/target/release/bundle
+          {
+            echo "### ${{ matrix.label }}"
+            echo
+            echo "\`${GITHUB_REF_NAME}\` @ \`${GITHUB_SHA::8}\`"
+            echo
+            found=0
+            echo '| file | size |'
+            echo '|---|---:|'
+            for f in nsis/*.exe appimage/*.AppImage deb/*.deb ../../../../portable/*.zip; do
+              [ -f "$f" ] || continue
+              found=1
+              echo "| \`$(basename "$f")\` | $(( $(stat -c%s "$f" 2>/dev/null || stat -f%z "$f") / 1048576 )) MB |"
+            done
+            [ "$found" = "1" ] || echo '| _none produced_ | |'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # compression-level 0: an NSIS installer and an AppImage are already compressed
+      # containers, so re-deflating them costs runner minutes and gains almost nothing.
+      #
+      # Keyed off the build step rather than overall job success, so a failing verification
+      # still hands over the installer it already produced.
+      - name: Upload installers
+        if: ${{ !cancelled() && steps.gate.outputs.run == 'true' && steps.build.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: WowUp-CF-Tauri-${{ matrix.key }}-${{ steps.gate.outputs.ref }}
+          path: ${{ matrix.artifacts }}
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    needs: build
+    if: ${{ inputs.publish_release && !cancelled() }}
+    runs-on: ubuntu-latest
+
+    # The default token is read-only on this repository; creating a release needs write.
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # merge-multiple flattens both platforms into one directory, so the release gets the
+      # installers rather than a folder per platform.
+      - name: Download installers
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: WowUp-CF-Tauri-*
+          merge-multiple: true
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          shopt -s nullglob
+          files=(dist/*.exe dist/*.AppImage dist/*.deb dist/*.zip)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "::error::No installers were produced, so there is nothing to release."
+            exit 1
+          fi
+
+          version=$(node -p "require('./wowup-electron/src-tauri/tauri.conf.json').version")
+          tag="${{ inputs.tag }}"
+          # The run number keeps a generated tag unique, so re-running never collides with a
+          # tag that already exists and never silently replaces a published release.
+          [ -n "$tag" ] || tag="tauri-v${version}-${GITHUB_RUN_NUMBER}"
+
+          notes=$(printf '%s\n' \
+            "Tauri build of WowUp-CF from \`${GITHUB_REF_NAME}\` @ \`${GITHUB_SHA::8}\`." \
+            "" \
+            "| platform | file |" \
+            "|---|---|" \
+            "$(for f in "${files[@]}"; do
+                 case "$f" in
+                   *portable*.zip) echo "| Windows (portable) | \`$(basename "$f")\` |";;
+                   *.exe)      echo "| Windows (installer) | \`$(basename "$f")\` |";;
+                   *.AppImage) echo "| Linux | \`$(basename "$f")\` |";;
+                   *.deb)      echo "| Linux (deb) | \`$(basename "$f")\` |";;
+                 esac
+               done)" \
+            "" \
+            "Unsigned, so Windows SmartScreen will warn on first run: **More info → Run anyway**." \
+            "" \
+            "The portable zip needs WebView2 on the machine; Windows 10 and 11 ship it. The installer bundles it." \
+            "" \
+            "Built by [run ${GITHUB_RUN_NUMBER}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}).")
+
+          flags=(--title "WowUp-CF Tauri ${version} (build ${GITHUB_RUN_NUMBER})" --notes "$notes" --target "${GITHUB_SHA}")
+          [ "${{ inputs.prerelease }}" = "true" ] && flags+=(--prerelease)
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag exists — replacing its files rather than creating it again."
+            gh release upload "$tag" "${files[@]}" --clobber
+          else
+            gh release create "$tag" "${files[@]}" "${flags[@]}"
+          fi
+
+          {
+            echo "### Released"
+            echo
+            echo "**$tag** — ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/$tag"
+          } >> "$GITHUB_STEP_SUMMARY"
