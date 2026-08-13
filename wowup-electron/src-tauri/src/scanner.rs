@@ -33,6 +33,52 @@ fn has_invalid_path_chars(s: &str) -> bool {
     s.chars().any(|c| c == '|' || (c as u32) < 0x20)
 }
 
+/// The one form every path comparison in this module uses: lowercased, separators folded
+/// to `/`.
+///
+/// Windows accepts both separators and mixes them freely, so the raw strings compared here
+/// do not line up on their own:
+///
+///   * `read_dir` appends the *platform* separator to whatever root it was handed, so a
+///     root of `C:/…/AddOns/WeakAuras` yields `C:/…/AddOns/WeakAuras\WeakAuras.toc`.
+///   * `.toc` includes are written `Libs\LibStub\LibStub.lua`, and resolving them against a
+///     parent produced a third spelling again.
+///
+/// Every one of those mismatches silently drops files from the scan, and dropped files mean
+/// a fingerprint CurseForge cannot match — which surfaces, a long way downstream, as every
+/// addon in the list showing no provider and a status of "Ignored". Folding here is what
+/// makes the comparisons separator-blind; it is not a tidy-up.
+fn key(path: &Path) -> String {
+    path.to_string_lossy()
+        .to_ascii_lowercase()
+        .replace('\\', "/")
+}
+
+/// The prefix the match patterns want stripped: the addon folder's *parent*, plus a
+/// separator, so a candidate reads `AddonName/File.toc`.
+///
+/// Cut from the folded string rather than taken from `Path::parent`, because `Path` only
+/// recognises the separators of the platform it was compiled for: a Windows path handed to a
+/// Linux build is one long component with no parent at all. That is not merely a testing
+/// inconvenience — it is the same class of assumption that broke this module in the first
+/// place.
+fn parent_prefix(folder_path: &Path) -> String {
+    let folded = key(folder_path);
+    // A trailing separator would otherwise make the folder its own parent, leaving the
+    // patterns a bare file name with no folder to match against.
+    let trimmed = folded.trim_end_matches('/');
+    match trimmed.rfind('/') {
+        Some(i) => trimmed[..=i].to_string(),
+        None => String::new(),
+    }
+}
+
+/// A already-folded path as the match patterns see it. Falls back to the whole path when the
+/// prefix does not apply, which is what the JS did.
+fn relative_key<'a>(parent_prefix: &str, folded: &'a str) -> &'a str {
+    folded.strip_prefix(parent_prefix).unwrap_or(folded)
+}
+
 /// Mirrors `AddonScanResult` (wowup-lib/src/addons.ts:113).
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -364,27 +410,19 @@ impl FolderScan {
         let files = read_dir_recursive(folder_path)?;
 
         let mut scan = FolderScan {
-            file_map: files
-                .iter()
-                .map(|p| (p.to_string_lossy().to_ascii_lowercase(), p.clone()))
-                .collect(),
+            file_map: files.iter().map(|p| (key(p), p.clone())).collect(),
             matching: Vec::new(),
             seen: HashSet::new(),
             flavour,
         };
 
-        // The JS strips `dirname(folderPath) + sep` from each path before matching, so the
-        // patterns see `AddonName/File.toc`.
-        let parent = folder_path
-            .parent()
-            .map(|p| format!("{}/", p.to_string_lossy()))
-            .unwrap_or_default()
-            .to_ascii_lowercase();
+        // The JS strips `dirname(folderPath) + sep` from each path before matching.
+        let parent = parent_prefix(folder_path);
 
         let mut toc_files = Vec::new();
         for path in &files {
-            let lower = path.to_string_lossy().to_ascii_lowercase();
-            let relative = lower.strip_prefix(&parent).unwrap_or(&lower);
+            let lower = key(path);
+            let relative = relative_key(&parent, &lower);
 
             if is_addon_toc(relative) {
                 toc_files.push(path.clone());
@@ -399,7 +437,7 @@ impl FolderScan {
 
         let mut matching = scan.matching;
         // `_.orderBy(matchingFiles, f => f.toLowerCase())`.
-        matching.sort_by_key(|p| p.to_string_lossy().to_ascii_lowercase());
+        matching.sort_by_key(|p| key(p));
         Ok(matching)
     }
 
@@ -415,9 +453,8 @@ impl FolderScan {
         let mut queue = vec![start.to_path_buf()];
 
         while let Some(candidate) = queue.pop() {
-            // Case-insensitive resolution through the folder's real file list.
-            let key = candidate.to_string_lossy().to_ascii_lowercase();
-            let Some(real) = self.file_map.get(&key).cloned() else {
+            // Case- and separator-insensitive resolution through the folder's real file list.
+            let Some(real) = self.file_map.get(&key(&candidate)).cloned() else {
                 continue;
             };
             if !real.is_file() || self.seen.contains(&real) {
@@ -589,6 +626,82 @@ mod tests {
         assert!(!is_addon_toc("weakauras/weakauras-nonsense.toc"));
         assert!(!is_addon_toc("weakauras/sub/weakauras.toc"));
         assert!(!is_addon_toc("weakauras.toc"));
+    }
+
+    // ---- Windows path shapes -------------------------------------------------------------
+    //
+    // These run on every platform because they are pure string work, which is the point: the
+    // shapes below only occur on Windows, and nothing else in this suite would ever produce
+    // them. Each one made the scan silently match zero files, so every addon came back with
+    // no provider and a status of "Ignored" — with no error anywhere to say why.
+
+    /// A native Windows path is all backslashes. The prefix used to be built with a hardcoded
+    /// `/`, so it never matched, nothing was stripped, and the patterns were handed a whole
+    /// absolute path — which matches nothing.
+    #[test]
+    fn a_backslash_path_still_finds_its_toc() {
+        let folder = Path::new(
+            r"C:\Program Files (x86)\World of Warcraft\_retail_\Interface\AddOns\WeakAuras",
+        );
+        let toc = folder.join("WeakAuras.toc");
+
+        let relative = key(&toc);
+        let relative = relative_key(&parent_prefix(folder), &relative);
+
+        assert_eq!(relative, "weakauras/weakauras.toc");
+        assert!(is_addon_toc(relative));
+    }
+
+    /// `read_dir` appends the *platform* separator to whatever root it was given, so a
+    /// forward-slash root on Windows yields a path with one of each.
+    #[test]
+    fn a_mixed_separator_path_still_finds_its_toc() {
+        let folder = Path::new(
+            "C:/Program Files (x86)/World of Warcraft/_retail_/Interface/AddOns/WeakAuras",
+        );
+        let toc = Path::new(
+            r"C:/Program Files (x86)/World of Warcraft/_retail_/Interface/AddOns/WeakAuras\WeakAuras.toc",
+        );
+
+        let relative = key(toc);
+        let relative = relative_key(&parent_prefix(folder), &relative);
+
+        assert_eq!(relative, "weakauras/weakauras.toc");
+        assert!(is_addon_toc(relative));
+    }
+
+    /// Includes are written `Libs\LibStub\LibStub.lua` and resolved against the file's own
+    /// directory, which spells the path a third way again. All three must land on one key, or
+    /// the include is dropped and the fingerprint is wrong — the failure that survives even
+    /// when the toc itself is found.
+    #[test]
+    fn an_include_with_a_directory_component_resolves() {
+        let on_disk = Path::new(r"C:\AddOns\WeakAuras\Libs\LibStub\LibStub.lua");
+        let resolved = Path::new(r"C:\AddOns\WeakAuras").join("Libs/LibStub/LibStub.lua");
+
+        assert_eq!(key(on_disk), key(&resolved));
+    }
+
+    /// Authors are inconsistent about case, and Windows does not care. Folding must keep
+    /// doing what it was already doing.
+    #[test]
+    fn case_is_still_folded() {
+        assert_eq!(key(Path::new("/x/WeakAuras.TOC")), "/x/weakauras.toc");
+    }
+
+    /// A Unix path has no backslashes to fold, so it must come through untouched — including
+    /// a backslash in a *file name*, which is legal on Linux. Folding it is wrong there, but
+    /// it is the price of one comparison working on both platforms, and an addon file with a
+    /// backslash in its name is not a thing that exists.
+    #[test]
+    fn a_unix_path_is_unchanged() {
+        let folder = Path::new("/home/user/wow/_retail_/Interface/AddOns/WeakAuras");
+        let toc = folder.join("WeakAuras.toc");
+
+        let relative = key(&toc);
+        let relative = relative_key(&parent_prefix(folder), &relative);
+
+        assert_eq!(relative, "weakauras/weakauras.toc");
     }
 
     #[test]
