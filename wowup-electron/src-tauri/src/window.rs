@@ -126,38 +126,40 @@ fn collapse_preference(stored: Option<&serde_json::Value>) -> bool {
     stored.and_then(|v| v.as_str()) == Some("true")
 }
 
-/// The flag the login item launches us with. Matches the one Electron registers
-/// (wowup.service.ts:453) and the one passed to `tauri_plugin_autostart::init`.
+/// The flag the login item launches us with. Still registered, to match what Electron writes
+/// (wowup.service.ts:453), but deliberately not read — see `should_start_hidden`.
 pub const HIDDEN_FLAG: &str = "--hidden";
 
-/// Port of `canStartHidden` (app/main.ts:577) — should this launch go straight to the tray?
+/// Should this launch go straight to the tray?
 ///
-/// Two conditions, and both are needed:
+/// The `start_minimized` preference decides on its own, so "Launch WowUp minimized" means
+/// every launch, not only the one the system makes. **This is a deliberate divergence from
+/// Electron**, which starts hidden only when the login item passes `--hidden`
+/// (`canStartHidden`, app/main.ts:577) and therefore always gives you a window when you open
+/// the app yourself.
 ///
-///   * the `--hidden` flag, which is what separates a launch by the login item from the user
-///     opening the app themselves. Starting minimised must not mean the icon stops working.
-///   * the `start_minimized` preference.
+/// The consequence is worth knowing before changing this back or forward: with the preference
+/// on, the tray icon is the only way to reach the window. Double-clicking the icon starts
+/// another hidden process — there is no single-instance handling — so if the tray is ever
+/// missing, the app can only be reached by killing it.
 ///
-/// Electron needs only the flag, because it rewrites the login item's arguments whenever the
-/// preference changes, so the flag *is* the preference. `tauri-plugin-autostart` takes its
-/// arguments once when the plugin is built, before any store can be read, so here the flag
-/// only ever says "the system started me" and the preference has to be consulted separately.
-/// The user-visible behaviour is the same, and it survives the preference being changed
-/// without the login item being rewritten.
+/// The `--hidden` flag is not consulted. It cannot be: `tauri-plugin-autostart` fixes its
+/// arguments when the plugin is built, before any store can be read, so it registers the flag
+/// whether or not the user asked to start minimised. Reading it would hide the window for
+/// anyone who enabled only "start with system".
 pub fn should_start_hidden(app: &AppHandle) -> bool {
-    let flagged = std::env::args().any(|arg| arg == HIDDEN_FLAG);
     let stored = app
         .state::<Stores>()
         .get(app, PREFERENCE_STORE_NAME, START_MINIMIZED_PREFERENCE_KEY)
         .ok()
         .flatten();
-    start_hidden(flagged, stored.as_ref())
+    start_hidden(stored.as_ref())
 }
 
 /// The decision itself, isolated so it can be tested without an app.
-fn start_hidden(flagged: bool, stored: Option<&serde_json::Value>) -> bool {
+fn start_hidden(stored: Option<&serde_json::Value>) -> bool {
     // Same string storage as every other boolean preference — see `coerce_for_storage`.
-    flagged && stored.and_then(|v| v.as_str()) == Some("true")
+    stored.and_then(|v| v.as_str()) == Some("true")
 }
 
 #[cfg(test)]
@@ -181,32 +183,29 @@ mod tests {
         assert!(!collapse_preference(None));
     }
 
+    /// Every launch, not only the one the system makes — the preference is the whole
+    /// decision. Electron would show a window here unless `--hidden` was passed; this is the
+    /// documented divergence.
     #[test]
-    fn the_login_item_starts_hidden_when_the_preference_is_on() {
-        assert!(start_hidden(true, Some(&json!("true"))));
+    fn the_preference_alone_starts_hidden() {
+        assert!(start_hidden(Some(&json!("true"))));
     }
 
-    /// The flag alone is not enough, and this is the half that is easy to get wrong:
-    /// `tauri-plugin-autostart` bakes `--hidden` into the registration whether the user asked
-    /// for it or not, so trusting it would hide the window for anyone who merely turned on
-    /// "start with system".
     #[test]
-    fn the_flag_alone_does_not_hide_the_window() {
-        assert!(!start_hidden(true, Some(&json!("false"))));
-        assert!(!start_hidden(true, None));
+    fn the_preference_off_always_shows_the_window() {
+        assert!(!start_hidden(Some(&json!("false"))));
     }
 
-    /// Opening the app yourself must always give you a window, however the preference is set
-    /// — otherwise "start minimized" reads as "the icon stopped working".
+    /// The default. A fresh install must open a window, or the app looks dead on first run.
     #[test]
-    fn launching_it_by_hand_always_shows_the_window() {
-        assert!(!start_hidden(false, Some(&json!("true"))));
+    fn an_absent_preference_shows_the_window() {
+        assert!(!start_hidden(None));
     }
 
     #[test]
     fn a_json_boolean_is_not_the_stored_form() {
         // Same string storage as every other preference; see collapse_preference above.
-        assert!(!start_hidden(true, Some(&json!(true))));
+        assert!(!start_hidden(Some(&json!(true))));
     }
 }
 

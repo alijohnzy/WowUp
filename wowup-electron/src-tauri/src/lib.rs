@@ -138,11 +138,12 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_dialog::init())
-        // Start-with-system. `--hidden` matches Electron, which passes the same flag so the
-        // app starts to the tray rather than opening a window on login.
+        // Start-with-system. The flag matches what Electron registers; nothing reads it, since
+        // the plugin would pass it whether or not the user asked to start minimised — see
+        // `window::should_start_hidden`.
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-            Some(vec!["--hidden"]),
+            Some(vec![window::HIDDEN_FLAG]),
         ))
         // The ad frame is an <iframe> on its own origin; this serves it. See src/ad.rs for
         // why it is proxied rather than framed directly, and why that origin matters.
@@ -283,7 +284,7 @@ pub fn run() {
                 // flashes one up. That makes showing it this app's job on every other
                 // launch — miss this and the app runs with no window at all.
                 if window::should_start_hidden(app.handle()) {
-                    log::info!("starting hidden, the tray is the way back");
+                    log::info!("start_minimized is on; starting hidden, the tray is the way back");
                     // A window that was never shown is not in the taskbar anyway, but the
                     // flag is what `restore_window` clears, so set it for symmetry with the
                     // close-to-tray path.
