@@ -20,6 +20,9 @@ pub const SENSITIVE_STORE_NAME: &str = "sensitive";
 /// `COLLAPSE_TO_TRAY_PREFERENCE_KEY` in src/common/constants.ts:136.
 pub const COLLAPSE_TO_TRAY_PREFERENCE_KEY: &str = "collapse_to_tray";
 
+/// `START_MINIMIZED_PREFERENCE_KEY` in src/common/constants.ts:148.
+pub const START_MINIMIZED_PREFERENCE_KEY: &str = "start_minimized";
+
 const STORE_NAMES: [&str; 3] = [
     ADDON_STORE_NAME,
     PREFERENCE_STORE_NAME,

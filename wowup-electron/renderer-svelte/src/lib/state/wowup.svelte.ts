@@ -400,10 +400,13 @@ class WowUp {
 		const startMinimized = await this.getStartMinimized();
 		const startWithSystem = await this.getStartWithSystem();
 
-		if (isLinux()) {
-			// auto-launch comes through the preload bridge (window.libs), same as before.
-			const libs = (window as { libs?: { autoLaunch?: new (o: unknown) => unknown } }).libs;
-			if (!libs?.autoLaunch) return;
+		// auto-launch comes through the preload bridge (window.libs), so it only exists under
+		// Electron. Under Tauri the autostart plugin sits behind setLoginItemSettings and
+		// serves every platform, so Linux goes the same way as the other two — without this
+		// the branch below was never reached there and the toggle wrote a preference nothing
+		// acted on.
+		const libs = (window as { libs?: { autoLaunch?: new (o: unknown) => unknown } }).libs;
+		if (isLinux() && libs?.autoLaunch) {
 			const autoLauncher = new libs.autoLaunch({ name: 'WowUp', isHidden: startMinimized }) as {
 				enable: () => void;
 				disable: () => void;

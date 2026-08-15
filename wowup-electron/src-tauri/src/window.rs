@@ -13,7 +13,9 @@ use crate::constants::{
     IPC_WINDOW_ENTER_FULLSCREEN, IPC_WINDOW_LEAVE_FULLSCREEN, IPC_WINDOW_MAXIMIZED,
     IPC_WINDOW_MINIMIZED, IPC_WINDOW_UNMAXIMIZED,
 };
-use crate::store::{Stores, COLLAPSE_TO_TRAY_PREFERENCE_KEY, PREFERENCE_STORE_NAME};
+use crate::store::{
+    Stores, COLLAPSE_TO_TRAY_PREFERENCE_KEY, PREFERENCE_STORE_NAME, START_MINIMIZED_PREFERENCE_KEY,
+};
 
 /// Set once the user has actually asked to quit, so the close-to-tray interception knows to
 /// stand aside. Mirrors `appIsQuitting` in app/main.ts.
@@ -124,6 +126,40 @@ fn collapse_preference(stored: Option<&serde_json::Value>) -> bool {
     stored.and_then(|v| v.as_str()) == Some("true")
 }
 
+/// The flag the login item launches us with. Matches the one Electron registers
+/// (wowup.service.ts:453) and the one passed to `tauri_plugin_autostart::init`.
+pub const HIDDEN_FLAG: &str = "--hidden";
+
+/// Port of `canStartHidden` (app/main.ts:577) — should this launch go straight to the tray?
+///
+/// Two conditions, and both are needed:
+///
+///   * the `--hidden` flag, which is what separates a launch by the login item from the user
+///     opening the app themselves. Starting minimised must not mean the icon stops working.
+///   * the `start_minimized` preference.
+///
+/// Electron needs only the flag, because it rewrites the login item's arguments whenever the
+/// preference changes, so the flag *is* the preference. `tauri-plugin-autostart` takes its
+/// arguments once when the plugin is built, before any store can be read, so here the flag
+/// only ever says "the system started me" and the preference has to be consulted separately.
+/// The user-visible behaviour is the same, and it survives the preference being changed
+/// without the login item being rewritten.
+pub fn should_start_hidden(app: &AppHandle) -> bool {
+    let flagged = std::env::args().any(|arg| arg == HIDDEN_FLAG);
+    let stored = app
+        .state::<Stores>()
+        .get(app, PREFERENCE_STORE_NAME, START_MINIMIZED_PREFERENCE_KEY)
+        .ok()
+        .flatten();
+    start_hidden(flagged, stored.as_ref())
+}
+
+/// The decision itself, isolated so it can be tested without an app.
+fn start_hidden(flagged: bool, stored: Option<&serde_json::Value>) -> bool {
+    // Same string storage as every other boolean preference — see `coerce_for_storage`.
+    flagged && stored.and_then(|v| v.as_str()) == Some("true")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -143,6 +179,34 @@ mod tests {
     fn an_absent_preference_really_closes() {
         // `get(...) !== "true"` in the JS: unset means close, not hide.
         assert!(!collapse_preference(None));
+    }
+
+    #[test]
+    fn the_login_item_starts_hidden_when_the_preference_is_on() {
+        assert!(start_hidden(true, Some(&json!("true"))));
+    }
+
+    /// The flag alone is not enough, and this is the half that is easy to get wrong:
+    /// `tauri-plugin-autostart` bakes `--hidden` into the registration whether the user asked
+    /// for it or not, so trusting it would hide the window for anyone who merely turned on
+    /// "start with system".
+    #[test]
+    fn the_flag_alone_does_not_hide_the_window() {
+        assert!(!start_hidden(true, Some(&json!("false"))));
+        assert!(!start_hidden(true, None));
+    }
+
+    /// Opening the app yourself must always give you a window, however the preference is set
+    /// — otherwise "start minimized" reads as "the icon stopped working".
+    #[test]
+    fn launching_it_by_hand_always_shows_the_window() {
+        assert!(!start_hidden(false, Some(&json!("true"))));
+    }
+
+    #[test]
+    fn a_json_boolean_is_not_the_stored_form() {
+        // Same string storage as every other preference; see collapse_preference above.
+        assert!(!start_hidden(true, Some(&json!(true))));
     }
 }
 

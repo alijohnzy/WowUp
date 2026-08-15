@@ -278,6 +278,19 @@ pub fn run() {
                     }
                 }
                 window::forward_window_events(&main);
+
+                // The window is configured `visible: false` so that a hidden start never
+                // flashes one up. That makes showing it this app's job on every other
+                // launch — miss this and the app runs with no window at all.
+                if window::should_start_hidden(app.handle()) {
+                    log::info!("starting hidden, the tray is the way back");
+                    // A window that was never shown is not in the taskbar anyway, but the
+                    // flag is what `restore_window` clears, so set it for symmetry with the
+                    // close-to-tray path.
+                    let _ = main.set_skip_taskbar(true);
+                } else if let Err(e) = main.show() {
+                    log::error!("could not show the main window: {e}");
+                }
             }
             Ok(())
         })
