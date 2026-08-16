@@ -54,6 +54,7 @@
 	import WtfBackup from '$lib/components/addons/WtfBackup.svelte';
 	import Icon from '$lib/components/common/Icon.svelte';
 	import ProgressSpinner from '$lib/components/common/ProgressSpinner.svelte';
+	import BusyOverlay from '$lib/components/common/BusyOverlay.svelte';
 
 	import { addonService, onAddonInstalled } from '$lib/state/addon.svelte';
 	import { onAddonUpdatePush } from '$lib/state/push.svelte';
@@ -155,7 +156,14 @@
 	);
 
 	let hasData = $derived(rowData.length > 0);
-	let hideGrid = $derived(isBusy || !hasData);
+
+	// The grid now stays up while the page is busy, so an update run happens in front of the
+	// table it is updating rather than behind a blank page. The full-page spinner is kept for
+	// the one case where there is genuinely nothing to show through: the first load, before
+	// any addon has been read off disk. An overlay over an empty page is just a worse spinner.
+	let showBusyOverlay = $derived(isBusy && hasData);
+	let showPageSpinner = $derived(isBusy && !hasData);
+	let hideGrid = $derived(!hasData);
 	let showNoAddons = $derived(!isBusy && !hasData);
 
 	let enableUpdateAll = $derived(
@@ -959,7 +967,7 @@
 		</div>
 	</div>
 
-	{#if isBusy}
+	{#if showPageSpinner}
 		<div class="spinner-container"><ProgressSpinner message={spinnerMessage} /></div>
 	{/if}
 
@@ -971,6 +979,10 @@
 		<AgGrid options={gridOptions} {rowData} onGridReady={(api) => (gridApi = api)} />
 	</div>
 </div>
+
+{#if showBusyOverlay}
+	<BusyOverlay message={spinnerMessage} />
+{/if}
 
 {#if updateAllMenu}
 	<ContextMenu x={updateAllMenu.x} y={updateAllMenu.y} onclose={closeMenus}>
