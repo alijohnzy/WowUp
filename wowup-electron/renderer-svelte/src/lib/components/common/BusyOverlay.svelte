@@ -14,6 +14,10 @@
 	// `modalDialog(true)` sets `closedby: none`, so neither Escape nor a backdrop click
 	// dismisses it. That is deliberate: there is nothing to cancel — the run owns the dialog
 	// and takes it away when it is done.
+	//
+	// It draws no surface of its own — no panel, no border — so the only thing over the table
+	// is the message itself. ProgressSpinner already centres its own content in the space it
+	// is given, which is now the whole viewport.
 
 	import ProgressSpinner from '$lib/components/common/ProgressSpinner.svelte';
 	import { modalDialog } from '$lib/attachments/modal-dialog';
@@ -31,17 +35,24 @@
 
 <style>
 	.busy-overlay {
-		/* Tailwind's preflight resets margin to 0 on every element, which anchors a modal
-		   <dialog> to the top-left instead of centring it — same restore as .wu-dialog. */
-		margin: auto;
+		/* No card: the dialog fills the viewport and paints nothing, so all that shows is the
+		   message over the blurred table. The UA stylesheet gives a <dialog> a border, padding,
+		   a background and `width: fit-content`, and the max-* defaults would cap it well short
+		   of the viewport — every one of them has to be undone explicitly. */
+		position: fixed;
+		inset: 0;
+		margin: 0;
 		border: 0;
-		border-radius: 8px;
-		padding: 1.5rem 2rem;
-		min-width: 16rem;
-		max-width: min(30rem, 90vw);
+		padding: 0;
+		width: 100%;
+		height: 100%;
+		max-width: none;
+		max-height: none;
+		background: transparent;
 		color: var(--text-1);
-		background: var(--background-secondary-2-fill);
-		box-shadow: 0 8px 32px rgb(0 0 0 / 45%);
+		/* Not a box, just enough separation to keep the message legible against whatever row
+		   happens to be behind it. Drop it if it reads as decoration. */
+		text-shadow: 0 1px 4px rgb(0 0 0 / 55%);
 	}
 
 	.busy-overlay::backdrop {
