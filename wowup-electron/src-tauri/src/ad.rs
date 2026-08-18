@@ -90,6 +90,40 @@ const SHIM: &str = r#"<script>
 
   keyExpectedTimeout = window.setTimeout(backoffReload, 30000);
 
+  // Tell the app whether the slot actually drew an ad, so it can take the space back when it
+  // did not. "The frame loaded" says nothing: the unit is a fixed 300x250 with its own
+  // background colour, so an unsold slot lays out exactly like a sold one and shows as a dark
+  // rectangle in the nav rail.
+  //
+  // A creative is an iframe with a painted box -- every winner arrives in one (SafeFrame or
+  // GPT). Images and video are counted too for the rare unframed creative. The page's own
+  // markup is a container div and text, so nothing here counts as a false positive.
+  var lastFilled = null;
+
+  function isFilled() {
+    var nodes = document.querySelectorAll('iframe, img, video');
+    for (var i = 0; i < nodes.length; i++) {
+      var box = nodes[i].getBoundingClientRect();
+      if (box.width > 20 && box.height > 20) return true;
+    }
+    return false;
+  }
+
+  function reportFill() {
+    var filled = isFilled();
+    if (filled === lastFilled) return;
+    lastFilled = filled;
+    parent.postMessage({ wowup: 'ad-fill', filled: filled }, '*');
+  }
+
+  // The header-bidding auction takes seconds, so an immediate verdict would collapse the slot
+  // and then reopen it. Wait, then keep watching: the unit can fill late, and this page
+  // reloads itself every five minutes.
+  window.setTimeout(function () {
+    reportFill();
+    window.setInterval(reportFill, 2000);
+  }, 6000);
+
 })();
 </script>"#;
 
@@ -270,6 +304,16 @@ mod tests {
     }
 
     /// The token must not travel over IPC — the frame has no commands by design.
+    /// The app collapses the ad space on this message, so a shim that stopped sending it
+    /// would quietly leave a dark 300x250 rectangle in the nav rail forever.
+    #[test]
+    fn the_shim_reports_whether_the_slot_filled() {
+        assert!(SHIM.contains("'ad-fill'"));
+        // Measured, not assumed: the unit has its own background colour, so the container
+        // being present says nothing about whether an ad is in it.
+        assert!(SHIM.contains("getBoundingClientRect"));
+    }
+
     #[test]
     fn the_shim_uses_postmessage_and_not_ipc() {
         assert!(SHIM.contains("parent.postMessage"));

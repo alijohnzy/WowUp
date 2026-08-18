@@ -21,6 +21,7 @@ const MIN_TOKEN_LEN = 20;
 interface AdFrameMessage {
 	wowup?: string;
 	token?: unknown;
+	filled?: unknown;
 }
 
 /**
@@ -52,6 +53,26 @@ export function adFrameSrc(options: AdPageOptions, nonce = 0): string {
 	return `${schemeOrigin()}/?${params.toString()}`;
 }
 
+/** Subscribe to one kind of message from the ad frame, checking it really came from there. */
+function onAdFrameMessage(kind: string, handle: (data: AdFrameMessage) => void): () => void {
+	const origin = schemeOrigin();
+
+	const listener = (event: MessageEvent) => {
+		// The check that matters: without it any frame on the page could inject a token, and
+		// the app would start signing Wago requests with whatever it was handed. Shared by
+		// every message the frame sends, so there is one place to get it right.
+		if (event.origin !== origin) return;
+
+		const data = event.data as AdFrameMessage | null;
+		if (!data || data.wowup !== kind) return;
+
+		handle(data);
+	};
+
+	window.addEventListener('message', listener);
+	return () => window.removeEventListener('message', listener);
+}
+
 /**
  * Forward the API key the ad frame hands back, and report that it did.
  *
@@ -59,18 +80,7 @@ export function adFrameSrc(options: AdPageOptions, nonce = 0): string {
  * listener is identical in both shells.
  */
 export function onAdFrameToken(onReceived: () => void): () => void {
-	const origin = schemeOrigin();
-
-	const listener = (event: MessageEvent) => {
-		// The check that matters: without it any frame on the page could inject a token, and
-		// the app would start signing Wago requests with whatever it was handed.
-		if (event.origin !== origin) return;
-
-		const data = event.data as AdFrameMessage | null;
-		if (!data) return;
-
-		if (data.wowup !== 'wago-token') return;
-
+	return onAdFrameMessage('wago-token', (data) => {
 		const token = data.token;
 		// Same guard as app/wago-handler.ts:29. Never log the token itself.
 		if (typeof token !== 'string' || token.length < MIN_TOKEN_LEN) {
@@ -83,8 +93,21 @@ export function onAdFrameToken(onReceived: () => void): () => void {
 		void emit(IPC_WAGO_TOKEN_RECEIVED, token).catch((e: unknown) =>
 			console.error('could not forward wago token', e)
 		);
-	};
+	});
+}
 
-	window.addEventListener('message', listener);
-	return () => window.removeEventListener('message', listener);
+/**
+ * Whether the slot actually drew an ad.
+ *
+ * The frame is cross-origin, so its contents cannot be measured from here — the verdict comes
+ * from the shim injected in src-tauri/src/ad.rs, which watches its own document. Only ever
+ * called under Tauri; the Electron build frames the real page in a <webview> and says nothing,
+ * so a caller that never hears from this should assume the ad is there.
+ */
+export function onAdFrameFill(onChange: (filled: boolean) => void): () => void {
+	return onAdFrameMessage('ad-fill', (data) => {
+		if (typeof data.filled !== 'boolean') return;
+		console.log(`[ad] slot ${data.filled ? 'filled' : 'empty'}`);
+		onChange(data.filled);
+	});
 }
