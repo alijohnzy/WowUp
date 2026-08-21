@@ -37,6 +37,7 @@
 	} from '$lib/ipc';
 	import { forwardConsoleToTauri } from '$lib/log-tauri';
 	import { injectShellGlobals } from '$lib/ipc-tauri';
+	import { guardExternalLinks } from '$lib/services/link-guard';
 	import { configureAxiosForTauri } from '$lib/http';
 	import { addonService, onAddonInstalled, ScanUpdateType } from '$lib/state/addon.svelte';
 	import { AddonInstallState } from '$lib/models/addon-install-state';
@@ -181,6 +182,10 @@
 			}
 		})
 	);
+
+	// Every shell, not just Tauri: a link inside an addon description would otherwise navigate
+	// the whole app to that page, and the app draws its own titlebar so there is no way back.
+	$effect(() => guardExternalLinks());
 
 	// The tray count is for the selected client, so switching clients changes it even though
 	// nothing about the addons did.
