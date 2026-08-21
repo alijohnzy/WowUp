@@ -77,7 +77,7 @@ async function request<T>(
 export class CircuitBreakerWrapper {
 	readonly #cb: CircuitBreaker;
 	readonly #defaultTimeoutMs: number;
-	#state: 'open' | 'closed' = 'closed';
+	#state: 'open' | 'halfOpen' | 'closed' = 'closed';
 
 	constructor(
 		name: string,
@@ -109,8 +109,21 @@ export class CircuitBreakerWrapper {
 			console.log(`${name} circuit breaker close`);
 			this.#state = 'closed';
 		});
+		// Tracked because callers gate on `isOpen()` *before* calling `fire()`, and opossum can
+		// only close a breaker by seeing a call succeed. Without this, half-open reads as open,
+		// the gate rejects the one probe opossum is waiting for, and the breaker stays open for
+		// the life of the process — `resetTimeout` may as well not exist.
+		//
+		// The Wago provider hid this for years: it calls `close()` by hand every time the ad
+		// frame hands back an API key, and the frame reloaded itself every five minutes. Stop
+		// reloading the frame and the deadlock is immediate and permanent.
+		this.#cb.on('halfOpen', () => {
+			console.log(`${name} circuit breaker half-open`);
+			this.#state = 'halfOpen';
+		});
 	}
 
+	/** Open means "reject without trying". Half-open is opossum asking for one probe. */
 	isOpen = (): boolean => this.#state === 'open';
 	enable = (): void => this.#cb.enable();
 	close = (): void => this.#cb.close();

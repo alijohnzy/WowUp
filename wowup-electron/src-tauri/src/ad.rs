@@ -110,6 +110,12 @@ const SHIM: &str = r#"<script>
   }
 
   function reportFill() {
+    // Never report empty before the page has handed over the API key. The app unmounts the
+    // frame on an empty verdict, and this document is the only source of that key -- if the
+    // page is slow or broken, the 30s backoffReload above is what retries, and collapsing at
+    // six seconds would take away the retry along with the frame.
+    if (keyExpectedTimeout !== undefined) return;
+
     var filled = isFilled();
     if (filled === lastFilled) return;
     lastFilled = filled;
@@ -312,6 +318,19 @@ mod tests {
         // Measured, not assumed: the unit has its own background colour, so the container
         // being present says nothing about whether an ad is in it.
         assert!(SHIM.contains("getBoundingClientRect"));
+    }
+
+    /// The frame is the only source of the Wago API key, and an empty verdict unmounts it.
+    /// Reporting before the key arrives would strand the provider with no token and no retry.
+    #[test]
+    fn the_shim_waits_for_the_key_before_reporting_empty() {
+        let report = SHIM.split("function reportFill()").nth(1).unwrap();
+        let guard = report.find("keyExpectedTimeout !== undefined").unwrap();
+        let verdict = report.find("isFilled()").unwrap();
+        assert!(
+            guard < verdict,
+            "the key guard must come before the verdict"
+        );
     }
 
     #[test]

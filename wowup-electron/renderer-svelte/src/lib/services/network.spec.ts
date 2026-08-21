@@ -17,7 +17,7 @@ vi.mock('$config/environment', () => ({
 	AppConfig: { defaultHttpTimeoutMs: 10_000, defaultHttpResetTimeoutMs: 30_000 }
 }));
 
-import { getJson } from './network';
+import { getCircuitBreaker, getJson } from './network';
 
 /** The AbortSignal the last call was given. */
 const lastSignal = (): AbortSignal => fetchMock.mock.calls.at(-1)?.[1]?.signal as AbortSignal;
@@ -69,5 +69,42 @@ describe('request timeout', () => {
 		await vi.advanceTimersByTimeAsync(60_000);
 
 		expect(signal.aborted).toBe(false);
+	});
+});
+
+// A breaker that never recovers.
+//
+// Callers ask `isOpen()` before calling `fire()`, so once the breaker trips, that gate is the
+// only thing deciding whether opossum ever gets another request. Opossum closes a breaker by
+// seeing a call succeed — so if the gate keeps rejecting through the half-open window, the
+// breaker stays open forever and `resetTimeout` does nothing.
+//
+// Wago hid this: it calls `close()` by hand on every API key from the ad frame, and the frame
+// reloaded every five minutes. Collapsing the empty ad slot stopped the reloads and turned a
+// self-healing 30-second blip into "restart the app", which is how it was found.
+describe('circuit breaker recovery', () => {
+	const failing = () => Promise.reject(new Error('boom'));
+
+	it('reopens the gate once the reset timeout has passed', async () => {
+		const cb = getCircuitBreaker('test_recovery', 30_000, 10_000);
+
+		// opossum's default volume threshold is 10 calls before it will trip.
+		for (let i = 0; i < 12; i++) await cb.fire(failing).catch(() => undefined);
+		expect(cb.isOpen()).toBe(true);
+
+		await vi.advanceTimersByTimeAsync(30_001);
+
+		// Half-open: opossum is waiting for exactly one probe, so the gate must let it through.
+		expect(cb.isOpen()).toBe(false);
+	});
+
+	it('closes for good once a probe succeeds', async () => {
+		const cb = getCircuitBreaker('test_probe', 30_000, 10_000);
+
+		for (let i = 0; i < 12; i++) await cb.fire(failing).catch(() => undefined);
+		await vi.advanceTimersByTimeAsync(30_001);
+		await cb.fire(() => Promise.resolve('ok'));
+
+		expect(cb.isOpen()).toBe(false);
 	});
 });
