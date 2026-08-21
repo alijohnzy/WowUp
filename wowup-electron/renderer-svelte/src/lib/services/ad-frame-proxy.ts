@@ -21,7 +21,6 @@ const MIN_TOKEN_LEN = 20;
 interface AdFrameMessage {
 	wowup?: string;
 	token?: unknown;
-	filled?: unknown;
 }
 
 /**
@@ -93,21 +92,5 @@ export function onAdFrameToken(onReceived: () => void): () => void {
 		void emit(IPC_WAGO_TOKEN_RECEIVED, token).catch((e: unknown) =>
 			console.error('could not forward wago token', e)
 		);
-	});
-}
-
-/**
- * Whether the slot actually drew an ad.
- *
- * The frame is cross-origin, so its contents cannot be measured from here — the verdict comes
- * from the shim injected in src-tauri/src/ad.rs, which watches its own document. Only ever
- * called under Tauri; the Electron build frames the real page in a <webview> and says nothing,
- * so a caller that never hears from this should assume the ad is there.
- */
-export function onAdFrameFill(onChange: (filled: boolean) => void): () => void {
-	return onAdFrameMessage('ad-fill', (data) => {
-		if (typeof data.filled !== 'boolean') return;
-		console.log(`[ad] slot ${data.filled ? 'filled' : 'empty'}`);
-		onChange(data.filled);
 	});
 }

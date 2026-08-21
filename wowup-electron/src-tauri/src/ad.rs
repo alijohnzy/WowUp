@@ -61,6 +61,18 @@ const DEFAULT_AD_USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit
 /// The preload's console forwarding is dropped: the frame's console goes nowhere useful and
 /// the page is chatty. Its reload-on-no-key timer is kept, because the page answering 500 is
 /// the normal way this fails and the frame would otherwise sit empty forever.
+///
+/// # The key expires, and this frame is the only thing that renews it
+///
+/// The key is a literal in the page, so it reads like a constant — but Wago rotates it, and
+/// the page's own `setTimeout(reload, 5 * 60 * 1000)` is what fetches the next one. Measured:
+/// a key taken from a render some hours earlier answers 401 on every endpoint while a key
+/// from a fresh render answers 200.
+///
+/// So the ad frame is not decoration. It is how the Wago provider stays authenticated, and
+/// anything that stops it reloading — unmounting it, hiding it, throttling it — takes the
+/// whole provider down about an hour later, with `HTTP 401` and then a circuit breaker as the
+/// only visible symptoms.
 const SHIM: &str = r#"<script>
 (function () {
   var keyExpectedTimeout;
@@ -90,45 +102,6 @@ const SHIM: &str = r#"<script>
 
   keyExpectedTimeout = window.setTimeout(backoffReload, 30000);
 
-  // Tell the app whether the slot actually drew an ad, so it can take the space back when it
-  // did not. "The frame loaded" says nothing: the unit is a fixed 300x250 with its own
-  // background colour, so an unsold slot lays out exactly like a sold one and shows as a dark
-  // rectangle in the nav rail.
-  //
-  // A creative is an iframe with a painted box -- every winner arrives in one (SafeFrame or
-  // GPT). Images and video are counted too for the rare unframed creative. The page's own
-  // markup is a container div and text, so nothing here counts as a false positive.
-  var lastFilled = null;
-
-  function isFilled() {
-    var nodes = document.querySelectorAll('iframe, img, video');
-    for (var i = 0; i < nodes.length; i++) {
-      var box = nodes[i].getBoundingClientRect();
-      if (box.width > 20 && box.height > 20) return true;
-    }
-    return false;
-  }
-
-  function reportFill() {
-    // Never report empty before the page has handed over the API key. The app unmounts the
-    // frame on an empty verdict, and this document is the only source of that key -- if the
-    // page is slow or broken, the 30s backoffReload above is what retries, and collapsing at
-    // six seconds would take away the retry along with the frame.
-    if (keyExpectedTimeout !== undefined) return;
-
-    var filled = isFilled();
-    if (filled === lastFilled) return;
-    lastFilled = filled;
-    parent.postMessage({ wowup: 'ad-fill', filled: filled }, '*');
-  }
-
-  // The header-bidding auction takes seconds, so an immediate verdict would collapse the slot
-  // and then reopen it. Wait, then keep watching: the unit can fill late, and this page
-  // reloads itself every five minutes.
-  window.setTimeout(function () {
-    reportFill();
-    window.setInterval(reportFill, 2000);
-  }, 6000);
 
 })();
 </script>"#;
@@ -307,30 +280,6 @@ mod tests {
         let out = rewrite("<body>only</body>", &base);
         assert!(out.contains("<base href="));
         assert!(out.contains("only"));
-    }
-
-    /// The token must not travel over IPC — the frame has no commands by design.
-    /// The app collapses the ad space on this message, so a shim that stopped sending it
-    /// would quietly leave a dark 300x250 rectangle in the nav rail forever.
-    #[test]
-    fn the_shim_reports_whether_the_slot_filled() {
-        assert!(SHIM.contains("'ad-fill'"));
-        // Measured, not assumed: the unit has its own background colour, so the container
-        // being present says nothing about whether an ad is in it.
-        assert!(SHIM.contains("getBoundingClientRect"));
-    }
-
-    /// The frame is the only source of the Wago API key, and an empty verdict unmounts it.
-    /// Reporting before the key arrives would strand the provider with no token and no retry.
-    #[test]
-    fn the_shim_waits_for_the_key_before_reporting_empty() {
-        let report = SHIM.split("function reportFill()").nth(1).unwrap();
-        let guard = report.find("keyExpectedTimeout !== undefined").unwrap();
-        let verdict = report.find("isFilled()").unwrap();
-        assert!(
-            guard < verdict,
-            "the key guard must come before the verdict"
-        );
     }
 
     #[test]

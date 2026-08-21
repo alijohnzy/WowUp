@@ -22,7 +22,6 @@
 	import { externalLink } from '$lib/attachments/external-link';
 	import Icon from './Icon.svelte';
 	import AdWebView from './AdWebView.svelte';
-	import { onAdFrameFill } from '$lib/services/ad-frame-proxy';
 	import type { IconName } from '$lib/icons';
 	import { addonProviders } from '$lib/state/addon-providers.svelte';
 	import { dialogs } from '$lib/state/dialogs.svelte';
@@ -87,23 +86,6 @@
 	// <owadview>) was winning over the Wago ad it actually shows — a 300x250 creative in a
 	// 400x300 hole. A pageUrl is what tells them apart; CurseForge has none.
 	let adKind = $derived(adParams ? (adParams.pageUrl ? 'wago' : 'curseforge') : undefined);
-
-	// Whether the slot came back empty, so the rail can take its 300x250 back.
-	//
-	// Wago's unit has its own background colour and a fixed size, so an unsold slot lays out
-	// exactly like a sold one — a dark rectangle that never becomes an ad. The verdict comes
-	// from the shim in src-tauri/src/ad.rs, since the frame is cross-origin and cannot be
-	// measured from here.
-	//
-	// The frame is unmounted rather than hidden. Hiding it would leave the auction running for
-	// an ad nobody could see, which is an impression that should not be counted; unmounting
-	// stops asking. It is re-tested on the next launch, so if Wago's fill ever returns, the
-	// slot comes back on its own.
-	//
-	// Only an explicit verdict sets this, and only the Tauri frame sends one — the Electron
-	// build frames the real page in a <webview> and says nothing, so it is unaffected.
-	let adEmpty = $state(false);
-	$effect(() => onAdFrameFill((filled) => (adEmpty = !filled)));
 
 	const isSelected = (path: RoutePath) => currentPath(page.route?.id) === path;
 
@@ -221,13 +203,19 @@
 			<button class="tab addon-info-btn" onclick={onClickAdExplainer}>
 				{t('ADS.AD_EXPLAINER_BUTTON')}
 			</button>
-			{#if adParams && !adEmpty}
-				<div class="ad">
+			<!-- Always mounted, even when the slot renders nothing.
+			     The frame is what keeps the Wago provider authenticated: the API key is a
+			     literal in Wago's page, they rotate it, and the page's own five-minute reload
+			     is what fetches the next one. Collapsing the empty slot here stopped the
+			     reloads, and roughly an hour later every Wago call answered 401 and the
+			     provider disappeared. See the SHIM docs in src-tauri/src/ad.rs. -->
+			<div class="ad">
+				{#if adParams}
 					{#key adParams.pageUrl}
 						<AdWebView options={adParams} />
 					{/key}
-				</div>
-			{/if}
+				{/if}
+			</div>
 		</div>
 	{/if}
 </div>
