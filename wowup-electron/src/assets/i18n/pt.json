@@ -660,7 +660,9 @@
         "RESCAN_CLIENTS_BUTTON": "Reescanear",
         "RESCAN_CLIENTS_LABEL": "Reescanear clientes World of Warcraft instalados",
         "SAVE_WOW_DIRECTORY_SELECT_BUTTON": "Salvar",
-        "TITLE": "World of Warcraft"
+        "TITLE": "World of Warcraft",
+        "UPDATE_FROM_TRAY_DESCRIPTION": "“Atualizar todos” na bandeja do sistema também atualiza este cliente, mesmo quando outro cliente estiver selecionado.",
+        "UPDATE_FROM_TRAY_LABEL": "Atualizar pela bandeja do sistema"
       },
       "WTF_EXPLORER": {
         "FOLDER_PATH_LABEL": "Folder: ",

@@ -137,6 +137,65 @@ test('Clients section shows the empty state with no installations', async ({ pag
 	await expect(page.locator('.installation-card')).toHaveCount(0);
 });
 
+// Only the Tauri tray has an Update All item, so the setting is shown only there. Faking a
+// whole Tauri startup is a rabbit hole, so the app boots on the Electron stub and is marked as
+// Tauri afterwards, before Options mounts. IPC keeps going through the stub (ipc.ts checks
+// Electron first), so writes are still recorded, while isTauri() reports true.
+test('a client can be set to update from the tray, and the tray is recounted', async ({ page }) => {
+	await stubPreload(page);
+	await page.goto('/#/my-addons');
+	const optionsLink = page.getByRole('link', { name: 'Options' });
+	await expect(optionsLink).toBeVisible();
+	await page.evaluate(() => {
+		(window as never as Record<string, unknown>)['__TAURI_INTERNALS__'] = {
+			invoke: () => Promise.resolve(),
+			transformCallback: () => 0
+		};
+	});
+	await optionsLink.click();
+	await optionsRail(page).getByRole('tab', { name: 'Clients' }).click();
+
+	const row = page.locator('.installation-card .row', { hasText: 'Update from Tray' });
+	await expect(row).toContainText('even when another client is selected');
+	const toggle = row.getByRole('switch');
+	await expect(toggle).toBeDisabled(); // like every card setting, only editable in edit mode
+
+	await page.getByRole('button', { name: 'Edit' }).click();
+	await toggle.click();
+	const traySyncsBefore = await page.evaluate(
+		() =>
+			(window as never as { __ipcCalls: { channel: string }[] }).__ipcCalls.filter(
+				(c) => c.channel === 'set-tray-update-count'
+			).length
+	);
+	await page.getByRole('button', { name: 'Save' }).click();
+
+	await expect
+		.poll(
+			async () => ((await store(page))['wow_installations'] as { updateFromTray?: boolean }[])[0]
+		)
+		.toMatchObject({ updateFromTray: true });
+	await expect
+		.poll(() =>
+			page.evaluate(
+				() =>
+					(window as never as { __ipcCalls: { channel: string }[] }).__ipcCalls.filter(
+						(c) => c.channel === 'set-tray-update-count'
+					).length
+			)
+		)
+		.toBeGreaterThan(traySyncsBefore);
+	await expect(toggle).toBeChecked();
+});
+
+test('the tray setting is not offered outside the Tauri app', async ({ page }) => {
+	await stubPreload(page);
+	await openOptionsTab(page, 'Clients');
+
+	await expect(page.getByRole('button', { name: 'Edit' })).toBeVisible();
+	await expect(page.getByText('Update from Tray')).toHaveCount(0);
+});
+
 test('a client card enters edit mode and reveals save / cancel', async ({ page }) => {
 	await stubPreload(page);
 	await openOptionsTab(page, 'Clients');

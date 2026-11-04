@@ -660,7 +660,9 @@
         "RESCAN_CLIENTS_BUTTON": "Neu scannen",
         "RESCAN_CLIENTS_LABEL": "Installierte World of Warcraft-Produkte erneut durchsuchen",
         "SAVE_WOW_DIRECTORY_SELECT_BUTTON": "Speichern",
-        "TITLE": "World of Warcraft"
+        "TITLE": "World of Warcraft",
+        "UPDATE_FROM_TRAY_DESCRIPTION": "„Alle aktualisieren“ im Benachrichtigungsbereich aktualisiert auch diesen Client, selbst wenn ein anderer Client ausgewählt ist.",
+        "UPDATE_FROM_TRAY_LABEL": "Über den Benachrichtigungsbereich aktualisieren"
       },
       "WTF_EXPLORER": {
         "FOLDER_PATH_LABEL": "Ordner: ",

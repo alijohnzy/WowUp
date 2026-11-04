@@ -660,7 +660,9 @@
         "RESCAN_CLIENTS_BUTTON": "重新扫描",
         "RESCAN_CLIENTS_LABEL": "重新扫描已安装的《魔兽世界》客户端",
         "SAVE_WOW_DIRECTORY_SELECT_BUTTON": "保存",
-        "TITLE": "魔兽世界"
+        "TITLE": "魔兽世界",
+        "UPDATE_FROM_TRAY_DESCRIPTION": "即使选中了其他客户端，系统托盘中的“全部更新”也会更新此客户端。",
+        "UPDATE_FROM_TRAY_LABEL": "从系统托盘更新"
       },
       "WTF_EXPLORER": {
         "FOLDER_PATH_LABEL": "Folder: ",

@@ -186,10 +186,11 @@
 	// the whole app to that page, and the app draws its own titlebar so there is no way back.
 	$effect(() => guardExternalLinks());
 
-	// The tray count is for the selected client, so switching clients changes it even though
-	// nothing about the addons did.
+	// The tray counts the selected client plus those set to update from the tray, so switching
+	// clients or flipping that setting changes it even though nothing about the addons did.
 	$effect(() => {
 		void session.selectedWowInstallation?.id;
+		void warcraftInstallations.installations.map((i) => i.updateFromTray);
 		void syncTrayUpdateCount();
 	});
 

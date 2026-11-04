@@ -33,4 +33,6 @@ export interface WowInstallation {
   gameVersion?: string;
   /** The gameVersion for which the user dismissed addon/game version mismatch warnings */
   ignoredCompatibilityVersion?: string;
+  /** Tauri app: the tray's Update All also updates this client when another one is selected */
+  updateFromTray?: boolean;
 }

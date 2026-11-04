@@ -660,7 +660,9 @@
         "RESCAN_CLIENTS_BUTTON": "Réanalyser",
         "RESCAN_CLIENTS_LABEL": "Réanalyser les clients de World of Warcraft installés",
         "SAVE_WOW_DIRECTORY_SELECT_BUTTON": "Save",
-        "TITLE": "World of Warcraft"
+        "TITLE": "World of Warcraft",
+        "UPDATE_FROM_TRAY_DESCRIPTION": "« Tout mettre à jour » dans la barre d'état système met aussi à jour ce client, même si un autre client est sélectionné.",
+        "UPDATE_FROM_TRAY_LABEL": "Mettre à jour depuis la barre d'état"
       },
       "WTF_EXPLORER": {
         "FOLDER_PATH_LABEL": "Folder: ",

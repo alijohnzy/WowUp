@@ -660,7 +660,9 @@
         "RESCAN_CLIENTS_BUTTON": "Znovu vyhledat",
         "RESCAN_CLIENTS_LABEL": "Pokusí se znovu vyhledat všechny instalace hry World of Warcraft",
         "SAVE_WOW_DIRECTORY_SELECT_BUTTON": "Save",
-        "TITLE": "World of Warcraft"
+        "TITLE": "World of Warcraft",
+        "UPDATE_FROM_TRAY_DESCRIPTION": "„Aktualizovat vše“ v liště aktualizuje i tohoto clienta, i když je vybrán jiný client.",
+        "UPDATE_FROM_TRAY_LABEL": "Aktualizovat z lišty"
       },
       "WTF_EXPLORER": {
         "FOLDER_PATH_LABEL": "Folder: ",

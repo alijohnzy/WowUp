@@ -11,9 +11,11 @@ import {
 	IPC_SET_TRAY_UPDATE_COUNT
 } from '$common/constants';
 import type { MenuConfig, SystemTrayConfig } from '$common/wowup/models';
+import type { WowInstallation } from 'wowup-lib-core';
 import { invoke, isDesktop, isElectron, isTauri } from '$lib/ipc';
 import { addonService } from '$lib/state/addon.svelte';
 import { session } from '$lib/state/session.svelte';
+import { warcraftInstallations } from '$lib/state/warcraft-installation.svelte';
 import { t, i18n } from '$lib/i18n.svelte';
 
 export async function createAppMenu(): Promise<void> {
@@ -94,11 +96,22 @@ export type TrayBadgeState = 'pending' | 'running' | 'done';
 const TRAY_MAX_ADDONS = 10;
 
 /**
- * Show the number of pending updates on the tray icon and in its menu.
+ * The clients the tray's Update All acts on: the selected one, as the Update All button does,
+ * plus every client set to update from the tray (Options > Clients). In the user's order.
  *
- * Counted for the *selected* installation, not across all of them, because the tray item
- * runs the same routine as the Update All button — which only touches the selected client.
- * A total would promise more than clicking delivers.
+ * The count, the names under the menu item and the click all go through this, so the tray
+ * never promises more — or less — than clicking it does.
+ */
+export function trayInstallations(): WowInstallation[] {
+	const selectedId = session.getSelectedWowInstallation()?.id;
+	return warcraftInstallations.installations.filter(
+		(installation) => installation.id === selectedId || installation.updateFromTray === true
+	);
+}
+
+/**
+ * Show the number of pending updates on the tray icon and in its menu, across
+ * trayInstallations().
  *
  * Electron's tray has no such item, so this is a no-op there rather than a missing channel.
  */
@@ -106,24 +119,35 @@ export async function syncTrayUpdateCount(state: TrayBadgeState = 'pending'): Pr
 	if (!isTauri()) return;
 
 	try {
-		const installation = session.getSelectedWowInstallation();
-		const addons = installation
-			? await addonService.getAllAddonsAvailableForUpdate(installation)
-			: [];
+		const pending: { name: string; client: string; clientId: string }[] = [];
+		for (const installation of trayInstallations()) {
+			for (const addon of await addonService.getAllAddonsAvailableForUpdate(installation)) {
+				pending.push({
+					name: addon.name,
+					client: installation.displayName,
+					clientId: installation.id
+				});
+			}
+		}
 
-		const names = addons.map((addon) => addon.name).slice(0, TRAY_MAX_ADDONS);
-		if (addons.length > names.length) {
+		// The same addon is often installed in several clients, so once more than one has
+		// something to update, each name says which client it is in.
+		const tagClients = new Set(pending.map((p) => p.clientId)).size > 1;
+		const names = pending
+			.slice(0, TRAY_MAX_ADDONS)
+			.map((p) => (tagClients ? `${p.name} (${p.client})` : p.name));
+		if (pending.length > names.length) {
 			names.push(
 				i18n.t('PAGES.MY_ADDONS.UPDATE_ALL_TOOLTIP_MORE', {
-					count: addons.length - names.length
+					count: pending.length - names.length
 				})
 			);
 		}
 
 		await invoke(
 			IPC_SET_TRAY_UPDATE_COUNT,
-			addons.length,
-			updateAllLabel(addons.length),
+			pending.length,
+			updateAllLabel(pending.length),
 			state,
 			names
 		);

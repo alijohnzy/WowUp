@@ -16,7 +16,7 @@
 		type WowInstallation
 	} from 'wowup-lib-core';
 	import { t, i18n } from '$lib/i18n.svelte';
-	import { invoke } from '$lib/ipc';
+	import { invoke, isTauri } from '$lib/ipc';
 	import { dirname } from '$lib/utils/path';
 	import Icon from '$lib/components/common/Icon.svelte';
 	import Toggle from '$lib/components/common/Toggle.svelte';
@@ -78,7 +78,9 @@
 
 	async function resetModel() {
 		if (!installation) return;
-		const copy = { ...installation };
+		// updateFromTray is absent on every client saved before it existed, and Svelte refuses
+		// bind:checked={undefined} on a Toggle (its prop has a fallback) — the card would not render.
+		const copy = { ...installation, updateFromTray: installation.updateFromTray ?? false };
 		model = copy;
 		try {
 			copy.label = await warcraftInstallations.getInstallationDisplayName(installation);
@@ -211,6 +213,17 @@
 				</div>
 				<Toggle bind:checked={model.defaultAutoUpdate} disabled={!editMode} />
 			</div>
+
+			<!-- Only the Tauri tray has an Update All item; Electron's has nothing to act on. -->
+			{#if isTauri()}
+				<div class="row">
+					<div class="grow">
+						<p>{t('PAGES.OPTIONS.WOW.UPDATE_FROM_TRAY_LABEL')}</p>
+						<small class="text-2">{t('PAGES.OPTIONS.WOW.UPDATE_FROM_TRAY_DESCRIPTION')}</small>
+					</div>
+					<Toggle bind:checked={model.updateFromTray} disabled={!editMode} />
+				</div>
+			{/if}
 		</div>
 
 		<footer class="card-actions">

@@ -660,7 +660,9 @@
         "RESCAN_CLIENTS_BUTTON": "재탐색",
         "RESCAN_CLIENTS_LABEL": "설치된 월드 오브 워크래프트 제품 재탐색",
         "SAVE_WOW_DIRECTORY_SELECT_BUTTON": "Save",
-        "TITLE": "월드 오브 워크래프트"
+        "TITLE": "월드 오브 워크래프트",
+        "UPDATE_FROM_TRAY_DESCRIPTION": "다른 클라이언트가 선택되어 있어도 시스템 트레이의 '모두 업데이트'가 이 클라이언트도 업데이트합니다.",
+        "UPDATE_FROM_TRAY_LABEL": "트레이에서 업데이트"
       },
       "WTF_EXPLORER": {
         "FOLDER_PATH_LABEL": "Folder: ",

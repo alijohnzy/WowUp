@@ -37,7 +37,7 @@
 	import { invoke } from '$lib/ipc';
 	import * as addonUtils from '$lib/utils/addon';
 	import { updateAllTooltipText } from '$lib/utils/update-tooltip';
-	import { withTrayRunState } from '$lib/services/native-menu';
+	import { trayInstallations, withTrayRunState } from '$lib/services/native-menu';
 	import { stringIncludes } from '$lib/utils/string';
 	import { join } from '$lib/utils/path';
 
@@ -846,8 +846,11 @@
 	$effect(() => session.addonsChanged.subscribe(() => void onRefresh()));
 	$effect(() => session.rescanComplete.subscribe(() => void onRefresh()));
 	// The tray's Update All. Same routine as the button, so the spinner, the error snackbar
-	// and the grid reload all behave identically however it was started.
-	$effect(() => session.updateAllRequested.subscribe(() => onUpdateAll()));
+	// and the grid reload all behave identically however it was started — but across the
+	// tray's clients: the selected one plus any set to update from the tray.
+	$effect(() =>
+		session.updateAllRequested.subscribe(() => void updateAllWithSpinner(...trayInstallations()))
+	);
 	$effect(() => session.targetFileInstallComplete.subscribe(() => void onRefresh()));
 
 	// A WowUp push notification is the hub telling the app that an addon it tracks has a new
