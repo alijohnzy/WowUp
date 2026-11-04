@@ -147,9 +147,18 @@ export class TukUiAddonProvider extends AddonProvider {
     await this.matchAddonSubfolders(tukProjectAddonFolders, installation);
   }
 
+  /**
+   * For Get Addons and search. TukUI serves one list for every game, so addons with no release
+   * for the installation's flavour are left out rather than offered with an empty game version.
+   * getById and scan go through toSearchResult directly, so installed addons still match.
+   */
   private async mapAddonsToSearchResults(addons: TukUiAddon[], installation: WowInstallation) {
     const results: AddonSearchResult[] = [];
     for (const addon of addons) {
+      if (this.getPatchForInstall(addon, installation) === '') {
+        continue;
+      }
+
       const searchResult = await this.toSearchResult(addon, installation);
       if (searchResult) {
         results.push(searchResult);
