@@ -7,7 +7,7 @@
 // subscribe plus an rxjs pipeline fetching the Blizzard agent path. That made the service's
 // readiness implicit and untestable. Here it is an explicit `init()` the root layout awaits.
 
-import { WOW_INSTALLATIONS_KEY } from '$common/constants';
+import { WOW_FOREVER_FOLDER, WOW_INSTALLATIONS_KEY } from '$common/constants';
 import { getWowClientFolderName } from '$common/warcraft';
 import {
 	AddonChannelType,
@@ -24,6 +24,11 @@ import { i18n } from '$lib/i18n.svelte';
 import { join, samePath } from '$lib/utils/path';
 
 const DEFAULT_NAME_TOKEN = '{defaultName}';
+
+/** A whole path segment, so a folder merely named like it (`my_forever_wow`) does not count. */
+function isInForeverFolder(location: string): boolean {
+	return location.toLowerCase().split(/[\\/]/).includes(WOW_FOREVER_FOLDER);
+}
 
 interface OpenDialogReturnValue {
 	canceled: boolean;
@@ -85,6 +90,18 @@ class WarcraftInstallations {
 			const native = join(installation.location);
 			changed ||= native !== installation.location;
 			installation.location = native;
+
+			// WoW Forever ships the retail Wow.exe, so until it was told apart by its folder,
+			// adding _forever_/Wow.exe by hand saved it as Retail — and fetched Retail addons.
+			if (
+				installation.clientType === WowClientType.Retail &&
+				isInForeverFolder(installation.location)
+			) {
+				console.info(`Migrating WoW Forever installation saved as Retail: ${native}`);
+				installation.clientType = WowClientType.Forever;
+				changed = true;
+			}
+
 			kept.push(installation);
 		}
 

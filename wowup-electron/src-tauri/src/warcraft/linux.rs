@@ -5,8 +5,8 @@
 
 use super::{
     base_name, path_exists, InstalledProduct, WowClientType, BLIZZARD_PRODUCT_DB_NAME,
-    WOW_ANNIVERSARY_FOLDER, WOW_CLASSIC_ERA_FOLDER, WOW_CLASSIC_ERA_PTR_FOLDER,
-    WOW_RETAIL_XPTR_FOLDER,
+    WOW_ANNIVERSARY_FOLDER, WOW_CLASSIC_BETA_FOLDER, WOW_CLASSIC_ERA_FOLDER,
+    WOW_CLASSIC_ERA_PTR_FOLDER, WOW_FOREVER_FOLDER, WOW_RETAIL_XPTR_FOLDER,
 };
 use std::path::{Path, PathBuf};
 
@@ -44,14 +44,15 @@ pub fn is_wow_application(app_name: &str) -> bool {
 
 pub fn get_executable_name(client_type: WowClientType) -> String {
     match client_type {
-        WowClientType::Retail => WOW_RETAIL_NAME,
+        // WoW Forever ships the retail binary; it is told apart by its install folder.
+        WowClientType::Retail | WowClientType::Forever => WOW_RETAIL_NAME,
         WowClientType::ClassicEra | WowClientType::Classic | WowClientType::Anniversary => {
             WOW_CLASSIC_NAME
         }
         WowClientType::RetailPtr | WowClientType::RetailXPtr => WOW_RETAIL_PTR_NAME,
         WowClientType::ClassicPtr | WowClientType::ClassicEraPtr => WOW_CLASSIC_PTR_NAME,
-        WowClientType::Beta => WOW_RETAIL_BETA_NAME,
-        WowClientType::ClassicBeta => WOW_CLASSIC_BETA_NAME,
+        // ClassicBeta is now the WoW Forever beta, which is the retail beta binary.
+        WowClientType::Beta | WowClientType::ClassicBeta => WOW_RETAIL_BETA_NAME,
         WowClientType::None => "",
     }
     .to_string()
@@ -60,7 +61,13 @@ pub fn get_executable_name(client_type: WowClientType) -> String {
 pub fn get_client_type(binary_path: &str) -> WowClientType {
     let lower = binary_path.to_lowercase();
     match base_name(binary_path) {
-        WOW_RETAIL_NAME => WowClientType::Retail,
+        WOW_RETAIL_NAME => {
+            if lower.contains(WOW_FOREVER_FOLDER) {
+                WowClientType::Forever
+            } else {
+                WowClientType::Retail
+            }
+        }
         WOW_CLASSIC_NAME => {
             if lower.contains(WOW_CLASSIC_ERA_FOLDER) {
                 WowClientType::ClassicEra
@@ -84,7 +91,13 @@ pub fn get_client_type(binary_path: &str) -> WowClientType {
                 WowClientType::ClassicPtr
             }
         }
-        WOW_RETAIL_BETA_NAME => WowClientType::Beta,
+        WOW_RETAIL_BETA_NAME => {
+            if lower.contains(WOW_CLASSIC_BETA_FOLDER) {
+                WowClientType::ClassicBeta
+            } else {
+                WowClientType::Beta
+            }
+        }
         WOW_CLASSIC_BETA_NAME => WowClientType::ClassicBeta,
         _ => WowClientType::None,
     }
@@ -308,10 +321,36 @@ mod tests {
             "WowClassicT.exe"
         );
         assert_eq!(get_executable_name(WowClientType::Beta), "WowB.exe");
-        assert_eq!(
-            get_executable_name(WowClientType::ClassicBeta),
-            "WowClassicB.exe"
-        );
+        // The Forever beta lives in _classic_beta_ but ships the retail beta binary.
+        assert_eq!(get_executable_name(WowClientType::ClassicBeta), "WowB.exe");
+        // WoW Forever ships the retail binary; only its folder tells it apart.
+        assert_eq!(get_executable_name(WowClientType::Forever), "Wow.exe");
         assert_eq!(get_executable_name(WowClientType::None), "");
+    }
+
+    #[test]
+    fn client_type_tells_forever_apart_from_retail_by_folder() {
+        let wow = "/home/me/Games/battlenet/drive_c/Program Files (x86)/World of Warcraft";
+        assert_eq!(
+            get_client_type(&format!("{wow}/_retail_/Wow.exe")),
+            WowClientType::Retail
+        );
+        assert_eq!(
+            get_client_type(&format!("{wow}/_forever_/Wow.exe")),
+            WowClientType::Forever
+        );
+        assert_eq!(
+            get_client_type(&format!("{wow}/_beta_/WowB.exe")),
+            WowClientType::Beta
+        );
+        assert_eq!(
+            get_client_type(&format!("{wow}/_classic_beta_/WowB.exe")),
+            WowClientType::ClassicBeta
+        );
+        // An older Forever beta install may still have the classic beta binary.
+        assert_eq!(
+            get_client_type(&format!("{wow}/_classic_beta_/WowClassicB.exe")),
+            WowClientType::ClassicBeta
+        );
     }
 }

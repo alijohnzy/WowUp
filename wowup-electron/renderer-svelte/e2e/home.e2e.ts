@@ -291,7 +291,8 @@ test('the key art renders behind the app', async ({ page }) => {
 		return { url: src, loaded: ok, zIndex: style.zIndex };
 	});
 
-	expect(url).toContain('wow-war-within-background');
+	// WoW Forever key art since upstream a8596596, replacing The War Within's.
+	expect(url).toContain('wow-forever-background');
 	expect(loaded).toBe(true);
 	expect(Number(zIndex)).toBeLessThan(0);
 

@@ -91,15 +91,20 @@ const GAME_TYPE_LISTS = [
 	{
 		flavor: 'wow-mists-of-pandaria-classic',
 		typeId: 79434,
-		matches: [WowClientType.Classic, WowClientType.ClassicPtr, WowClientType.ClassicBeta]
+		matches: [WowClientType.Classic, WowClientType.ClassicPtr]
 	},
 	{
 		flavor: 'wow-wrath-titan',
 		typeId: 81212,
 		matches: []
+	},
+	{
+		flavor: 'wow-forever',
+		typeId: 88568,
+		// ClassicBeta is the WoW Forever beta (upstream repurposed the member).
+		matches: [WowClientType.Forever, WowClientType.ClassicBeta]
 	}
 ];
-
 
 /**
  * CurseForge returns `downloadUrl: null` for files whose author has opted out of
@@ -115,7 +120,11 @@ const GAME_TYPE_LISTS = [
  *
  * `8543831` -> `files/8543/831/…`; the trailing group is not zero-padded.
  */
-export function cfDownloadUrl(fileId: number, fileName: string, apiUrl: string | undefined): string {
+export function cfDownloadUrl(
+	fileId: number,
+	fileName: string,
+	apiUrl: string | undefined
+): string {
 	if (apiUrl) return apiUrl;
 	if (!Number.isFinite(fileId) || fileId <= 0 || !fileName) return '';
 
@@ -808,6 +817,8 @@ export class CurseAddonProvider extends AddonProvider {
 				return cfv2.CF2WowGameVersionType.Retail;
 			case WowClientGroup.Mists:
 				return cfv2.CF2WowGameVersionType.Mists;
+			case WowClientGroup.Forever:
+				return cfv2.CF2WowGameVersionType.Forever;
 			default:
 				throw new Error(`invalid game type: ${clientGroup as string}`);
 		}

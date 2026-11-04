@@ -5,8 +5,8 @@
 
 use super::{
     base_name, path_exists, InstalledProduct, WowClientType, BLIZZARD_PRODUCT_DB_NAME,
-    WOW_ANNIVERSARY_FOLDER, WOW_CLASSIC_ERA_FOLDER, WOW_CLASSIC_ERA_PTR_FOLDER,
-    WOW_RETAIL_XPTR_FOLDER,
+    WOW_ANNIVERSARY_FOLDER, WOW_CLASSIC_BETA_FOLDER, WOW_CLASSIC_ERA_FOLDER,
+    WOW_CLASSIC_ERA_PTR_FOLDER, WOW_FOREVER_FOLDER, WOW_RETAIL_XPTR_FOLDER,
 };
 use std::path::Path;
 
@@ -38,14 +38,15 @@ pub fn is_wow_application(app_name: &str) -> bool {
 
 pub fn get_executable_name(client_type: WowClientType) -> String {
     match client_type {
-        WowClientType::Retail => WOW_RETAIL_NAME,
+        // WoW Forever ships the retail binary; it is told apart by its install folder.
+        WowClientType::Retail | WowClientType::Forever => WOW_RETAIL_NAME,
         WowClientType::ClassicEra | WowClientType::Classic | WowClientType::Anniversary => {
             WOW_CLASSIC_NAME
         }
         WowClientType::RetailPtr | WowClientType::RetailXPtr => WOW_RETAIL_PTR_NAME,
         WowClientType::ClassicPtr | WowClientType::ClassicEraPtr => WOW_CLASSIC_PTR_NAME,
-        WowClientType::Beta => WOW_RETAIL_BETA_NAME,
-        WowClientType::ClassicBeta => WOW_CLASSIC_BETA_NAME,
+        // ClassicBeta is now the WoW Forever beta, which is the retail beta binary.
+        WowClientType::Beta | WowClientType::ClassicBeta => WOW_RETAIL_BETA_NAME,
         WowClientType::None => "",
     }
     .to_string()
@@ -54,7 +55,13 @@ pub fn get_executable_name(client_type: WowClientType) -> String {
 pub fn get_client_type(binary_path: &str) -> WowClientType {
     let lower = binary_path.to_lowercase();
     match base_name(binary_path) {
-        WOW_RETAIL_NAME => WowClientType::Retail,
+        WOW_RETAIL_NAME => {
+            if lower.contains(WOW_FOREVER_FOLDER) {
+                WowClientType::Forever
+            } else {
+                WowClientType::Retail
+            }
+        }
         WOW_CLASSIC_NAME => {
             if lower.contains(WOW_CLASSIC_ERA_FOLDER) {
                 WowClientType::ClassicEra
@@ -78,7 +85,13 @@ pub fn get_client_type(binary_path: &str) -> WowClientType {
                 WowClientType::ClassicPtr
             }
         }
-        WOW_RETAIL_BETA_NAME => WowClientType::Beta,
+        WOW_RETAIL_BETA_NAME => {
+            if lower.contains(WOW_CLASSIC_BETA_FOLDER) {
+                WowClientType::ClassicBeta
+            } else {
+                WowClientType::Beta
+            }
+        }
         WOW_CLASSIC_BETA_NAME => WowClientType::ClassicBeta,
         _ => WowClientType::None,
     }
@@ -104,6 +117,31 @@ pub fn resolve_products(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn forever_is_told_apart_from_retail_by_folder() {
+        let wow = "/Applications/World of Warcraft";
+        assert_eq!(
+            get_client_type(&format!("{wow}/_retail_/World of Warcraft.app")),
+            WowClientType::Retail
+        );
+        assert_eq!(
+            get_client_type(&format!("{wow}/_forever_/World of Warcraft.app")),
+            WowClientType::Forever
+        );
+        assert_eq!(
+            get_client_type(&format!("{wow}/_classic_beta_/World of Warcraft Beta.app")),
+            WowClientType::ClassicBeta
+        );
+        assert_eq!(
+            get_executable_name(WowClientType::Forever),
+            "World of Warcraft.app"
+        );
+        assert_eq!(
+            get_executable_name(WowClientType::ClassicBeta),
+            "World of Warcraft Beta.app"
+        );
+    }
 
     #[test]
     fn identifies_app_bundles() {

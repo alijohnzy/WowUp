@@ -57,7 +57,7 @@
 		"@tauri-apps/plugin-store": "^2.4.4",
 		"ag-grid-community": "^31.2.1",
 		"bits-ui": "^2.18.1",
-		"curseforge-v2": "^1.5.0",
+		"curseforge-v2": "^1.6.0",
 		"opossum": "^9.0.0",
 		"runed": "^0.37.1",
 		"slug": "^12.0.1",

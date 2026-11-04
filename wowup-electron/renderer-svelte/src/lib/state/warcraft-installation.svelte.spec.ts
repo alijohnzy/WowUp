@@ -118,6 +118,28 @@ describe('on startup', () => {
 
 		expect(installations.installations).toHaveLength(2);
 	});
+
+	// WoW Forever ships the retail Wow.exe, so before it was told apart by its folder, adding
+	// _forever_\Wow.exe by hand saved it as Retail — and Retail addons went into it.
+	it('turns a Retail installation that lives in _forever_ into WoW Forever', async () => {
+		const forever = 'C:\\Program Files (x86)\\World of Warcraft\\_forever_\\Wow.exe';
+		store = [installation(RETAIL), installation(forever)];
+
+		const installations = await boot();
+
+		expect(store.map((i) => i.clientType)).toEqual([WowClientType.Retail, WowClientType.Forever]);
+		// What the card heading shows: named for the Forever client, not for Retail.
+		expect(installations.installations[1]?.displayName).toBe('COMMON.CLIENT_TYPES.FOREVER');
+	});
+
+	it('leaves a Retail installation alone when _forever_ is only part of a folder name', async () => {
+		const lookalike = 'C:\\Games\\my_forever_wow\\_retail_\\Wow.exe';
+		store = [installation(lookalike)];
+
+		await boot();
+
+		expect(store[0]?.clientType).toBe(WowClientType.Retail);
+	});
 });
 
 describe('addInstallation', () => {

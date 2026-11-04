@@ -117,7 +117,7 @@ fn read_dir_recursive(root: &Path) -> std::io::Result<Vec<PathBuf>> {
     Ok(out)
 }
 
-/// `^([^/]+)[\\/]\1([-_](mainline|bcc|…))?\.toc$`, case-insensitive, hand-rolled.
+/// `^([^/]+)[\\/]\1([-_](mainline|bcc|…|forever|camelot))?\.toc$`, case-insensitive, hand-rolled.
 ///
 /// The backreference is why this is not a plain glob: the `.toc` has to be named after its
 /// own folder, optionally with a flavour suffix. `WeakAuras/WeakAuras-Mists.toc` counts,
@@ -125,8 +125,9 @@ fn read_dir_recursive(root: &Path) -> std::io::Result<Vec<PathBuf>> {
 ///
 /// Input is already lowercased and relative to the addon folder's parent.
 fn is_addon_toc(relative: &str) -> bool {
-    const FLAVOURS: [&str; 9] = [
+    const FLAVOURS: [&str; 11] = [
         "mainline", "bcc", "tbc", "classic", "vanilla", "wrath", "wotlkc", "cata", "mists",
+        "forever", "camelot",
     ];
 
     let mut parts = relative.splitn(2, ['/', '\\']);
@@ -613,6 +614,8 @@ mod tests {
     fn flavour_suffixes_match() {
         for f in [
             "mainline", "bcc", "tbc", "classic", "vanilla", "wrath", "wotlkc", "cata", "mists",
+            // WoW Forever; "camelot" is its internal name and appears in the wild too.
+            "forever", "camelot",
         ] {
             assert!(is_addon_toc(&format!("weakauras/weakauras-{f}.toc")), "{f}");
             assert!(is_addon_toc(&format!("weakauras/weakauras_{f}.toc")), "{f}");

@@ -5,8 +5,8 @@
 	// "+ N" for the rest.
 
 	import type { ICellRendererParams } from 'ag-grid-community';
-	import { getWowMajorVersion } from 'wowup-lib-core';
 	import { session } from '$lib/state/session.svelte';
+	import { formatGameVersions } from '$lib/utils/game-version';
 
 	interface Props {
 		params: ICellRendererParams;
@@ -17,19 +17,9 @@
 	let versions = $derived((params.value as string[]) ?? []);
 	let title = $derived(versions.join(', '));
 
-	let displayValue = $derived.by(() => {
-		const wowInstall = session.getSelectedWowInstallation();
-		let display = versions[0] ?? '';
-
-		if (wowInstall !== undefined) {
-			const majorVersion = getWowMajorVersion(wowInstall.clientType);
-			const match = versions.find((v) => v.startsWith(`${majorVersion}.`));
-			if (match !== undefined) display = match;
-		}
-
-		if (versions.length - 1 > 0) display += `, ${versions.length - 1} +`;
-		return display;
-	});
+	let displayValue = $derived(
+		formatGameVersions(versions, session.getSelectedWowInstallation()?.clientType)
+	);
 </script>
 
 <span {title}>{displayValue}</span>

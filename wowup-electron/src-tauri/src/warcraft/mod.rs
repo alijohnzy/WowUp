@@ -39,7 +39,8 @@ pub enum WowClientType {
     ClassicEraPtr = 7,
     RetailXPtr = 8,
     Anniversary = 9,
-    None = 10,
+    Forever = 10,
+    None = 11,
 }
 
 /// Mirrors `InstalledProduct` (`wowup-lib/src/models/warcraft.ts:13`).
@@ -62,6 +63,9 @@ pub const WOW_RETAIL_PTR_FOLDER: &str = "_ptr_";
 pub const WOW_RETAIL_XPTR_FOLDER: &str = "_xptr_";
 pub const WOW_RETAIL_FOLDER: &str = "_retail_";
 pub const WOW_ANNIVERSARY_FOLDER: &str = "_anniversary_";
+/// WoW Forever. Its binary is the retail one, so this folder is the only thing that tells
+/// the two apart. `_classic_beta_` now holds the Forever beta, on the retail beta binary.
+pub const WOW_FOREVER_FOLDER: &str = "_forever_";
 
 pub const BLIZZARD_PRODUCT_DB_NAME: &str = "product.db";
 
@@ -78,6 +82,7 @@ fn client_type_for_folder_name(folder_name: &str) -> WowClientType {
         WOW_CLASSIC_BETA_FOLDER => WowClientType::ClassicBeta,
         WOW_CLASSIC_ERA_PTR_FOLDER => WowClientType::ClassicEraPtr,
         WOW_ANNIVERSARY_FOLDER => WowClientType::Anniversary,
+        WOW_FOREVER_FOLDER => WowClientType::Forever,
         _ => WowClientType::None,
     }
 }
@@ -202,7 +207,25 @@ mod tests {
         assert_eq!(WowClientType::ClassicEraPtr as u8, 7);
         assert_eq!(WowClientType::RetailXPtr as u8, 8);
         assert_eq!(WowClientType::Anniversary as u8, 9);
-        assert_eq!(WowClientType::None as u8, 10);
+        // Upstream inserted Forever before None, so None moved from 10 to 11.
+        assert_eq!(WowClientType::Forever as u8, 10);
+        assert_eq!(WowClientType::None as u8, 11);
+    }
+
+    #[test]
+    fn forever_round_trips_as_its_typescript_number() {
+        assert_eq!(
+            serde_json::to_string(&WowClientType::Forever).unwrap(),
+            "10"
+        );
+        assert_eq!(
+            serde_json::from_str::<WowClientType>("10").unwrap(),
+            WowClientType::Forever
+        );
+        assert_eq!(
+            serde_json::from_str::<WowClientType>("11").unwrap(),
+            WowClientType::None
+        );
     }
 
     #[test]
@@ -263,6 +286,10 @@ mod tests {
         assert_eq!(
             client_type_for_folder_name("_anniversary_"),
             WowClientType::Anniversary
+        );
+        assert_eq!(
+            client_type_for_folder_name("_forever_"),
+            WowClientType::Forever
         );
         assert_eq!(
             client_type_for_folder_name("_nonsense_"),
