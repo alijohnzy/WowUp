@@ -52,7 +52,6 @@
 		updateBadgeCount
 	} from '$lib/services/auto-update';
 	import { createAppMenu, createSystemTray, syncTrayUpdateCount } from '$lib/services/native-menu';
-	import { changeLogs } from '$lib/data/changelogs';
 	import { AppConfig } from '$config/environment';
 	import {
 		GitHubFetchReleasesError,
@@ -334,21 +333,6 @@
 		await analytics.setTelemetryEnabled(result.telemetry);
 	}
 
-	/** "What's new" on first launch of a new build. Also never wired up. */
-	async function showNewVersionNotes(): Promise<void> {
-		if (!(await wowup.shouldShowNewVersionNotes())) return;
-
-		const version = electron.appVersion;
-		const entry = changeLogs.find((log) => log.Version === version);
-		if (entry) {
-			await dialogs.patchNotes({
-				title: i18n.t('DIALOGS.NEW_VERSION_POPUP.TITLE', { versionNumber: version }),
-				html: entry.html ?? entry.Description ?? ''
-			});
-		}
-		await wowup.setNewVersionNotes();
-	}
-
 	/**
 	 * A deep re-scan run once per app version, before the UI is usable — it rewrites addon
 	 * records, so the preload spinner stays up with its own message while it runs.
@@ -448,7 +432,8 @@
 				// `--quit` scheduled-task mode never terminated.
 				void startAutoUpdate();
 				startAppUpdateCheck();
-				return showNewVersionNotes();
+				// No "what's new" popup on a new version: upstream dropped it (20324c92) along
+				// with its strings. Patch notes stay under Options > About.
 			})
 			.catch((e: unknown) => {
 				console.error('bootstrap failed', e);

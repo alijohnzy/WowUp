@@ -102,8 +102,7 @@
 			const confirmed = await dialogs.confirm({
 				title: t('DIALOGS.PERMISSIONS.WAGO.TOGGLE_LABEL'),
 				message: i18n.t('DIALOGS.PERMISSIONS.WAGO.DESCRIPTION', {
-					termsUrl: AppConfig.wago.termsUrl,
-					dataUrl: AppConfig.wago.dataConsentUrl
+					termsUrl: AppConfig.wago.termsUrl
 				})
 			});
 			if (!confirmed) return;

@@ -48,7 +48,12 @@ export const IPC_CREATE_TRAY_MENU_CHANNEL = "create-tray-menu";
 export const IPC_SET_TRAY_UPDATE_COUNT = "set-tray-update-count";
 /** Tauri only: the tray's Update All was chosen. */
 export const IPC_TRAY_UPDATE_ALL = "tray-update-all";
-export const IPC_LIST_DISKS_WIN32 = "list-disks-win32";
+/**
+ * Tauri only: the Rust scanner still answers the two fingerprint scans separately. Upstream
+ * folded them into IPC_ADDON_GET_SCAN_RESULTS for its Electron main process.
+ */
+export const IPC_CURSE_GET_SCAN_RESULTS = "curse-get-scan-results";
+export const IPC_WOWUP_GET_SCAN_RESULTS = "wowup-get-scan-results";
 export const IPC_CREATE_APP_MENU_CHANNEL = "create-app-menu";
 export const IPC_OW_IS_CMP_REQUIRED = "ow-is-cmp-required";
 export const IPC_OW_OPEN_CMP = "ow-open-cmp";

@@ -12,8 +12,7 @@
 import type { AddonChannelType, AddonSearchResult } from 'wowup-lib-core';
 import type { AddonViewModel } from '$lib/business-objects/addon-view-model';
 
-export type DialogKind =
-	'confirm' | 'alert' | 'externalUrl' | 'consent' | 'patchNotes' | 'addonDetail';
+export type DialogKind = 'confirm' | 'alert' | 'externalUrl' | 'consent' | 'addonDetail';
 
 export interface ConfirmDialogData {
 	title: string;
@@ -54,12 +53,6 @@ export interface ConsentResult {
 	wagoProvider: boolean;
 }
 
-/** "What's new" popup — an alert whose body is the release's HTML changelog. */
-export interface PatchNotesDialogData {
-	title: string;
-	html: string;
-}
-
 /**
  * Was MAT_DIALOG_DATA for AddonDetailComponent. Exactly one of `listItem` (opened from My
  * Addons) or `searchResult` (opened from Get Addons) is set; the component branches on which.
@@ -71,12 +64,7 @@ export interface AddonDetailData {
 }
 
 export type DialogData =
-	| ConfirmDialogData
-	| AlertDialogData
-	| ExternalUrlDialogData
-	| ConsentDialogData
-	| PatchNotesDialogData
-	| AddonDetailData;
+	ConfirmDialogData | AlertDialogData | ExternalUrlDialogData | ConsentDialogData | AddonDetailData;
 
 export type DialogResult = boolean | ExternalUrlResult | ConsentResult | undefined;
 
@@ -123,10 +111,6 @@ class Dialogs {
 	/** First-run permissions. `undefined` if dismissed without submitting. */
 	consent = (data: ConsentDialogData): Promise<ConsentResult | undefined> =>
 		this.#open<ConsentResult | undefined>('consent', data, true);
-
-	/** "What's new" popup. Resolves once acknowledged. */
-	patchNotes = (data: PatchNotesDialogData): Promise<boolean> =>
-		this.#open<boolean>('patchNotes', data, false);
 
 	/** Addon detail. Renders its own chrome, so DialogHost delegates rather than wrapping. */
 	addonDetail = (data: AddonDetailData): Promise<boolean> =>

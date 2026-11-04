@@ -28,7 +28,6 @@ import {
 	START_MINIMIZED_PREFERENCE_KEY,
 	START_WITH_SYSTEM_PREFERENCE_KEY,
 	TRUSTED_DOMAINS_KEY,
-	UPDATE_NOTES_POPUP_VERSION_KEY,
 	USE_HARDWARE_ACCELERATION_PREFERENCE_KEY,
 	USE_SYMLINK_MODE_PREFERENCE_KEY,
 	WOWUP_RELEASE_CHANNEL_PREFERENCE_KEY
@@ -290,18 +289,6 @@ class WowUp {
 		}
 		console.debug('Update app badge', count);
 		await invoke(IPC_UPDATE_APP_BADGE, count);
-	}
-
-	async shouldShowNewVersionNotes(): Promise<boolean> {
-		const popupVersion = await preferenceStorage.getAsync(UPDATE_NOTES_POPUP_VERSION_KEY);
-		return popupVersion !== (await invoke<string>(IPC_GET_APP_VERSION));
-	}
-
-	async setNewVersionNotes(): Promise<void> {
-		await preferenceStorage.setAsync(
-			UPDATE_NOTES_POPUP_VERSION_KEY,
-			await invoke<string>(IPC_GET_APP_VERSION)
-		);
 	}
 
 	async shouldMigrateAddons(): Promise<boolean> {

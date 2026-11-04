@@ -12,7 +12,6 @@
 		type ConfirmDialogData,
 		type ConsentDialogData,
 		type ExternalUrlDialogData,
-		type PatchNotesDialogData,
 		type AddonDetailData
 	} from '$lib/state/dialogs.svelte';
 	import AddonDetail from '$lib/components/addons/AddonDetail.svelte';
@@ -56,7 +55,6 @@
 		{@const alertData = dialog.data as AlertDialogData}
 		{@const urlData = dialog.data as ExternalUrlDialogData}
 		{@const consentData = dialog.data as ConsentDialogData}
-		{@const notesData = dialog.data as PatchNotesDialogData}
 
 		<dialog
 			class="wu-dialog"
@@ -85,8 +83,7 @@
 								<!-- Translation contains anchor markup for the terms/data-consent links. -->
 								<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 								{@html t('DIALOGS.PERMISSIONS.WAGO.DESCRIPTION', {
-									termsUrl: AppConfig.wago.termsUrl,
-									dataUrl: AppConfig.wago.dataConsentUrl
+									termsUrl: AppConfig.wago.termsUrl
 								})}
 							</small>
 						</div>
@@ -104,10 +101,6 @@
 							</small>
 						</div>
 					{/if}
-				{:else if dialog.kind === 'patchNotes'}
-					<!-- Changelog HTML is compiled into the app, not user input. -->
-					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-					<div class="changelog">{@html notesData.html}</div>
 				{:else}
 					<!-- Was `[innerHtml]="data.message"` in the Angular dialogs. Messages are built
 				     from translation strings in app code, not user input — same trust boundary. -->
@@ -237,10 +230,6 @@
 		color: var(--control-color);
 		cursor: pointer;
 		text-decoration: underline;
-	}
-
-	.changelog {
-		user-select: text;
 	}
 
 	.dialog-buttons {

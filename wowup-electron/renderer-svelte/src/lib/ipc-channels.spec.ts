@@ -46,7 +46,6 @@ const ALLOWED_WITHOUT_CONSTANT = new Set([
 	'zoom-changed'
 ]);
 
-
 function sourceFiles(dir: string, acc: string[] = []): string[] {
 	for (const entry of readdirSync(dir)) {
 		const full = path.join(dir, entry);

@@ -23,6 +23,10 @@ export async function createAppMenu(): Promise<void> {
 
 	const config: MenuConfig = {
 		quitLabel: t('APP.APP_MENU.QUIT'),
+		// macOS only enables Cmd+H, Cmd+Alt+H and Cmd+M through menu items with these roles.
+		hideLabel: t('APP.APP_MENU.HIDE'),
+		hideOthersLabel: t('APP.APP_MENU.HIDE_OTHERS'),
+		showAllLabel: t('APP.APP_MENU.SHOW_ALL'),
 
 		editLabel: t('APP.APP_MENU.EDIT.LABEL'),
 		copyLabel: t('APP.APP_MENU.EDIT.COPY'),
@@ -42,7 +46,10 @@ export async function createAppMenu(): Promise<void> {
 		zoomResetLabel: t('APP.APP_MENU.VIEW.ZOOM_RESET'),
 
 		windowLabel: t('APP.APP_MENU.WINDOW.LABEL'),
-		windowCloseLabel: t('APP.APP_MENU.WINDOW.CLOSE')
+		windowCloseLabel: t('APP.APP_MENU.WINDOW.CLOSE'),
+		windowMinimizeLabel: t('APP.APP_MENU.WINDOW.MINIMIZE'),
+		windowZoomLabel: t('APP.APP_MENU.WINDOW.ZOOM'),
+		windowBringAllToFrontLabel: t('APP.APP_MENU.WINDOW.BRING_ALL_TO_FRONT')
 	};
 
 	try {
