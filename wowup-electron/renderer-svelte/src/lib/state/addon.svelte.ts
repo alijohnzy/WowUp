@@ -56,6 +56,7 @@ import * as searchResults from '$lib/utils/search-result';
 import { strIsNotNullOrEmpty } from '$lib/utils/string';
 import { delayMs } from '$lib/utils/misc';
 import { join } from '$lib/utils/path';
+import { SerialByKey } from '$lib/utils/serial-by-key';
 import * as addonStorage from '$lib/services/addon-storage';
 import { getFingerprints } from '$lib/services/addon-fingerprint';
 import * as files from '$lib/services/files';
@@ -136,6 +137,9 @@ class AddonService {
 	readonly searchError = new Emitter<GenericProviderError>();
 
 	#initialized = false;
+
+	/** One rescan per installation at a time, by installation id (#1561). */
+	readonly #rescans = new SerialByKey<Addon[]>();
 
 	/** Replaces five constructor-time rxjs subscriptions. */
 	async init(): Promise<void> {
@@ -412,12 +416,13 @@ class AddonService {
 
 	async getAddons(installation: WowInstallation, rescan = false): Promise<Addon[]> {
 		if (!installation) return [];
+		if (rescan) return await this.rescanInstallation(installation);
 
-		let addons = await addonStorage.getAllForInstallationIdAsync(installation.id);
-		if (rescan || addons.length === 0) {
-			addons = await this.rescanInstallation(installation);
-		}
-		return addons;
+		const addons = await addonStorage.getAllForInstallationIdAsync(installation.id);
+		if (addons.length > 0) return addons;
+
+		// Nothing saved yet: share a scan that is already running rather than starting another.
+		return await (this.#rescans.active(installation.id) ?? this.rescanInstallation(installation));
 	}
 
 	// ---- install / update / remove ----------------------------------------------------
@@ -958,9 +963,20 @@ class AddonService {
 
 	// ---- scanning --------------------------------------------------------------------
 
-	async rescanInstallation(installation: WowInstallation): Promise<Addon[]> {
-		if (!installation) return [];
+	/**
+	 * Scan the installation's addon folders and replace its saved addons with the result.
+	 *
+	 * Serialised per installation: the replace is a remove followed by a save, so two scans
+	 * that overlapped could both remove before either saved, leaving a copy of every addon per
+	 * scan (upstream #1561 — several My Addons loads at startup with nothing saved yet). A call
+	 * made mid-scan waits and scans again; see SerialByKey.
+	 */
+	rescanInstallation(installation: WowInstallation): Promise<Addon[]> {
+		if (!installation) return Promise.resolve([]);
+		return this.#rescans.run(installation.id, () => this.#scanAndReplaceAddons(installation));
+	}
 
+	async #scanAndReplaceAddons(installation: WowInstallation): Promise<Addon[]> {
 		console.debug(`[addon-service] rescanInstallation: ${installation.displayName}`);
 		let addons = await addonStorage.getAllForInstallationIdAsync(installation.id);
 
