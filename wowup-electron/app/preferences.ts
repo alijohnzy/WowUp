@@ -1,11 +1,10 @@
-import { app } from "electron";
-
 import {
   ACCT_PUSH_ENABLED_KEY,
   COLLAPSE_TO_TRAY_PREFERENCE_KEY,
   CURRENT_THEME_KEY,
   DEFAULT_THEME,
   DEFAULT_TRUSTED_DOMAINS,
+  DISABLE_IPV6_PREFERENCE_KEY,
   ENABLE_APP_BADGE_KEY,
   ENABLE_SYSTEM_NOTIFICATIONS_PREFERENCE_KEY,
   TRUSTED_DOMAINS_KEY,
@@ -14,11 +13,12 @@ import {
   WOWUP_RELEASE_CHANNEL_PREFERENCE_KEY,
 } from "../src/common/constants";
 import { WowUpReleaseChannelType } from "../src/common/wowup/wowup-release-channel-type";
+import { getShell } from "../../wowup-shell/contract/shell-api";
 import { getPreferenceStore } from "./stores";
 import * as log from "electron-log/main";
 
 export function initializeDefaultPreferences() {
-  const isBetaBuild = app.getVersion().toLowerCase().indexOf("beta") != -1;
+  const isBetaBuild = getShell().bundle.version.toLowerCase().indexOf("beta") != -1;
   const defaultReleaseChannel = isBetaBuild ? WowUpReleaseChannelType.Beta : WowUpReleaseChannelType.Stable;
 
   setDefaultPreference(ENABLE_SYSTEM_NOTIFICATIONS_PREFERENCE_KEY, true);
@@ -27,6 +27,7 @@ export function initializeDefaultPreferences() {
   setDefaultPreference(CURRENT_THEME_KEY, DEFAULT_THEME);
   setDefaultPreference(WOWUP_RELEASE_CHANNEL_PREFERENCE_KEY, defaultReleaseChannel);
   setDefaultPreference(USE_SYMLINK_MODE_PREFERENCE_KEY, false);
+  setDefaultPreference(DISABLE_IPV6_PREFERENCE_KEY, false);
   setDefaultPreference(ENABLE_APP_BADGE_KEY, true);
   setDefaultPreference(TRUSTED_DOMAINS_KEY, DEFAULT_TRUSTED_DOMAINS);
   setDefaultPreference(ACCT_PUSH_ENABLED_KEY, false);

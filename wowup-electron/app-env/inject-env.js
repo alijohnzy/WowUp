@@ -22,21 +22,6 @@ console.debug(envData);
 
 fs.writeFileSync(envPath, envData);
 
-const packagePath = path.join(__dirname, "..", "package.json");
-let packageData = fs.readFileSync(packagePath, "utf8");
-let packageJson = JSON.parse(packageData);
-
-packageJson.name = process.env.BUILD_FLAVOR === "ow" ? "wowup-cf" : "wowup";
-packageJson.productName = process.env.BUILD_FLAVOR === "ow" ? "WowUpCf" : "WowUp";
-
-// A Svelte build is a different application as far as the OS is concerned: its own userData
-// directory, its own single-instance lock, its own tray entry. Without this it would share
-// ~/.config/WowUpCf with the installed release and the two could write over each other.
-if (buildRenderer === "svelte") {
-  packageJson.name += "-svelte";
-  packageJson.productName += "Svelte";
-}
-packageJson.repository.url =
-  process.env.BUILD_FLAVOR === "ow" ? "https://github.com/WowUp/WowUp.CF.git" : "https://github.com/WowUp/WowUp.git";
-
-fs.writeFileSync(packagePath, JSON.stringify(packageJson, null, 2));
+// The app's name and productName (which decides the user data folder) belong to the shell, which is what
+// Electron actually runs, in dev and in installers
+require("../../wowup-shell/scripts/set-flavor").setFlavor(process.env.BUILD_FLAVOR);
