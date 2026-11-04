@@ -103,6 +103,12 @@ class AddonProviders {
 
 	hasProvider = (providerName: string): boolean => this.#providerMap.has(providerName);
 
+	/** Registered and switched on: something the Providers menu can actually switch to. */
+	isProviderAvailable = (providerName: string): boolean => {
+		void this.revision; // re-run when a provider is toggled
+		return this.getProvider(providerName)?.enabled === true;
+	};
+
 	getAddonProviderForUri(addonUri: URL): AddonProvider | undefined {
 		for (const ap of this.#providerMap.values()) {
 			if (ap.isValidAddonUri(addonUri)) return ap;

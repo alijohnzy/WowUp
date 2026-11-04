@@ -6,7 +6,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { getGameVersion } from 'wowup-lib-core';
-import { needsUpdate, toInterfaceVersion } from './addon';
+import { getAllProviders, hasMultipleProviders, needsUpdate, toInterfaceVersion } from './addon';
 import type { Addon } from 'wowup-lib-core';
 
 describe('getGameVersion (wowup-lib-core, unchanged by the migration)', () => {
@@ -87,5 +87,32 @@ describe('needsUpdate', () => {
 
 	it('is false when nothing is installed', () => {
 		expect(needsUpdate(addon({ installedVersion: '', latestVersion: '1.0' }))).toBe(false);
+	});
+});
+
+// Provider ids are recorded from TOC metadata for every provider the addon names, including
+// ones this build does not register or the user has turned off. Picking one from the
+// Providers menu could only fail with "Provider not found" (upstream 93e15c14).
+describe('the Providers menu', () => {
+	const addon = {
+		providerName: 'Wago',
+		externalIds: [
+			{ providerName: 'Wago', id: 'w1' },
+			{ providerName: 'CurseV2', id: 'c2' },
+			{ providerName: 'GitHub', id: 'g1' }
+		]
+	} as unknown as Addon;
+	const available = (name: string) => name === 'GitHub';
+
+	it('lists only providers that can be switched to, plus the addon’s own', () => {
+		expect(getAllProviders(addon, available).map((p) => p.providerName)).toEqual([
+			'GitHub',
+			'Wago'
+		]);
+	});
+
+	it('is not offered when no other provider is available', () => {
+		expect(hasMultipleProviders(addon, () => false)).toBe(false);
+		expect(hasMultipleProviders(addon, available)).toBe(true);
 	});
 });

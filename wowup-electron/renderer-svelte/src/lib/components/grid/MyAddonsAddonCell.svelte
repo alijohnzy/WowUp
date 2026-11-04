@@ -24,6 +24,7 @@
 	import AddonThumbnail from '$lib/components/addons/AddonThumbnail.svelte';
 	import FundingButton from '$lib/components/addons/FundingButton.svelte';
 	import { session } from '$lib/state/session.svelte';
+	import { addonProviders } from '$lib/state/addon-providers.svelte';
 
 	interface Props {
 		params: ICellRendererParams;
@@ -54,7 +55,9 @@
 	);
 
 	let hasMultipleProviders = $derived(
-		item?.addon === undefined ? false : addonUtils.hasMultipleProviders(item.addon)
+		item?.addon === undefined
+			? false
+			: addonUtils.hasMultipleProviders(item.addon, addonProviders.isProviderAvailable)
 	);
 
 	// Only flagged when nothing more specific already explains the row's state.

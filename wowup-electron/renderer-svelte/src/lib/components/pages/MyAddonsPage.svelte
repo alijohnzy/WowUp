@@ -1118,11 +1118,11 @@
 			</div>
 		{/if}
 
-		{#if single && addonUtils.hasMultipleProviders(single.addon!)}
+		{#if single && addonUtils.hasMultipleProviders(single.addon!, addonProviders.isProviderAvailable)}
 			<div class="submenu-label">
 				{t('PAGES.MY_ADDONS.ADDON_CONTEXT_MENU.PROVIDER_SUBMENU_TITLE')}
 			</div>
-			{#each addonUtils.getAllProviders(single.addon!) as provider (provider.providerName)}
+			{#each addonUtils.getAllProviders(single.addon!, addonProviders.isProviderAvailable) as provider (provider.providerName)}
 				<button
 					class="menu-item indent"
 					onclick={() => void onSelectedProviderChange(single, provider.providerName)}

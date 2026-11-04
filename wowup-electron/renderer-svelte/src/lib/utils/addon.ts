@@ -3,16 +3,28 @@
 
 import type { Addon, AddonDependency, AddonDependencyType, AddonExternalId } from 'wowup-lib-core';
 
-export function getAllProviders(addon: Addon): AddonExternalId[] {
-	return [...(addon.externalIds ?? [])].sort((a, b) =>
-		a.providerName.localeCompare(b.providerName)
-	);
+/** Whether an external id's provider can be switched to in this build. */
+export type ProviderAvailability = (providerName: string) => boolean;
+
+/**
+ * Every provider the addon can be switched to, plus its own. Ids for providers this build does
+ * not register or the user turned off are left out: they are recorded from TOC metadata
+ * regardless, and picking one could only fail.
+ */
+export function getAllProviders(
+	addon: Addon,
+	isAvailable: ProviderAvailability = () => true
+): AddonExternalId[] {
+	return (addon.externalIds ?? [])
+		.filter((ext) => ext.providerName === addon.providerName || isAvailable(ext.providerName))
+		.sort((a, b) => a.providerName.localeCompare(b.providerName));
 }
 
-export const getProviders = (addon: Addon): AddonExternalId[] =>
-	getAllProviders(addon).filter((extId) => extId.providerName !== addon.providerName);
+export const getProviders = (addon: Addon, isAvailable?: ProviderAvailability): AddonExternalId[] =>
+	getAllProviders(addon, isAvailable).filter((extId) => extId.providerName !== addon.providerName);
 
-export const hasMultipleProviders = (addon: Addon): boolean => getProviders(addon).length > 0;
+export const hasMultipleProviders = (addon: Addon, isAvailable?: ProviderAvailability): boolean =>
+	getProviders(addon, isAvailable).length > 0;
 
 export function getAddonDependencies(
 	addon: Addon,
