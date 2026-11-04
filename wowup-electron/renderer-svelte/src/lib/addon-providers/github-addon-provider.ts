@@ -24,7 +24,7 @@ import type {
 import type { GitHubAsset, GitHubRelease, GitHubRepository, WowInstallation } from 'wowup-lib-core';
 import { SourceRemovedAddonError } from 'wowup-lib-core';
 
-type MetadataFlavor = 'bcc' | 'classic' | 'mainline' | 'wrath' | 'cata' | 'mists';
+type MetadataFlavor = 'bcc' | 'classic' | 'mainline' | 'wrath' | 'cata' | 'mists' | 'forever';
 
 interface LatestValidAsset {
 	matchedAsset: GitHubAsset | undefined;
@@ -77,17 +77,14 @@ export class GitHubAddonProvider extends AddonProvider {
 	}
 
 	public async getDownloadAuth(): Promise<DownloadAuth | undefined> {
-		const hasPat = await this.hasPersonalAccessKey();
-		if (hasPat) {
-			const headers = await this.getAuthorizationHeader();
-			headers.Accept = 'application/octet-stream';
+		// The REST asset endpoint (asset.url) only streams the binary when the request carries
+		// Accept: application/octet-stream; without it, it answers 200 with a small JSON
+		// metadata payload that gets saved as the addon zip and fails to unzip. So the header
+		// goes on every download, with the PAT added on top when one is set (private repos).
+		const headers = await this.getAuthorizationHeader();
+		headers.Accept = 'application/octet-stream';
 
-			return {
-				headers
-			};
-		} else {
-			return undefined;
-		}
+		return { headers };
 	}
 
 	public async getAll(installation: WowInstallation, addonIds: string[]): Promise<GetAllResult> {
@@ -189,7 +186,11 @@ export class GitHubAddonProvider extends AddonProvider {
 						channelType: result.release?.prerelease
 							? AddonChannelType.Beta
 							: AddonChannelType.Stable,
-						downloadUrl: asset?.browser_download_url || asset?.url || '',
+						// asset.url, as in getByIdAsync: with the Accept header from
+						// getDownloadAuth() it works anonymously and with a PAT, whereas
+						// browser_download_url 404s on private repos. Keeping both paths on the
+						// same URL also stops each update rewriting it.
+						downloadUrl: asset?.url ?? '',
 						folders: [],
 						gameVersion: '',
 						releaseDate: new Date(result.release?.published_at ?? ''),
@@ -402,7 +403,6 @@ export class GitHubAddonProvider extends AddonProvider {
 		switch (clientType) {
 			case WowClientType.Classic:
 			case WowClientType.ClassicPtr:
-			case WowClientType.ClassicBeta:
 				return 'mists';
 			case WowClientType.Anniversary:
 				return 'bcc';
@@ -414,6 +414,11 @@ export class GitHubAddonProvider extends AddonProvider {
 			case WowClientType.RetailPtr:
 			case WowClientType.RetailXPtr:
 				return 'mainline';
+			// ClassicBeta is the Forever beta, and the packager's flavor for it is "forever" too:
+			// https://github.com/BigWigsMods/packager/commit/7391c8ded01a14ff084dfa28ef09e52b0470c3cb
+			case WowClientType.Forever:
+			case WowClientType.ClassicBeta:
+				return 'forever';
 			default:
 				throw new Error('Unknown client type for metadata');
 		}
@@ -477,20 +482,23 @@ export class GitHubAddonProvider extends AddonProvider {
 		const isWotlk = this.isWotlk(asset);
 		const isCataclysm = this.isCataclysm(asset);
 		const isMists = this.isMists(asset);
+		const isForever = this.isForever(asset);
 
 		switch (clientType) {
 			case WowClientType.Retail:
 			case WowClientType.RetailPtr:
 			case WowClientType.RetailXPtr:
 			case WowClientType.Beta:
-				return !isClassic && !isBurningCrusade && !isWotlk && !isCataclysm;
+				return !isClassic && !isBurningCrusade && !isWotlk && !isCataclysm && !isForever;
 			case WowClientType.ClassicEra:
 			case WowClientType.ClassicEraPtr:
 				return isClassic;
 			case WowClientType.Classic:
 			case WowClientType.ClassicPtr:
-			case WowClientType.ClassicBeta:
 				return isMists;
+			case WowClientType.Forever:
+			case WowClientType.ClassicBeta:
+				return isForever;
 			case WowClientType.Anniversary:
 				return isBurningCrusade;
 			default:
@@ -516,6 +524,10 @@ export class GitHubAddonProvider extends AddonProvider {
 
 	private isMists(asset: GitHubAsset): boolean {
 		return /[-_](mists)\.zip$/i.test(asset.name);
+	}
+
+	private isForever(asset: GitHubAsset): boolean {
+		return /[-_](forever|camelot)\.zip$/i.test(asset.name);
 	}
 
 	private getAddonName(addonId: string): string {
