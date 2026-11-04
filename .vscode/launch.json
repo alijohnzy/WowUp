@@ -34,7 +34,14 @@
       "cwd": "${workspaceFolder}/wowup-electron",
       "runtimeExecutable": "${workspaceFolder}/wowup-electron/node_modules/.bin/electron",
       "trace": "verbose",
-      "runtimeArgs": ["--serve", ".", "--remote-debugging-port=9876"],
+      "outputCapture": "std",
+      "runtimeArgs": [
+        "../wowup-shell",
+        "--serve",
+        "--bundle-dir=${workspaceFolder}/wowup-electron/app-build/bundle",
+        "--remote-debugging-port=9876"
+      ],
+      "outFiles": ["${workspaceFolder}/wowup-electron/app-build/**/*.js", "${workspaceFolder}/wowup-shell/dist/**/*.js"],
       "windows": {
         "runtimeExecutable": "${workspaceFolder}/wowup-electron/node_modules/.bin/electron.cmd"
       },
@@ -42,17 +49,11 @@
     },
     {
       "name": "OW Renderer",
-      "type": "chrome",
-      "request": "attach",
-      "port": 9876,
-      "url": "http://localhost:4200",
-      "sourceMaps": true,
-      "timeout": 10000,
-      "trace": "verbose",
-      "sourceMapPathOverrides": {
-        "webpack:///./*": "${workspaceFolder}/wowup-electron/*"
-      },
-      "preLaunchTask": "Build.Renderer.OW"
+      "type": "node-terminal",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/wowup-electron",
+      "command": "npm run ow:ng:serve",
+      "preLaunchTask": "Build.Lib"
     },
     {
       "name": "OW Main",
@@ -62,7 +63,15 @@
       "cwd": "${workspaceFolder}/wowup-electron",
       "runtimeExecutable": "${workspaceFolder}/wowup-electron/node_modules/.bin/ow-electron",
       "trace": "verbose",
-      "runtimeArgs": ["--force-cmp", "--serve", ".", "--remote-debugging-port=9876"],
+      "outputCapture": "std",
+      "runtimeArgs": [
+        "--force-cmp",
+        "../wowup-shell",
+        "--serve",
+        "--bundle-dir=${workspaceFolder}/wowup-electron/app-build/bundle",
+        "--remote-debugging-port=9876"
+      ],
+      "outFiles": ["${workspaceFolder}/wowup-electron/app-build/**/*.js", "${workspaceFolder}/wowup-shell/dist/**/*.js"],
       "windows": {
         "runtimeExecutable": "${workspaceFolder}/wowup-electron/node_modules/.bin/ow-electron.cmd"
       },

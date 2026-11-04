@@ -1,4 +1,3 @@
-import { ipcMain } from "electron";
 import * as Store from "electron-store";
 import * as log from "electron-log/main";
 import { Addon } from "wowup-lib-core";
@@ -11,22 +10,26 @@ import {
   IPC_ADDONS_GET_AVAILABLE_FOR_UPDATE,
   IPC_ADDONS_GET_BY_EXTERNAL_ID,
   IPC_ADDONS_GET_BY_EXTERNAL_IDS,
+  IPC_ADDONS_REPLACE_ALL_FOR_INSTALLATION,
   IPC_ADDONS_SAVE_ALL,
 } from "../../src/common/constants";
-import { IpcController } from "./ipc-controller";
+import { ipcHandle, IpcController } from "./ipc-controller";
 
 export class AddonController implements IpcController {
   public constructor(private readonly addonStore: Store) {}
 
   public register(): void {
-    ipcMain.handle(IPC_ADDONS_SAVE_ALL, (_evt, addons: Addon[]) => this.saveAll(addons));
-    ipcMain.handle(IPC_ADDONS_GET_ALL, () => this.getAll());
-    ipcMain.handle(IPC_ADDONS_GET_ALL_FOR_INSTALLATION, (_evt, installationId: string) => this.getAllForInstallation(installationId));
-    ipcMain.handle(IPC_ADDONS_GET_ALL_FOR_PROVIDER, (_evt, providerName: string) => this.getAllForProvider(providerName));
-    ipcMain.handle(IPC_ADDONS_GET_BY_EXTERNAL_ID, (_evt, externalId: string, providerName: string, installationId: string) => this.getByExternalId(externalId, providerName, installationId));
-    ipcMain.handle(IPC_ADDONS_GET_BY_EXTERNAL_IDS, (_evt, externalIds: string[]) => this.getByExternalIds(externalIds));
-    ipcMain.handle(IPC_ADDONS_GET_AVAILABLE_FOR_UPDATE, (_evt, installationId?: string) => this.getAvailableForUpdate(installationId));
-    ipcMain.handle(IPC_ADDONS_GET_AUTO_UPDATE_ENABLED, () => this.getAutoUpdateEnabled());
+    ipcHandle(IPC_ADDONS_SAVE_ALL, (_evt, addons: Addon[]) => this.saveAll(addons));
+    ipcHandle(IPC_ADDONS_REPLACE_ALL_FOR_INSTALLATION, (_evt, installationId: string, addons: Addon[]) =>
+      this.replaceAllForInstallation(installationId, addons),
+    );
+    ipcHandle(IPC_ADDONS_GET_ALL, () => this.getAll());
+    ipcHandle(IPC_ADDONS_GET_ALL_FOR_INSTALLATION, (_evt, installationId: string) => this.getAllForInstallation(installationId));
+    ipcHandle(IPC_ADDONS_GET_ALL_FOR_PROVIDER, (_evt, providerName: string) => this.getAllForProvider(providerName));
+    ipcHandle(IPC_ADDONS_GET_BY_EXTERNAL_ID, (_evt, externalId: string, providerName: string, installationId: string) => this.getByExternalId(externalId, providerName, installationId));
+    ipcHandle(IPC_ADDONS_GET_BY_EXTERNAL_IDS, (_evt, externalIds: string[]) => this.getByExternalIds(externalIds));
+    ipcHandle(IPC_ADDONS_GET_AVAILABLE_FOR_UPDATE, (_evt, installationId?: string) => this.getAvailableForUpdate(installationId));
+    ipcHandle(IPC_ADDONS_GET_AUTO_UPDATE_ENABLED, () => this.getAutoUpdateEnabled());
   }
 
   private getAll(): Addon[] {
@@ -109,6 +112,24 @@ export class AddonController implements IpcController {
     const installedVer = (addon.installedVersion ?? "").replace(/^v/i, "");
     const latestVer = (addon.latestVersion ?? "").replace(/^v/i, "");
     return installedVer.length > 0 && installedVer !== latestVer;
+  }
+
+  /**
+   * Swap an installation's addons for a new set in one step, so two overlapping rescans
+   * can't each delete before the other saves and leave both sets behind (#1561).
+   */
+  public replaceAllForInstallation(installationId: string, addons: Addon[]): void {
+    if (typeof installationId !== "string" || !Array.isArray(addons)) {
+      return;
+    }
+
+    for (const [key, addon] of [...this.addonStore]) {
+      if ((addon as Addon).installationId === installationId) {
+        this.addonStore.delete(key);
+      }
+    }
+
+    this.saveAll(addons);
   }
 
   private saveAll(addons: Addon[]): void {
