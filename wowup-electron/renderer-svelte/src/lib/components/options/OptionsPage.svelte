@@ -64,26 +64,26 @@
 			app launch instead of when its tab is opened.
 		-->
 		<div class="nav-content bg-secondary-2 text-1">
-			<Tabs.Content value="clients">
+			<Tabs.Content value="clients" class="tab-panel">
 				{#if activeTab === 'clients'}<WowSection />{/if}
 			</Tabs.Content>
-			<Tabs.Content value="application">
+			<Tabs.Content value="application" class="tab-panel">
 				{#if activeTab === 'application'}<AppSection />{/if}
 			</Tabs.Content>
-			<Tabs.Content value="addons">
+			<Tabs.Content value="addons" class="tab-panel">
 				{#if activeTab === 'addons'}<AddonSection />{/if}
 			</Tabs.Content>
-			<Tabs.Content value="debug">
+			<Tabs.Content value="debug" class="tab-panel">
 				{#if activeTab === 'debug'}<DebugSection />{/if}
 			</Tabs.Content>
-			<Tabs.Content value="wtf">
+			<Tabs.Content value="wtf" class="tab-panel">
 				{#if activeTab === 'wtf'}<WtfExplorer />{/if}
 			</Tabs.Content>
-			<Tabs.Content value="about">
+			<Tabs.Content value="about" class="tab-panel">
 				{#if activeTab === 'about'}<About />{/if}
 			</Tabs.Content>
 			{#if isCmpRequired}
-				<Tabs.Content value="curseforge">
+				<Tabs.Content value="curseforge" class="tab-panel">
 					{#if activeTab === 'curseforge'}<CurseforgeSection />{/if}
 				</Tabs.Content>
 			{/if}
@@ -146,5 +146,27 @@
 		min-width: 0;
 		min-height: 0;
 		overflow: hidden;
+	}
+
+	/*
+		Every section scrolls itself (height: 100% + overflow-y: auto on its .container), so
+		the panel between it and .nav-content needs a definite height. Without one the
+		section's 100% resolves to auto, it grows to fit its content, and .nav-content's
+		overflow: hidden clips the rest with no scrollbar — a long client list was simply
+		unreachable.
+	*/
+	:global(.tab-panel) {
+		height: 100%;
+		min-height: 0;
+	}
+
+	/*
+		And the section must fit inside it: sections pad themselves, and under the default
+		content-box a padded height: 100% overhangs the panel by the padding, so the bottom
+		of every scrolled section sat under the clip. Debug never set a height at all.
+	*/
+	:global(.tab-panel > *) {
+		box-sizing: border-box;
+		height: 100%;
 	}
 </style>

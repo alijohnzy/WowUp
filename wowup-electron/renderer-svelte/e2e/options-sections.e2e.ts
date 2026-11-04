@@ -100,6 +100,35 @@ test('Clients section lists installations and offers rescan / add', async ({ pag
 	await expect(page.getByRole('heading', { name: 'Retail' })).toBeVisible();
 });
 
+test('Clients section scrolls when the installations overflow the window', async ({ page }) => {
+	const installations = Array.from({ length: 6 }, (_, i) => ({
+		...INSTALLATION,
+		id: `inst-${i}`,
+		label: `Client ${i}`,
+		displayName: `Client ${i}`,
+		location: `/games/wow-${i}/_retail_/Wow.exe`,
+		selected: i === 0
+	}));
+	await page.setViewportSize({ width: 1280, height: 720 });
+	await stubPreload(page, { installations });
+	await openOptionsTab(page, 'Clients');
+
+	const last = page.getByRole('heading', { name: 'Client 5' });
+	await expect(last).not.toBeInViewport();
+
+	// A wheel over the panel, not scrollIntoView: an overflow:hidden ancestor still scrolls
+	// programmatically, so only a user-style scroll proves the list is reachable.
+	await page.getByRole('heading', { name: 'Client 0' }).hover();
+	await page.mouse.wheel(0, 5000);
+
+	await expect(last).toBeInViewport();
+	// The bottom of the last card too — a section taller than its panel scrolls, but its
+	// final rows end up under the clip and still can't be reached.
+	await expect(
+		page.locator('.installation-card').last().getByRole('button', { name: 'Edit' })
+	).toBeInViewport({ ratio: 1 });
+});
+
 test('Clients section shows the empty state with no installations', async ({ page }) => {
 	await stubPreload(page, { installations: [] });
 	await openOptionsTab(page, 'Clients');
