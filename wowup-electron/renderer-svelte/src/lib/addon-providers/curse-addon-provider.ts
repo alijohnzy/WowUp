@@ -898,6 +898,8 @@ export class CurseAddonProvider extends AddonProvider {
 					downloadUrl: cfDownloadUrl(lf.id, lf.fileName, lf.downloadUrl ?? undefined),
 					folders: this.getFolderNames(lf),
 					gameVersion: getGameVersion(this.getGameVersion(lf)),
+					// Every flavour the file serves; gameVersion is only the first of them.
+					gameVersions: lf.gameVersions,
 					releaseDate: new Date(lf.fileDate),
 					dependencies: lf.dependencies.map(this.createAddonSearchResultDependency),
 					externalId: lf.id.toString()

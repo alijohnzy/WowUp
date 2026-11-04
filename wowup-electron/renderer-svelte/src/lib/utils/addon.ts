@@ -76,3 +76,15 @@ export function toInterfaceVersion(version: string): string {
 
 	return parts.map((part, idx) => padInterfacePart(part, idx)).join('');
 }
+
+/**
+ * The game versions to store for an addon from the release on offer. Providers that list every
+ * patch a release targets (CurseForge) set `gameVersions`; the rest only `gameVersion`.
+ */
+export function getFileTargetVersions(file: {
+	gameVersion?: string;
+	gameVersions?: string[];
+}): string[] {
+	const versions = file.gameVersions?.length ? file.gameVersions : [file.gameVersion ?? ''];
+	return [...new Set(versions.filter((v) => v.length > 0))];
+}

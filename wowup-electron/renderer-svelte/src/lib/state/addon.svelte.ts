@@ -899,8 +899,9 @@ class AddonService {
 				addon.author = result.author;
 				addon.externalChannel = getEnumName(AddonChannelType, latestFile.channelType);
 
-				if (latestFile.gameVersion) {
-					addon.gameVersion = getGameVersionList([latestFile.gameVersion]);
+				const targetVersions = addonUtils.getFileTargetVersions(latestFile);
+				if (targetVersions.length > 0) {
+					addon.gameVersion = getGameVersionList(targetVersions);
 				} else if (addon.gameVersion) {
 					addon.gameVersion = getGameVersionList(addon.gameVersion ?? []);
 				} else {
@@ -1481,7 +1482,7 @@ class AddonService {
 			latestVersion: latestFile.version,
 			clientType: installation.clientType,
 			externalId: searchResult.externalId.toString(),
-			gameVersion: getGameVersionList([latestFile.gameVersion]),
+			gameVersion: getGameVersionList(addonUtils.getFileTargetVersions(latestFile)),
 			author: searchResult.author,
 			downloadUrl: latestFile.downloadUrl,
 			externalUrl: searchResult.externalUrl,
