@@ -5,7 +5,16 @@
 // Kept: wowup-lib-core's TOC key constants and getTocForGameType — framework-agnostic.
 
 import * as tocModels from 'wowup-lib-core';
-import { getTocForGameType, type Toc, type WowClientType } from 'wowup-lib-core';
+import {
+	getTocForClientType,
+	getTocForGameType,
+	hasLoadGameTypeConditions,
+	isLoadConditionMet,
+	stripLoadConditions,
+	WowGameType,
+	type Toc,
+	type WowClientType
+} from 'wowup-lib-core';
 import { listFiles, readFile } from './files';
 import { basename, join } from '$lib/utils/path';
 
@@ -23,8 +32,9 @@ export function stripTextureCode(str: string): string {
 
 const stripNewLineChars = (value: string): string => value.replace(/\|r/g, '');
 
+// Load directives first: "Title [AllowLoadGameType wrath]" is "Title" whatever the client.
 const stripEncodedChars = (value: string): string =>
-	stripNewLineChars(stripTextureCode(stripColorCode(value)));
+	stripNewLineChars(stripTextureCode(stripColorCode(stripLoadConditions(value))));
 
 function getValue(key: string, tocText: string): string {
 	const match = new RegExp(`^## ${key}:(.*?)$`, 'm').exec(tocText);
@@ -41,6 +51,30 @@ function getValueArray(key: string, tocText: string): string[] {
 				.map((x) => x.trim())
 		)
 	];
+}
+
+const TITLE_LINE = /^##\s*Title\s*:/i;
+
+/**
+ * A TOC can carry several titles guarded by [AllowLoadGameType …] conditions; the game shows
+ * the last one that applies to it. Only set when such conditions are present, so a plain TOC
+ * keeps using `title`. Port of upstream's TocService.getTitlesByGameType (c2f130f3).
+ */
+function getTitlesByGameType(tocText: string): Record<string, string> | undefined {
+	const titleLines = tocText
+		.split(/\r?\n/)
+		.map((line) => line.trim())
+		.filter((line) => TITLE_LINE.test(line));
+
+	if (!titleLines.some((line) => hasLoadGameTypeConditions(line))) return undefined;
+
+	const titles: Record<string, string> = {};
+	for (const gameType of Object.values(WowGameType)) {
+		const line = titleLines.findLast((titleLine) => isLoadConditionMet(titleLine, gameType));
+		const title = line ? stripEncodedChars(line.replace(TITLE_LINE, '').trim()) : '';
+		if (title) titles[gameType] = title;
+	}
+	return titles;
 }
 
 const getWebsite = (tocText: string): string =>
@@ -63,6 +97,7 @@ export async function parse(tocPath: string): Promise<Toc> {
 		curseProjectId: getValue(tocModels.TOC_X_CURSE_PROJECT_ID, tocText),
 		interface: getValueArray(tocModels.TOC_INTERFACE, tocText),
 		title: getValue(tocModels.TOC_TITLE, tocText),
+		titles: getTitlesByGameType(tocText),
 		website: getWebsite(tocText),
 		version: getValue(tocModels.TOC_VERSION, tocText),
 		partOf: getValue(tocModels.TOC_X_PART_OF, tocText),
@@ -97,13 +132,21 @@ export function getTocForGameType2(
 	// No game-type match: fall back to the toc named after its folder.
 	// Example: "All The Things" for TBC (ATT-Classic).
 	if (matchedToc === '') {
-		return tocs.find(
-			(toc) => removeExtension(toc.fileName).toLowerCase() === folderName.toLowerCase()
+		return titled(
+			tocs.find((toc) => removeExtension(toc.fileName).toLowerCase() === folderName.toLowerCase()),
+			clientType
 		);
 	}
 
-	return tocs.find((toc) => toc.fileName === matchedToc);
+	return titled(
+		tocs.find((toc) => toc.fileName === matchedToc),
+		clientType
+	);
 }
+
+/** The toc as the client sees it: titled for its game type. */
+const titled = (toc: Toc | undefined, clientType: WowClientType): Toc | undefined =>
+	toc && getTocForClientType(toc, clientType);
 
 /** All valid tocs under baseDir for the given installed folders and client type. */
 export async function getAllTocs(
