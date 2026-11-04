@@ -1,6 +1,6 @@
 [package]
 name = "wowup"
-version = "2.23.0"
+version = "2.25.4"
 description = "World of Warcraft addon updater"
 authors = ["WowUp LLC <zakrn@wowup.io>"]
 edition = "2021"

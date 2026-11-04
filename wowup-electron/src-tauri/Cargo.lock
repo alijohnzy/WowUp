@@ -5711,7 +5711,7 @@ checksum = "1ebf944e87a7c253233ad6766e082e3cd714b5d03812acc24c318f549614536e"
 
 [[package]]
 name = "wowup"
-version = "2.23.0"
+version = "2.25.4"
 dependencies = [
  "globset",
  "log",
