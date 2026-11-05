@@ -18,6 +18,20 @@ use tauri::{AppHandle, Emitter};
 #[cfg(unix)]
 const DEFAULT_FILE_MODE: u32 = 0o655;
 
+/// What the app calls itself on the wire, in the shape of the Electron build's getUserAgent().
+///
+/// Not cosmetic: GitHub refuses API requests that carry no User-Agent ("Request forbidden by
+/// administrative rules"), and reqwest sends none unless told to. Every install from a GitHub
+/// release failed with "Invalid response (403)" until this was set.
+fn user_agent() -> String {
+    format!(
+        "WowUp-Client/{} ({}; {}; CF; Tauri; +https://wowup.io)",
+        env!("CARGO_PKG_VERSION"),
+        std::env::consts::OS,
+        std::env::consts::ARCH
+    )
+}
+
 /// Mirrors `DownloadAuth` (wowup-lib-core).
 #[derive(Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -140,7 +154,12 @@ async fn perform_download(request: DownloadRequest) -> Result<String, String> {
     ));
     log::info!("[DownloadFile] '{url}' -> '{}'", save_path.display());
 
-    let mut req = reqwest::Client::new().get(url.clone());
+    let client = reqwest::Client::builder()
+        .user_agent(user_agent())
+        .build()
+        .map_err(|e| format!("{url}: {e}"))?;
+    // Headers the caller sends still win over the default User-Agent.
+    let mut req = client.get(url.clone());
     if let Some(headers) = request.auth.as_ref().and_then(|a| a.headers.as_ref()) {
         for (key, value) in headers {
             // Never log the value: these carry CurseForge and Wago tokens.
@@ -364,6 +383,79 @@ mod tests {
         assert!(err.contains("relative path 'downloads'"), "got {err}");
         // Nothing should have been created next to the binary.
         assert!(!Path::new("downloads").exists());
+    }
+
+    /// A one-request HTTP server that answers like api.github.com: 403 "Please make sure your
+    /// request has a User-Agent header" without one, the file otherwise. Returns its URL and
+    /// the User-Agent it saw.
+    fn github_like_server(
+        body: &'static [u8],
+    ) -> (String, std::sync::mpsc::Receiver<Option<String>>) {
+        use std::io::{BufRead, BufReader};
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let url = format!(
+            "http://{}/releases/assets/1",
+            listener.local_addr().unwrap()
+        );
+        let (tx, rx) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            let mut user_agent = None;
+            let mut reader = BufReader::new(stream.try_clone().unwrap());
+            loop {
+                let mut line = String::new();
+                if reader.read_line(&mut line).unwrap() == 0 || line == "\r\n" {
+                    break;
+                }
+                if let Some((name, value)) = line.split_once(':') {
+                    if name.eq_ignore_ascii_case("user-agent") {
+                        user_agent = Some(value.trim().to_string());
+                    }
+                }
+            }
+            let response = match &user_agent {
+                Some(_) => [
+                    format!(
+                        "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+                        body.len()
+                    )
+                    .into_bytes(),
+                    body.to_vec(),
+                ]
+                .concat(),
+                None => b"HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                    .to_vec(),
+            };
+            stream.write_all(&response).unwrap();
+            tx.send(user_agent).unwrap();
+        });
+        (url, rx)
+    }
+
+    /// GitHub refuses API requests that carry no User-Agent, and reqwest sends none unless
+    /// told to. Every install from a GitHub release failed with "Invalid response (403)",
+    /// token or not, while CurseForge and Wago (plain CDNs) downloaded fine.
+    #[tokio::test]
+    async fn download_identifies_itself_so_github_serves_the_file() {
+        let zip: &[u8] = b"PK\x03\x04 pretend zip";
+        let (url, seen) = github_like_server(zip);
+        let folder = std::env::temp_dir().join(format!("wowup-dl-{}", nanoid::nanoid!()));
+
+        let saved = perform_download(DownloadRequest {
+            url,
+            file_name: "NameplateSCT-1.56.zip".into(),
+            output_folder: folder.to_string_lossy().into_owned(),
+            response_key: "k".into(),
+            auth: None,
+        })
+        .await;
+        let user_agent = seen.recv().unwrap();
+        let _ = std::fs::remove_dir_all(&folder);
+
+        let saved = saved.expect("the download should succeed");
+        assert!(saved.ends_with("-NameplateSCT-1.56.zip"), "got {saved}");
+        let user_agent = user_agent.expect("a User-Agent header");
+        assert!(user_agent.starts_with("WowUp-Client/"), "got {user_agent}");
     }
 
     #[test]
