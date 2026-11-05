@@ -214,6 +214,10 @@ jobs:
       - name: Rust tests
         if: steps.gate.outputs.run == 'true' && matrix.key == 'linux'
         run: |
+          # tauri::generate_context!() fails to compile when frontendDist does not exist, and
+          # the renderer is only built later, by tauri:build. The tests embed nothing from it,
+          # so an empty directory is enough.
+          mkdir -p ./wowup-electron/renderer-svelte/build
           cd ./wowup-electron/src-tauri
           cargo test
 
