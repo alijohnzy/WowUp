@@ -53,7 +53,7 @@ class WowUpAccount {
 	#loadAuthToken(): void {
 		const storedToken = window.localStorage.getItem(STORAGE_WOWUP_AUTH_TOKEN);
 		if (storedToken) {
-			console.debug('loaded auth token', storedToken);
+			console.debug(`loaded auth token (${storedToken.length} chars)`);
 			this.#setAuthToken(storedToken);
 		}
 	}

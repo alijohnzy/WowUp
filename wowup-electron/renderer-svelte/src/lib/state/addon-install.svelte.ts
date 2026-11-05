@@ -41,6 +41,7 @@ import { addonProviders } from '$lib/state/addon-providers.svelte';
 import { warcraft } from '$lib/state/warcraft.svelte';
 import { warcraftInstallations } from '$lib/state/warcraft-installation.svelte';
 import { wowup } from '$lib/state/wowup.svelte';
+import { describeDownloadAuth } from '$lib/utils/redact';
 
 export type InstallType = 'install' | 'update' | 'remove';
 
@@ -146,7 +147,8 @@ class AddonInstall {
 
 		try {
 			const downloadAuth = await addonProvider.getDownloadAuth();
-			console.debug(`Download auth for ${addon.name}:`, downloadAuth);
+			// Names only: the values are tokens, and this console ends up in the log file.
+			console.debug(`Download auth for ${addon.name}: ${describeDownloadAuth(downloadAuth)}`);
 
 			let retryCt = 0;
 			while (downloadedFilePath.length === 0) {

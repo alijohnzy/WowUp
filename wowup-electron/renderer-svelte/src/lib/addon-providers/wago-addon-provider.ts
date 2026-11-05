@@ -219,7 +219,8 @@ export class WagoAddonProvider extends AddonProvider {
 		sensitiveStorage.change((change) => {
 			if (change.key !== PREF_WAGO_ACCESS_KEY) return;
 
-			console.log('[wago] wago secret set', change);
+			// The value is the user's Wago access key: log that it changed, not what to.
+			console.log(`[wago] wago secret set (${String(change.value ?? '').length} chars)`);
 			if (this.isValidToken(change.value as string)) {
 				this._wagoSecret = change.value as string;
 				this._circuitBreaker.close();
