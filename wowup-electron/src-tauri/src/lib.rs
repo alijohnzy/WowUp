@@ -14,6 +14,7 @@ pub mod install;
 pub mod scanner;
 pub mod store;
 pub mod tray;
+pub mod updater;
 pub mod warcraft;
 pub mod window;
 
@@ -138,6 +139,7 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         // Start-with-system. The flag matches what Electron registers; nothing reads it, since
         // the plugin would pass it whether or not the user asked to start minimised — see
         // `window::should_start_hidden`.
@@ -179,6 +181,7 @@ pub fn run() {
         .manage(store::Stores::default())
         .manage(tray::TrayState::default())
         .manage(window::Quitting::default())
+        .manage(updater::PendingUpdate::default())
         .invoke_handler(tauri::generate_handler![
             get_app_version,
             get_app_paths,
@@ -225,8 +228,8 @@ pub fn run() {
             window::set_zoom_limits,
             window::get_login_item_settings,
             window::set_login_item_settings,
-            window::app_check_update,
-            window::app_install_update,
+            updater::app_check_update,
+            updater::app_install_update,
             get_locale,
             update_app_badge,
             is_default_protocol_client,

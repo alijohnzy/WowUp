@@ -8,7 +8,10 @@
 	import { AppUpdateState } from '$common/wowup/models';
 	import { AppConfig } from '$config/environment';
 	import { t } from '$lib/i18n.svelte';
+	import { isTauri } from '$lib/ipc';
+	import { openExternalLink } from '$lib/services/links';
 	import Icon from './Icon.svelte';
+	import { dialogs } from '$lib/state/dialogs.svelte';
 	import { electron } from '$lib/state/electron.svelte';
 	import { session } from '$lib/state/session.svelte';
 	import { wowup } from '$lib/state/wowup.svelte';
@@ -17,6 +20,24 @@
 	let updateProgress = $derived(
 		(electron.appUpdate?.progress as { percent?: number } | undefined)?.percent ?? 0
 	);
+
+	// Tauri asks before downloading (src-tauri/src/updater.rs): UpdateAvailable is a button,
+	// where Electron, which downloads straight away, only showed it as a passing state.
+	let availableVersion = $derived(electron.appUpdate?.version ?? '');
+
+	async function onUpdateAvailable(): Promise<void> {
+		const evt = electron.appUpdate;
+		if (evt?.manual) {
+			// The portable zip cannot replace itself; send the user to the release instead.
+			const ok = await dialogs.confirm({
+				title: t('APP.WOWUP_UPDATE.PORTABLE_DOWNLOAD_TITLE'),
+				message: t('APP.WOWUP_UPDATE.PORTABLE_DOWNLOAD_MESSAGE')
+			});
+			if (ok && evt.releaseUrl) await openExternalLink(evt.releaseUrl);
+			return;
+		}
+		wowup.installUpdate();
+	}
 
 	$effect(() => {
 		if (session.appVersion === undefined) {
@@ -34,6 +55,15 @@
 	<div class="update-slot">
 		{#if updateState === AppUpdateState.CheckingForUpdate}
 			<p>{t('APP.WOWUP_UPDATE.CHECKING_FOR_UPDATE')}</p>
+		{:else if updateState === AppUpdateState.UpdateAvailable && isTauri()}
+			<button
+				class="footer-button update-button text-1"
+				title={`${t('APP.WOWUP_UPDATE.TOOLTIP')} (v${availableVersion})`}
+				onclick={() => void onUpdateAvailable()}
+			>
+				<Icon name="fas:rotate" />
+				{t('APP.WOWUP_UPDATE.SNACKBAR_ACTION')}
+			</button>
 		{:else if updateState === AppUpdateState.UpdateAvailable}
 			<p>{t('APP.WOWUP_UPDATE.UPDATE_AVAILABLE')}</p>
 		{:else if updateState === AppUpdateState.Downloading}

@@ -23,7 +23,7 @@
 	import { WowUpReleaseChannelType } from '$common/wowup/wowup-release-channel-type';
 	import { AppConfig } from '$config/environment';
 	import { t } from '$lib/i18n.svelte';
-	import { invoke, isWin } from '$lib/ipc';
+	import { invoke, isTauri, isWin } from '$lib/ipc';
 	import type { ThemeGroup } from '$lib/models/theme';
 	import { getTelemetryEnabled, setTelemetryEnabled } from '$lib/services/analytics';
 	import Toggle from '$lib/components/common/Toggle.svelte';
@@ -449,23 +449,29 @@
 		</div>
 	{/if}
 
-	<div class="setting">
-		<div class="grow">
-			<div>{t('PAGES.OPTIONS.APPLICATION.APP_RELEASE_CHANNEL_LABEL')}</div>
-			<small class="text-2">{t('PAGES.OPTIONS.APPLICATION.APP_RELEASE_CHANNEL_DESCRIPTION')}</small>
+	<!-- Tauri builds have no release channels: every published build is offered to everyone
+	     (src-tauri/src/updater.rs), so the choice would do nothing. -->
+	{#if !isTauri()}
+		<div class="setting">
+			<div class="grow">
+				<div>{t('PAGES.OPTIONS.APPLICATION.APP_RELEASE_CHANNEL_LABEL')}</div>
+				<small class="text-2"
+					>{t('PAGES.OPTIONS.APPLICATION.APP_RELEASE_CHANNEL_DESCRIPTION')}</small
+				>
+			</div>
+			<label class="field">
+				<select
+					value={currentReleaseChannel}
+					onchange={(e) => void onReleaseChannelChange(Number(e.currentTarget.value))}
+					aria-label={t('PAGES.OPTIONS.APPLICATION.APP_RELEASE_CHANNEL_DROPDOWN_LABEL')}
+				>
+					{#each RELEASE_CHANNELS as channel (channel.value)}
+						<option value={channel.value}>{t(channel.labelKey)}</option>
+					{/each}
+				</select>
+			</label>
 		</div>
-		<label class="field">
-			<select
-				value={currentReleaseChannel}
-				onchange={(e) => void onReleaseChannelChange(Number(e.currentTarget.value))}
-				aria-label={t('PAGES.OPTIONS.APPLICATION.APP_RELEASE_CHANNEL_DROPDOWN_LABEL')}
-			>
-				{#each RELEASE_CHANNELS as channel (channel.value)}
-					<option value={channel.value}>{t(channel.labelKey)}</option>
-				{/each}
-			</select>
-		</label>
-	</div>
+	{/if}
 
 	<div class="setting">
 		<div class="grow">

@@ -12,7 +12,7 @@ import {
 	WOWUP_LOGO_FILENAME_CF
 } from '$common/constants';
 import { AppConfig } from '$config/environment';
-import { invoke, isElectron } from '$lib/ipc';
+import { invoke, isElectron, isTauri } from '$lib/ipc';
 import { getAssetFilePath } from '$lib/services/files';
 import { i18n } from '$lib/i18n.svelte';
 import { addonService } from '$lib/state/addon.svelte';
@@ -151,6 +151,10 @@ export function stopAutoUpdate(): void {
 // release never announced itself: the footer sat blank until someone clicked.
 
 let appUpdateInterval: number | undefined;
+let firstAppUpdateCheck: number | undefined;
+
+/** Long enough for startup's own network burst (addon sync, the ad) to finish first. */
+const FIRST_APP_UPDATE_CHECK_MS = 15_000;
 
 export function startAppUpdateCheck(): void {
 	if (appUpdateInterval !== undefined) {
@@ -158,7 +162,15 @@ export function startAppUpdateCheck(): void {
 		return;
 	}
 
-	// No immediate call, unlike the addon job: the main process already checks on launch.
+	// Electron's main process checks on launch, so there the interval is enough. Tauri's does
+	// not (src-tauri/src/updater.rs only answers), so the first check is made from here.
+	if (isTauri()) {
+		firstAppUpdateCheck = window.setTimeout(() => {
+			firstAppUpdateCheck = undefined;
+			wowup.checkForAppUpdate();
+		}, FIRST_APP_UPDATE_CHECK_MS);
+	}
+
 	appUpdateInterval = window.setInterval(
 		() => wowup.checkForAppUpdate(),
 		AppConfig.appUpdateIntervalMs
@@ -166,6 +178,10 @@ export function startAppUpdateCheck(): void {
 }
 
 export function stopAppUpdateCheck(): void {
+	if (firstAppUpdateCheck !== undefined) {
+		window.clearTimeout(firstAppUpdateCheck);
+		firstAppUpdateCheck = undefined;
+	}
 	if (appUpdateInterval === undefined) return;
 	window.clearInterval(appUpdateInterval);
 	appUpdateInterval = undefined;

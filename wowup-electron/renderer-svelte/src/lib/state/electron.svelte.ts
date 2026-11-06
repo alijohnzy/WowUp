@@ -28,12 +28,18 @@ import {
 	IPC_WINDOW_RESUME,
 	IPC_WINDOW_UNMAXIMIZED
 } from '$common/constants';
-import { invoke, isElectron, on } from '$lib/ipc';
+import { invoke, isElectron, isTauri, on } from '$lib/ipc';
 
 export interface AppUpdateEvent {
 	state: number;
 	progress?: unknown;
 	error?: string;
+	/** Tauri only: the version on offer, with UpdateAvailable. */
+	version?: string;
+	/** Tauri only: the release page, for copies that are updated by hand. */
+	releaseUrl?: string;
+	/** Tauri only: true for the portable zip, which cannot replace itself. */
+	manual?: boolean;
 }
 
 type Listener<T> = (value: T) => void;
@@ -69,7 +75,17 @@ class ElectronState {
 
 	/** Called once from the root layout. Idempotent. */
 	start(): void {
-		if (this.#started || !isElectron()) return;
+		if (this.#started) return;
+		if (!isElectron()) {
+			// Under Tauri the window state below is handled elsewhere, but the update state is
+			// not: without this listener src-tauri/src/updater.rs reported into the void, and the
+			// footer never showed an update.
+			if (isTauri()) {
+				this.#started = true;
+				on(IPC_APP_UPDATE_STATE, (_e, evt: never) => (this.appUpdate = evt as AppUpdateEvent));
+			}
+			return;
+		}
 		this.#started = true;
 
 		this.online = navigator.onLine;
