@@ -44,7 +44,7 @@ import { invoke, isElectron, isLinux, isMac, isWin, send } from '$lib/ipc';
 import { preferenceStorage } from '$lib/services/storage';
 import { createDirectory, listEntries, remove, showDirectory } from '$lib/services/files';
 import { electron } from '$lib/state/electron.svelte';
-import { i18n } from '$lib/i18n.svelte';
+import { i18n, resolveLocale } from '$lib/i18n.svelte';
 import { join } from '$lib/utils/path';
 
 // Imported for use below and re-exported so call sites keep importing them from here, as
@@ -124,7 +124,7 @@ class WowUp {
 	async initializeLanguage(): Promise<void> {
 		console.log('Language setup start');
 		const currentLang = await this.getCurrentLanguage();
-		const langCode = currentLang || (await invoke<string>('get-locale'));
+		const langCode = currentLang || resolveLocale(await invoke<string>('get-locale'));
 
 		try {
 			await i18n.load(langCode);

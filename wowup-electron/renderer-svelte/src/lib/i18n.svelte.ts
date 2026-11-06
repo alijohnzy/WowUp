@@ -20,6 +20,24 @@ function localeFromPath(p: string): string {
 
 export const availableLocales: string[] = Object.keys(locales).map(localeFromPath).sort();
 
+/**
+ * Map an OS locale tag to a shipped locale file: exact match, then the base language.
+ *
+ * Electron's `app.getLocale()` mostly returned bare codes ("tr", "de"), but the Tauri
+ * `get-locale` returns the OS's region tag ("tr-TR", "de_DE"), which never matched a file
+ * name, so every non-English system started in English. Unknown tags come back unchanged
+ * and `i18n.load()` rejects them as before.
+ */
+export function resolveLocale(tag: string): string {
+	const parts = tag.replace(/_/g, '-').split('-');
+	const exact = availableLocales.find((l) => l.toLowerCase() === parts.join('-').toLowerCase());
+	if (exact) return exact;
+
+	const base = parts[0].toLowerCase();
+	if (base === 'zh' && parts.some((p) => /^(hant|tw|hk|mo)$/i.test(p))) return 'zh-TW';
+	return availableLocales.includes(base) ? base : tag;
+}
+
 /** Dot-path lookup: "PAGES.OPTIONS.TABS.ABOUT" -> "About" */
 function lookup(messages: Messages, key: string): string | undefined {
 	let node: unknown = messages;
