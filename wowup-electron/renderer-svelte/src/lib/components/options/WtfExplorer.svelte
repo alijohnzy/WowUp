@@ -107,19 +107,19 @@
 			disabled={loading}
 			onclick={() => void loadWtfStructure(selectedInstallation)}
 		>
-			Refresh
+			{t('PAGES.GET_ADDONS.REFRESH_BUTTON')}
 		</button>
 	</div>
 
 	{#if loading}
 		<div class="account-container">
-			<h4><i>Loading {selectedInstallationLabel}...</i></h4>
+			<h4><i>{selectedInstallationLabel}: {t('COMMON.PROGRESS_SPINNER.LOADING')}</i></h4>
 		</div>
 	{/if}
 
 	{#if error !== ''}
 		<div class="account-container text-warning">
-			<h4>Error {selectedInstallationLabel}</h4>
+			<h4>{t('DIALOGS.ALERT.ERROR_TITLE')}: {selectedInstallationLabel}</h4>
 			<p>{error}</p>
 		</div>
 	{/if}
