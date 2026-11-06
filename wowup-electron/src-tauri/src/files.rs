@@ -704,8 +704,10 @@ fn walk_files<'a>(
     })
 }
 
-/// Mirrors `TreeNode` (src/common/models/ipc-events.ts:12).
+/// Mirrors `TreeNode` (src/common/models/ipc-events.ts:12). camelCase because the renderer
+/// reads `isDirectory`; snake_case made every folder in the WTF explorer render as a file.
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TreeNode {
     name: String,
     path: String,
@@ -723,9 +725,28 @@ pub struct DirectoryTreeOptions {
     include_hash: bool,
 }
 
-/// Port of `getDirTree` (app/file.utils.ts:170), used by the WTF explorer.
+/// The `get-directory-tree` payload. The renderer sends one object (services/files.ts:106),
+/// because that is what the Electron handler takes, so CHANNEL_PARAMS maps it to `request`.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DirectoryTreeRequest {
+    dir_path: String,
+    #[serde(default)]
+    opts: Option<DirectoryTreeOptions>,
+}
+
+/// Port of the `get-directory-tree` channel, used by the WTF explorer.
+///
+/// It used to take `dir_path` and `opts` as separate arguments while the renderer sent
+/// `{ request: {...} }`, so every call failed with "missing required key dirPath".
+/// renderer-svelte/src/lib/ipc-contract.spec.ts now checks every channel against its command.
 #[tauri::command]
-pub async fn get_directory_tree(
+pub async fn get_directory_tree(request: DirectoryTreeRequest) -> Result<TreeNode, String> {
+    directory_tree(request.dir_path, request.opts).await
+}
+
+/// Port of `getDirTree` (app/file.utils.ts:170).
+pub async fn directory_tree(
     dir_path: String,
     opts: Option<DirectoryTreeOptions>,
 ) -> Result<TreeNode, String> {
@@ -995,7 +1016,7 @@ mod fs_group_tests {
         std::fs::write(dir.join("one.txt"), "12345").unwrap();
         std::fs::write(dir.join("sub/two.txt"), "123").unwrap();
 
-        let tree = get_directory_tree(dir.to_string_lossy().into(), None)
+        let tree = directory_tree(dir.to_string_lossy().into(), None)
             .await
             .unwrap();
 
@@ -1013,11 +1034,11 @@ mod fs_group_tests {
         std::fs::write(dir.join("f.txt"), "before").unwrap();
         let opts = Some(DirectoryTreeOptions { include_hash: true });
 
-        let first = get_directory_tree(dir.to_string_lossy().into(), opts)
+        let first = directory_tree(dir.to_string_lossy().into(), opts)
             .await
             .unwrap();
         std::fs::write(dir.join("f.txt"), "after").unwrap();
-        let second = get_directory_tree(
+        let second = directory_tree(
             dir.to_string_lossy().into(),
             Some(DirectoryTreeOptions { include_hash: true }),
         )
@@ -1035,7 +1056,7 @@ mod fs_group_tests {
         let dir = tmpdir("tree-nohash");
         std::fs::write(dir.join("f.txt"), "x").unwrap();
 
-        let tree = get_directory_tree(dir.to_string_lossy().into(), None)
+        let tree = directory_tree(dir.to_string_lossy().into(), None)
             .await
             .unwrap();
         assert_eq!(tree.children[0].hash.as_deref(), Some(""));
@@ -1047,9 +1068,47 @@ mod fs_group_tests {
         let file = dir.join("f.txt");
         std::fs::write(&file, "x").unwrap();
 
-        let err = get_directory_tree(file.to_string_lossy().into(), None)
+        let err = directory_tree(file.to_string_lossy().into(), None)
             .await
             .unwrap_err();
         assert!(err.contains("was not a directory"), "{err}");
+    }
+
+    /// The exact payload services/files.ts:106 sends, nested under `request` by CHANNEL_PARAMS.
+    #[tokio::test]
+    async fn directory_tree_accepts_the_renderer_payload() {
+        let dir = tmpdir("tree-payload");
+        std::fs::create_dir_all(dir.join("Account")).unwrap();
+        std::fs::write(dir.join("Config.wtf"), "SET x 1").unwrap();
+
+        let request: DirectoryTreeRequest = serde_json::from_value(serde_json::json!({
+            "dirPath": dir.to_string_lossy(),
+            "opts": { "includeHash": true }
+        }))
+        .unwrap();
+        let tree = get_directory_tree(request).await.unwrap();
+        assert_eq!(tree.children.len(), 2);
+
+        // opts is optional, as the renderer's own type has it.
+        let bare: DirectoryTreeRequest =
+            serde_json::from_value(serde_json::json!({ "dirPath": dir.to_string_lossy() }))
+                .unwrap();
+        assert!(get_directory_tree(bare).await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn tree_nodes_serialise_with_the_renderers_field_names() {
+        let dir = tmpdir("tree-json");
+        std::fs::create_dir_all(dir.join("Account")).unwrap();
+
+        let json = serde_json::to_value(
+            directory_tree(dir.to_string_lossy().into(), None)
+                .await
+                .unwrap(),
+        )
+        .unwrap();
+        let child = &json["children"][0];
+        assert_eq!(child["isDirectory"], serde_json::json!(true), "{json}");
+        assert!(child.get("is_directory").is_none(), "{json}");
     }
 }
