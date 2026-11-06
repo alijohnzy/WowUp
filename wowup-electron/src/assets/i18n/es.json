@@ -118,14 +118,21 @@
     "WINDOW_TITLE_CF": "WowUp.io CF",
     "WINDOW_TITLE_FULLSCREEN": "WowUp.io - Pantalla completa",
     "WOWUP_UPDATE": {
+      "BUNDLE_OVERDUE_TEXT": "Una actualización de WowUp lleva un tiempo esperando. Reinicie WowUp para terminar de actualizar.",
+      "BUNDLE_READY_TEXT": "Se ha descargado una actualización de WowUp. Reinicie ahora para usarla, o WowUp le pedirá que reinicie en un plazo de 6 horas.",
+      "BUNDLE_REQUIRED_TEXT": "Esta versión de WowUp tiene un problema y ha sido reemplazada. Reinicie WowUp para terminar de actualizar.",
       "CHECKING_FOR_UPDATE": "Buscando actualización",
       "DOWNLOADED_TOOLTIP": "Instalar actualización de WowUp",
       "DOWNLOADING_UPDATE": "Descargando actualización",
       "INSTALL_MESSAGE": "¿Quiere reiniciar WowUp para instalar la actualización?",
       "INSTALL_TITLE": "Actualización de WowUp preparada",
+      "LATER": "Más tarde",
       "NOT_AVAILABLE": "La versión más reciente de WowUp ya se encuentra instalada",
       "PORTABLE_DOWNLOAD_MESSAGE": "¿Quiere descargar manualmente la última versión portable?\n\nTendrá que cerrar la aplicación y copiar los archivos de la nueva versión manualmente.",
       "PORTABLE_DOWNLOAD_TITLE": "Descarga manual requerida",
+      "RESTART_NOW": "Reiniciar ahora",
+      "RESTART_TO_UPDATE": "Reiniciar para actualizar",
+      "RESTART_TO_UPDATE_TOOLTIP": "Reiniciar WowUp para usar la actualización descargada",
       "SNACKBAR_ACTION": "Actualizar y reiniciar",
       "SNACKBAR_TEXT": "Una nueva versión de WowUp está disponible",
       "TOOLTIP": "Actualización de WowUp disponible",
@@ -159,7 +166,7 @@
       "PROFESSIONS": "Profesiones",
       "PVP": "JcJ",
       "QUESTS_LEVELING": "Misiones y leveo",
-      "ROLEPLAY": "Roleplay",
+      "ROLEPLAY": "Rol",
       "TOOLTIPS": "Información adicional",
       "UNIT_FRAMES": "Marcos de unidad"
     },
@@ -193,8 +200,8 @@
       "GAME_VERSION_TOC_MISSING_TOOLTIP": "Faltan uno o más archivos toc para esta versión del juego",
       "GENERIC_DESCRIPTION": "Se ha detectado un problema con este addon. No es posible actualizarlo ni proveer detalles.",
       "GENERIC_TOOLTIP": "Se ha detectado un problema con este addon",
-      "MISSING_ON_PROVIDER_DESCRIPTION": "Este addon parece haber sido eliminado por el autor o el proveedor.<br>No es posible actualizarlo ni proveer detalles.",
-      "MISSING_ON_PROVIDER_TOOLTIP": "Este addon parece haber sido eliminado por el proveedor",
+      "MISSING_ON_PROVIDER_DESCRIPTION": "{providerName} no devolvió el addon cuando se solicitó.<br>No es posible actualizarlo ni proveer detalles hasta que {providerName} lo solucione.",
+      "MISSING_ON_PROVIDER_TOOLTIP": "{providerName} no está devolviendo este addon como se esperaba",
       "NO_PROVIDER_FILES_DESCRIPTION": "{providerName} informa disponer de este addon, sin embargo, no posee ningún archivo que corresponda a esta versión del juego.<br>Una vez esté disponible una actualización que corresponda a esta versión del juego esta advertencia debería desaparecer.",
       "NO_PROVIDER_FILES_TOOLTIP": "{providerName} no dispone de ningún archivo que se corresponda con la versión del juego",
       "TOC_NAME_MISMATCH_DESCRIPTION": "El nombre de carpeta de este addon no se corresponde con el archivo toc esperado, puede que experimente problemas con este addon dentro del juego.",
@@ -246,7 +253,7 @@
     "ERRORS": {
       "ACCOUNT_PUSH_TOGGLE_FAILED_ERROR": "No se pudieron activar las actualizaciones instantáneas en su cuenta. Por favor, inténtelo de nuevo más tarde o contacte con nosotros en Discord.",
       "ADDON_INSTALL_ERROR": "Falló la instalación del addon {addonName}. Por favor, inténtelo de nuevo más tarde.",
-      "ADDON_INSTALL_NETWORK_ERROR": "Failed to download {addonName} due to a network error. This can be caused by an unstable connection or IPv6 issues on your network — try disabling IPv6 on your network adapter if this keeps happening.",
+      "ADDON_INSTALL_NETWORK_ERROR": "No se pudo descargar {addonName} debido a un error de red. Puede deberse a una conexión inestable o a problemas de IPv6 en su red; si sigue ocurriendo, intente desactivar IPv6 en su adaptador de red.",
       "ADDON_SCAN_ERROR": "Ocurrió un error al comparar sus carpetas de addons con {providerName}. Por favor, inténtelo de nuevo más tarde.",
       "ADDON_SYNC_ERROR": "Ocurrió un error al comprobar actualizaciones desde: {providerName}",
       "ADDON_SYNC_FULL_ERROR": "[{installationName}]: Ocurrió un error al buscar actualizaciones de {addonName} desde {providerName}. Por favor, inténtelo de nuevo más tarde.",
@@ -261,7 +268,11 @@
     "SEARCH": {
       "NO_ADDONS": "No se encontraron addons"
     },
-    "WOW_EXE_SELECTION_NAME": "Ejecutable de WoW"
+    "WOW_EXE_SELECTION_NAME": "Ejecutable de WoW",
+    "CLOSE": "Cerrar",
+    "PREVIOUS": "Anterior",
+    "NEXT": "Siguiente",
+    "MORE_ACTIONS": "Más acciones"
   },
   "DIALOGS": {
     "ADDON_DETAILS": {
@@ -330,10 +341,10 @@
         "CATACLYSM_ASSET_NOT_FOUND": "No se encontró el recurso a descargar desde {message}.\n\nEs necesario un archivo zip válido con el sufijo '-cata' para que WowUp pueda descargarlo.",
         "CLASSIC_ASSET_NOT_FOUND": "No se encontró el recurso a descargar desde {message}.\n\nEs necesario un archivo zip válido con el sufijo '-classic' para que WowUp pueda descargarlo.",
         "FAILED_TO_CONNECT": "No se pudo conectar con la API. Por favor, espere un momento y vuelva a intentarlo.",
-        "FOREVER_ASSET_NOT_FOUND": "No asset was found to download from {message}.\n\nA valid zip file ending with '-forever' is required in order for WowUp to download it.",
+        "FOREVER_ASSET_NOT_FOUND": "No se encontró el recurso a descargar desde {message}.\n\nEs necesario un archivo zip válido con el sufijo '-forever' para que WowUp pueda descargarlo.",
         "INSTALL_FAILED": "Ocurrió un error al intentar instalar el addon. Por favor, inténtelo de nuevo.\n\nSi se sigue mostrando este mensaje, puede obtener ayuda en Discord en el canal #help-me.",
         "INVALID_URL": "El valor introducido no es una URL válida. Ejemplos de URLs válidas:\n\t- https://github.com/WowUp/WowUp.Addon\n\t- https://www.wowinterface.com/downloads/info25610-8.3-014.html\n\t- https://www.curseforge.com/wow/addons/altoholic",
-        "MISTS_ASSET_NOT_FOUND": "No asset was found to download from {message}.\n\nA valid zip file ending with '-mists' is required in order for WowUp to download it.",
+        "MISTS_ASSET_NOT_FOUND": "No se encontró el recurso a descargar desde {message}.\n\nEs necesario un archivo zip válido con el sufijo '-mists' para que WowUp pueda descargarlo.",
         "NO_ADDON_FOUND": "No se encontró el addon, asegúrese de que la URL apunta a la página correcta.\n\nSi está instalando desde GitHub, asegúrese de que el repositorio tiene una release tag con un archivo zip conteniendo el addon.",
         "NO_RELEASE_FOUND": "No se encontraron publicaciones para {message}.\n\nSe requiere una versión válida con los recursos contenidos en un archivo zip para que WowUp pueda descargarla.",
         "NO_SEARCH_RESULTS": "No se encontraron resultados.",
@@ -364,7 +375,7 @@
       },
       "TITLE": "Configuración de permisos de WowUp",
       "WAGO": {
-        "DESCRIPTION": "¿Activar el proveedor de addons Wago.io? Esto hará que se muestre un anuncio requerido para usar el servicio.\n¡Dicha publicidad beneficia directamente a los autores tus addons favoritos!",
+        "DESCRIPTION": "¡Active el proveedor de addons Wago.io para apoyar a los autores de sus addons favoritos! Esto mostrará un panel promocional necesario para usar su servicio.\nAl activarlo, acepta sus <a appExternalLink href=\"{termsUrl}\" >Términos de servicio</a>.",
         "TOGGLE_LABEL": "Activar Wago.io como proveedor"
       }
     },
@@ -518,7 +529,8 @@
         "UPDATE_RETAIL_CLASSIC_BUTTON": "Actualizar Retail/Classic"
       },
       "VERSION_MISMATCH_TOOLTIP": "Esta actualización requiere WoW {required}. Tienes WoW {current}.",
-      "WTF_BACKUP_BUTTON": "Copia de seguridad"
+      "WTF_BACKUP_BUTTON": "Copia de seguridad",
+      "UPDATE_ALL_TOOLTIP_MORE": "…y {count} más"
     },
     "NEWS": {
       "NEWS_LINK_COPY_TOAST": "Enlace de la noticia copiado al portapapeles",
@@ -562,11 +574,11 @@
         "CURRENT_LANGUAGE_LABEL": "Idioma actual",
         "CURSE_PROTOCOL_DESCRIPTION": "Al descargar addons desde la web de CurseForge, WowUp se hará cargo de la instalación",
         "CURSE_PROTOCOL_LABEL": "Tramitar enlaces de descarga de CurseForge",
-        "DISABLE_IPV6_CONFIRMATION_LABEL": "Do you want to restart?",
-        "DISABLE_IPV6_DESCRIPTION": "If addon downloads keep failing with a network error, your network's IPv6 connectivity may be broken. Enabling this forces WowUp to use IPv4 only.<br>Changing this setting requires a restart.",
-        "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "Re-enabling IPv6 requires the application to restart.",
-        "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Forcing IPv4-only networking requires the application to restart.",
-        "DISABLE_IPV6_LABEL": "Force IPv4 (disable IPv6)",
+        "DISABLE_IPV6_CONFIRMATION_LABEL": "¿Quiere reiniciar la aplicación?",
+        "DISABLE_IPV6_DESCRIPTION": "Si las descargas de addons siguen fallando con un error de red, es posible que la conectividad IPv6 de su red no funcione correctamente. Activar esta opción obliga a WowUp a usar solo IPv4.<br>Es necesario reiniciar tras cambiar esta opción.",
+        "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "Volver a activar IPv6 requiere reiniciar la aplicación.",
+        "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Forzar el uso exclusivo de IPv4 requiere reiniciar la aplicación.",
+        "DISABLE_IPV6_LABEL": "Forzar IPv4 (desactivar IPv6)",
         "ENABLE_APP_BADGE_DESCRIPTION": "Muestra un contador en el icono de la aplicación en la barra de tareas con el número de addons con actualizaciones disponibles.",
         "ENABLE_APP_BADGE_LABEL": "Activar contador en el icono",
         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Activa varios mensajes de notificación del sistema, tales como cuando los addons son actualizados automáticamente.",
@@ -633,9 +645,9 @@
         "WTF_EXPLORER": "Explorador WTF"
       },
       "WAGO": {
-        "AD_CONSENT_DESCRIPTION": "View and manage how Wago ad partners may use your data for ad personalization",
-        "AD_CONSENT_LABEL": "Wago Ads Personalization & Data",
-        "AD_CONSENT_MANAGE": "Manage"
+        "AD_CONSENT_DESCRIPTION": "Ver y administrar la manera en que los socios publicitarios de Wago pueden usar sus datos para la personalización de la publicidad",
+        "AD_CONSENT_LABEL": "Personalización de publicidad y datos de Wago",
+        "AD_CONSENT_MANAGE": "Administrar"
       },
       "WOW": {
         "ADD_CLIENT_BUTTON": "Añadir nuevo",
@@ -643,7 +655,7 @@
         "AUTO_UPDATE_LABEL": "Actualización automática",
         "CANCEL_WOW_DIRECTORY_SELECT_BUTTON": "Cancelar",
         "CLEAR_INSTALL_LOCATION_DIALOG": {
-          "MESSAGE": "¿Quiere borrar la ruta de instalación de la versión {clientName}? Esto eliminará toda la información sobre los addons almacenada para este cliente de WoW.\n\nLas carpetas de los addons no serán eliminadas.",
+          "MESSAGE": "¿Está seguro de que quiere eliminar la instalación en \"{location}\"? Esto eliminará toda la información sobre los addons almacenada para este cliente.\n\nLas carpetas de sus addons no serán eliminadas.",
           "TITLE": "¿Borrar la ruta de instalación?"
         },
         "CLIENT_TYPE_INPUT_HINT": "La carpeta que contiene la versión {clientTypeName} del cliente de World of Warcraft \"{clientFolderName}\"",

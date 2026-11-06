@@ -118,14 +118,21 @@
     "WINDOW_TITLE_CF": "WowUp.io CF",
     "WINDOW_TITLE_FULLSCREEN": "WowUp.io — Полный экран",
     "WOWUP_UPDATE": {
+      "BUNDLE_OVERDUE_TEXT": "Обновление WowUp ожидает уже некоторое время. Перезапустите WowUp, чтобы завершить обновление.",
+      "BUNDLE_READY_TEXT": "Обновление WowUp загружено. Перезапустите приложение сейчас, чтобы начать им пользоваться, иначе WowUp попросит вас перезапустить его в течение 6 часов.",
+      "BUNDLE_REQUIRED_TEXT": "В этой версии WowUp обнаружена проблема, и она была заменена. Перезапустите WowUp, чтобы завершить обновление.",
       "CHECKING_FOR_UPDATE": "Проверка на наличие обновления",
       "DOWNLOADED_TOOLTIP": "Установить обновление WowUp",
       "DOWNLOADING_UPDATE": "Загрузка обновления",
       "INSTALL_MESSAGE": "Вы хотите перезапустить WowUp, чтобы установить обновление?",
       "INSTALL_TITLE": "Для WowUp готово обновление",
+      "LATER": "Позже",
       "NOT_AVAILABLE": "Последняя версия WowUp уже установлена",
       "PORTABLE_DOWNLOAD_MESSAGE": "Хотите вручную установить последнюю портативную версию?\n\nНужно будет закрыть приложение вручную и заменить его новой версией.",
       "PORTABLE_DOWNLOAD_TITLE": "Необходима загрузка вручную",
+      "RESTART_NOW": "Перезапустить сейчас",
+      "RESTART_TO_UPDATE": "Перезапустить для обновления",
+      "RESTART_TO_UPDATE_TOOLTIP": "Перезапустите WowUp, чтобы использовать загруженное обновление",
       "SNACKBAR_ACTION": "Обновить и перезапустить",
       "SNACKBAR_TEXT": "Доступна новая версия WowUp",
       "TOOLTIP": "Доступно обновление для WowUp",
@@ -157,7 +164,7 @@
       "MISSIONS": "Миссии",
       "PLUGINS": "Плагины",
       "PROFESSIONS": "Профессии",
-      "PVP": "PVP",
+      "PVP": "PvP",
       "QUESTS_LEVELING": "Задания и прокачка",
       "ROLEPLAY": "Ролевая игра",
       "TOOLTIPS": "Описания",
@@ -184,17 +191,17 @@
       "INSTALLING": "Установка",
       "INSTALLING_DEPENDENCIES": "Зависимости {completed}/{total}",
       "PENDING": "В ожидании",
-      "RETRY": "Retrying...",
+      "RETRY": "Повторная попытка...",
       "UNINSTALLING": "Удаление",
       "UPDATING": "Обновление..."
     },
     "ADDON_WARNING": {
-      "GAME_VERSION_TOC_MISSING_DESCRIPTION": "This addon or its children have one or more missing toc files for this game version",
-      "GAME_VERSION_TOC_MISSING_TOOLTIP": "One or more missing toc files for this game version",
+      "GAME_VERSION_TOC_MISSING_DESCRIPTION": "У этой модификации или её дочерних модификаций отсутствует один или несколько toc-файлов для этой версии игры",
+      "GAME_VERSION_TOC_MISSING_TOOLTIP": "Отсутствует один или несколько toc-файлов для этой версии игры",
       "GENERIC_DESCRIPTION": "Мы обнаружили неполадку с этой модификацией. Мы больше неспособны обновлять эту модификацию или показывать её детали.",
       "GENERIC_TOOLTIP": "Мы обнаружили неполадку с этой модификацией",
-      "MISSING_ON_PROVIDER_DESCRIPTION": "Эта модификация, вероятно, была удалена автором или источником модификаций.<br>Мы больше неспособны обновлять эту модификацию или показывать её детали.",
-      "MISSING_ON_PROVIDER_TOOLTIP": "Эта модификация, вероятно, была удалена источником",
+      "MISSING_ON_PROVIDER_DESCRIPTION": "{providerName} не вернул модификацию по нашему запросу.<br>Мы больше не можем обновлять эту модификацию или показывать её детали, пока {providerName} не исправит это.",
+      "MISSING_ON_PROVIDER_TOOLTIP": "{providerName} не возвращает эту модификацию, как ожидалось",
       "NO_PROVIDER_FILES_DESCRIPTION": "{providerName} верно определил модификацию, однако он не имеет каких-либо файлов соответствующих этой версии игры.<br>Это предупреждение исчезнет, как только будет доступно обновление для данной версии игры.",
       "NO_PROVIDER_FILES_TOOLTIP": "{providerName} не имеет файлов, соответствующих версии игры",
       "TOC_NAME_MISMATCH_DESCRIPTION": "Название папки этой модификации не совпадает с ожидаемым toc-файлом, у Вас могут возникнуть проблемы с этой модификацией в игре.",
@@ -246,7 +253,7 @@
     "ERRORS": {
       "ACCOUNT_PUSH_TOGGLE_FAILED_ERROR": "Не удалось включить мгновенные обновления для Вашего аккаунта. Попробуйте позже или сообщите об этом в Discord.",
       "ADDON_INSTALL_ERROR": "Не удалось установить модификацию {addonName}. Попробуйте позже.",
-      "ADDON_INSTALL_NETWORK_ERROR": "Failed to download {addonName} due to a network error. This can be caused by an unstable connection or IPv6 issues on your network — try disabling IPv6 on your network adapter if this keeps happening.",
+      "ADDON_INSTALL_NETWORK_ERROR": "Не удалось загрузить {addonName} из-за сетевой ошибки. Причиной может быть нестабильное соединение или проблемы с IPv6 в Вашей сети — если это повторяется, попробуйте отключить IPv6 на Вашем сетевом адаптере.",
       "ADDON_SCAN_ERROR": "Возникла ошибка при сравнении ваших папок с {providerName}, попробуйте позже.",
       "ADDON_SYNC_ERROR": "Возникла ошибка при проверке обновлений с: {providerName}",
       "ADDON_SYNC_FULL_ERROR": "[{installationName}]: Произошла ошибка при проверке наличия обновлений для {addonName} из {providerName}, попробуйте позже.",
@@ -261,7 +268,11 @@
     "SEARCH": {
       "NO_ADDONS": "Модификаций не найдено"
     },
-    "WOW_EXE_SELECTION_NAME": "Исполняемый файл WoW"
+    "WOW_EXE_SELECTION_NAME": "Исполняемый файл WoW",
+    "CLOSE": "Закрыть",
+    "PREVIOUS": "Назад",
+    "NEXT": "Далее",
+    "MORE_ACTIONS": "Другие действия"
   },
   "DIALOGS": {
     "ADDON_DETAILS": {
@@ -327,13 +338,13 @@
       "ERROR": {
         "ASSET_NOT_FOUND": "Не найдено ресурсов для загрузки {message}.\n\nНеобходим верный .zip файл в выпусках, чтобы WowUp мог загрузить его.",
         "BURNING_CRUSADE_ASSET_NOT_FOUND": "Не найдено ресурсов для загрузки из {message}.\n\nНеобходим верный .zip файл с окончанием '-bc', чтобы WowUp мог загрузить его.",
-        "CATACLYSM_ASSET_NOT_FOUND": "No asset was found to download from {message}.\n\nA valid zip file ending with '-cata' is required in order for WowUp to download it.",
+        "CATACLYSM_ASSET_NOT_FOUND": "Не найдено ресурсов для загрузки из {message}.\n\nНеобходим верный .zip файл с окончанием '-cata', чтобы WowUp мог загрузить его.",
         "CLASSIC_ASSET_NOT_FOUND": "Не найдено ресурсов для загрузки из {message}.\n\nНеобходим верный .zip файл с окончанием '-classic', чтобы WowUp мог загрузить его.",
         "FAILED_TO_CONNECT": "Не удается подключиться к API, подождите немного и повторите попытку.",
-        "FOREVER_ASSET_NOT_FOUND": "No asset was found to download from {message}.\n\nA valid zip file ending with '-forever' is required in order for WowUp to download it.",
+        "FOREVER_ASSET_NOT_FOUND": "Не найдено ресурсов для загрузки из {message}.\n\nНеобходим верный .zip файл с окончанием '-forever', чтобы WowUp мог загрузить его.",
         "INSTALL_FAILED": "Что-то пошло не так при попытке установить модификацию, попытайтесь снова.\n\nЕсли это сообщение продолжает появляться, Вы можете получить помощь в канале #help-me нашего Discord сообщества.",
         "INVALID_URL": "Введённое значение не является правильной ссылкой. Примеры правильных ссылок для модификаций:\n\t- https://github.com/WowUp/WowUp.Addon\n\t- https://www.wowinterface.com/downloads/info25610-8.3-014.html\n\t- https://www.curseforge.com/wow/addons/altoholic",
-        "MISTS_ASSET_NOT_FOUND": "No asset was found to download from {message}.\n\nA valid zip file ending with '-mists' is required in order for WowUp to download it.",
+        "MISTS_ASSET_NOT_FOUND": "Не найдено ресурсов для загрузки из {message}.\n\nНеобходим верный .zip файл с окончанием '-mists', чтобы WowUp мог загрузить его.",
         "NO_ADDON_FOUND": "Модификация не была найдена, убедитесь, что Ваша ссылка указывает на правильную страницу.\n\nПри установке с GitHub, убедитесь, что в репозитории есть тег выпуска с zip-архивом, содержащим модификацию.",
         "NO_RELEASE_FOUND": "Не найдено выпусков для {message}.\n\nНеобходим верный выпуск с ресурсами в .zip файле, чтобы WowUp мог загрузить его.",
         "NO_SEARCH_RESULTS": "Поиск не дал результатов.",
@@ -364,7 +375,7 @@
       },
       "TITLE": "Установка разрешений для WowUp",
       "WAGO": {
-        "DESCRIPTION": "Включение источника модификаций Wago.io будет отображать рекламу, необходимую для использования их сервиса.\nРеклама приносит прямую прибыль авторам Ваших любимых модификаций!",
+        "DESCRIPTION": "Включите источник модификаций Wago.io, чтобы поддержать авторов Ваших любимых модификаций! Будет отображаться рекламный блок, необходимый для использования их сервиса.\nВключая его, Вы принимаете их <a appExternalLink href=\"{termsUrl}\" >Условия использования</a>.",
         "TOGGLE_LABEL": "Включить источник Wago.io"
       }
     },
@@ -383,7 +394,7 @@
     "ABOUT": {
       "ATTRIBUTIONS_TITLE": "Атрибутика",
       "CHANGE_LOG_SECTION_LABEL": "Журнал изменений",
-      "SHELL_VERSION": "Shell v{version}",
+      "SHELL_VERSION": "Оболочка v{version}",
       "TITLE": "WowUp.io",
       "WEBSITE_LINK_LABEL": "Посетите наш сайт!"
     },
@@ -518,7 +529,8 @@
         "UPDATE_RETAIL_CLASSIC_BUTTON": "Обновить Актуальный/Классический"
       },
       "VERSION_MISMATCH_TOOLTIP": "Для этого обновления нужна WoW {required}. У вас WoW {current}.",
-      "WTF_BACKUP_BUTTON": "Резервное копир. настр. интерфейса"
+      "WTF_BACKUP_BUTTON": "Резервное копир. настр. интерфейса",
+      "UPDATE_ALL_TOOLTIP_MORE": "…и ещё {count}"
     },
     "NEWS": {
       "NEWS_LINK_COPY_TOAST": "Ссылка на новость скопирована в буфер обмена",
@@ -546,9 +558,9 @@
         },
         "TITLE": "Модификации",
         "WAGO_ACCESS_KEY": {
-          "MESSAGE": "Use the Wago provider without seeing advertisements. <a href=\"https://addons.wago.io/patreon\">Learn More</a>",
-          "PLACEHOLDER": "Access Key",
-          "TITLE": "Wago Access Key"
+          "MESSAGE": "Используйте источник Wago без рекламы. <a href=\"https://addons.wago.io/patreon\">Узнать больше</a>",
+          "PLACEHOLDER": "Ключ доступа",
+          "TITLE": "Ключ доступа Wago"
         }
       },
       "APPLICATION": {
@@ -562,11 +574,11 @@
         "CURRENT_LANGUAGE_LABEL": "Текущий язык",
         "CURSE_PROTOCOL_DESCRIPTION": "При загрузке модификаций с сайта CurseForge, WowUp будет брать установку на себя.",
         "CURSE_PROTOCOL_LABEL": "Обрабатывать ссылки на установку с CurseForge",
-        "DISABLE_IPV6_CONFIRMATION_LABEL": "Do you want to restart?",
-        "DISABLE_IPV6_DESCRIPTION": "If addon downloads keep failing with a network error, your network's IPv6 connectivity may be broken. Enabling this forces WowUp to use IPv4 only.<br>Changing this setting requires a restart.",
-        "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "Re-enabling IPv6 requires the application to restart.",
-        "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Forcing IPv4-only networking requires the application to restart.",
-        "DISABLE_IPV6_LABEL": "Force IPv4 (disable IPv6)",
+        "DISABLE_IPV6_CONFIRMATION_LABEL": "Хотите перезапустить приложение?",
+        "DISABLE_IPV6_DESCRIPTION": "Если загрузка модификаций постоянно завершается сетевой ошибкой, возможно, в Вашей сети не работает подключение по IPv6. Включение этой настройки заставит WowUp использовать только IPv4.<br>Изменение этой настройки требует перезапуска приложения.",
+        "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "Для повторного включения IPv6 нужен перезапуск приложения.",
+        "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Для принудительного использования только IPv4 нужен перезапуск приложения.",
+        "DISABLE_IPV6_LABEL": "Использовать только IPv4 (отключить IPv6)",
         "ENABLE_APP_BADGE_DESCRIPTION": "Показывать количество доступных обновлений на значке приложения.",
         "ENABLE_APP_BADGE_LABEL": "Включить уведомления на значке приложения",
         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Включить различные окна системных уведомлений, такие как автоматически обновлённые модификации.",
@@ -630,12 +642,12 @@
         "CLIENTS": "Клиенты",
         "CURSEFORGE": "CurseForge",
         "DEBUG": "Отладка",
-        "WTF_EXPLORER": "WTF Explorer"
+        "WTF_EXPLORER": "Обозреватель WTF"
       },
       "WAGO": {
-        "AD_CONSENT_DESCRIPTION": "View and manage how Wago ad partners may use your data for ad personalization",
-        "AD_CONSENT_LABEL": "Wago Ads Personalization & Data",
-        "AD_CONSENT_MANAGE": "Manage"
+        "AD_CONSENT_DESCRIPTION": "Просмотр и управление тем, как рекламные партнёры Wago могут использовать Ваши данные для персонализации рекламы",
+        "AD_CONSENT_LABEL": "Персонализация рекламы и данные Wago",
+        "AD_CONSENT_MANAGE": "Управление"
       },
       "WOW": {
         "ADD_CLIENT_BUTTON": "Добавить новый",
@@ -643,7 +655,7 @@
         "AUTO_UPDATE_LABEL": "Автообновление",
         "CANCEL_WOW_DIRECTORY_SELECT_BUTTON": "Отмена",
         "CLEAR_INSTALL_LOCATION_DIALOG": {
-          "MESSAGE": "Вы точно хотите очистить путь установки для {clientName}? Это удалит всю хранимую информацию модификации для этого клиента.\n\nПапки Ваших модификаций не будут удалены.",
+          "MESSAGE": "Вы точно хотите удалить установку по пути «{location}»? Это удалит всю хранимую информацию о модификациях для этого клиента.\n\nПапки Ваших модификаций не будут удалены.",
           "TITLE": "Очистить место установки?"
         },
         "CLIENT_TYPE_INPUT_HINT": "Директория, которая содержит папку клиента {clientTypeName} – \"{clientFolderName}\"",
@@ -665,9 +677,9 @@
         "UPDATE_FROM_TRAY_LABEL": "Обновлять из области уведомлений"
       },
       "WTF_EXPLORER": {
-        "FOLDER_PATH_LABEL": "Folder: ",
-        "PAGE_EXPLANATION": "The WTF Explorer allows you to inspect all the data your addons have saved.\nFiles in grey are typically things you can ignore such as backup files.\nFiles in red should belong to addons that you no longer have installed.",
-        "TITLE": "WTF Explorer"
+        "FOLDER_PATH_LABEL": "Папка: ",
+        "PAGE_EXPLANATION": "Обозреватель WTF позволяет просматривать все данные, сохранённые Вашими модификациями.\nФайлы серого цвета обычно можно игнорировать — например, резервные копии.\nФайлы красного цвета, скорее всего, принадлежат модификациям, которые у Вас больше не установлены.",
+        "TITLE": "Обозреватель WTF"
       }
     }
   },

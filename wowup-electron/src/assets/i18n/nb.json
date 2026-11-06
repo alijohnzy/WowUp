@@ -43,8 +43,8 @@
       "TITLE": "Hvorfor ser jeg denne annonsen?"
     },
     "AD_EXPLAINER_DIALOG_CF": {
-      "MESSAGE": "In order to use <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> as an addon provider and help support authors for their hard work on your favorite addons we are required to show this advertisement.\n\nIf you do not want to see this ad, you can always disable CurseForge as a provider in the options tab.",
-      "TITLE": "Why am I seeing this ad?"
+      "MESSAGE": "For å kunne bruke <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> som leverandør av utvidelser, og støtte forfatterne for deres harde arbeid med favorittutvidelsene dine, er vi nødt til å vise denne annonsen.\n\nHvis du ikke vil se denne annonsen, kan du alltid deaktivere CurseForge som leverandør i fanen for alternativer.",
+      "TITLE": "Hvorfor ser jeg denne annonsen?"
     }
   },
   "APP": {
@@ -110,7 +110,7 @@
       "DEFAULT": "Standard",
       "GROUP_DARK": "Mørk",
       "GROUP_LIGHT": "Lys",
-      "HORDE": "Horde"
+      "HORDE": "Horden"
     },
     "UPDATES_ON_HOLD_NOTIFICATION_BODY": "Noen utvidelsesoppdateringer krever en nyere versjon av World of Warcraft enn den som er installert. Åpne WowUp for å se dem.",
     "UPDATES_ON_HOLD_NOTIFICATION_TITLE": "Oppdateringer satt på vent",
@@ -118,14 +118,21 @@
     "WINDOW_TITLE_CF": "WowUp.io CF",
     "WINDOW_TITLE_FULLSCREEN": "WowUp.io - Fullskjerm",
     "WOWUP_UPDATE": {
+      "BUNDLE_OVERDUE_TEXT": "En WowUp-oppdatering har ventet en stund. Start WowUp på nytt for å fullføre oppdateringen.",
+      "BUNDLE_READY_TEXT": "En WowUp-oppdatering er lastet ned. Start på nytt nå for å ta den i bruk, ellers vil WowUp be deg starte på nytt innen 6 timer.",
+      "BUNDLE_REQUIRED_TEXT": "Denne versjonen av WowUp har et problem og er blitt erstattet. Start WowUp på nytt for å fullføre oppdateringen.",
       "CHECKING_FOR_UPDATE": "Ser etter oppdateringer",
       "DOWNLOADED_TOOLTIP": "Installer oppdatering til WowUp",
       "DOWNLOADING_UPDATE": "Laster ned oppdatering",
       "INSTALL_MESSAGE": "Vil du restarte WowUp for å installere oppdateringen?",
       "INSTALL_TITLE": "WowUp-oppdatering er klar",
+      "LATER": "Senere",
       "NOT_AVAILABLE": "Den nyeste versjonen av WowUp er allerede installert",
       "PORTABLE_DOWNLOAD_MESSAGE": "Vil du laste ned den nyeste portable versjonen manuelt?\n\nDu må lukke programmet manuelt og kopiere den nye versjonen over den gamle.",
       "PORTABLE_DOWNLOAD_TITLE": "Manuell nedlasting kreves",
+      "RESTART_NOW": "Start på nytt nå",
+      "RESTART_TO_UPDATE": "Start på nytt for å oppdatere",
+      "RESTART_TO_UPDATE_TOOLTIP": "Start WowUp på nytt for å bruke den nedlastede oppdateringen",
       "SNACKBAR_ACTION": "Oppdater og start på nytt",
       "SNACKBAR_TEXT": "En ny versjon av WowUp er tilgjengelig",
       "TOOLTIP": "WowUp-oppdatering tilgjengelig",
@@ -135,33 +142,33 @@
   },
   "COMMON": {
     "ADDON_CATEGORIES": {
-      "ACHIEVEMENTS": "Achievements",
-      "ACTION_BARS": "Action Bars",
-      "ALL_ADDONS": "All Addons",
-      "AUCTION_ECONOMY": "Auction & Economy",
-      "BAGS_INVENTORY": "Bags & Inventory",
-      "BOSS_ENCOUNTERS": "Boss Encounters",
-      "BUFFS_DEBUFFS": "Buffs & Debuffs",
-      "BUNDLES": "Bundles",
-      "CHAT_COMMUNICATION": "Chat & Communication",
-      "CLASS": "Class",
-      "COMBAT": "Combat",
-      "COMPANIONS": "Companions",
-      "DATA_EXPORT": "Data Export",
-      "DEVELOPMENT_TOOLS": "Development Tools",
-      "GUILD": "Guild",
-      "LIBRARIES": "Libraries",
-      "MAIL": "Mail",
-      "MAP_MINIMAP": "Map & Minimap",
-      "MISCELLANEOUS": "Miscellaneous",
-      "MISSIONS": "Missions",
-      "PLUGINS": "Plugins",
-      "PROFESSIONS": "Professions",
+      "ACHIEVEMENTS": "Prestasjoner",
+      "ACTION_BARS": "Handlingslinjer",
+      "ALL_ADDONS": "Alle utvidelser",
+      "AUCTION_ECONOMY": "Auksjon og økonomi",
+      "BAGS_INVENTORY": "Vesker og inventar",
+      "BOSS_ENCOUNTERS": "Bosskamper",
+      "BUFFS_DEBUFFS": "Buffs og debuffs",
+      "BUNDLES": "Pakker",
+      "CHAT_COMMUNICATION": "Chat og kommunikasjon",
+      "CLASS": "Klasse",
+      "COMBAT": "Kamp",
+      "COMPANIONS": "Følgesvenner",
+      "DATA_EXPORT": "Dataeksport",
+      "DEVELOPMENT_TOOLS": "Utviklerverktøy",
+      "GUILD": "Gilde",
+      "LIBRARIES": "Biblioteker",
+      "MAIL": "Post",
+      "MAP_MINIMAP": "Kart og minikart",
+      "MISCELLANEOUS": "Diverse",
+      "MISSIONS": "Misjoner",
+      "PLUGINS": "Programtillegg",
+      "PROFESSIONS": "Yrker",
       "PVP": "PVP",
-      "QUESTS_LEVELING": "Quests & Leveling",
-      "ROLEPLAY": "Roleplay",
-      "TOOLTIPS": "Tooltips",
-      "UNIT_FRAMES": "Unit Frames"
+      "QUESTS_LEVELING": "Oppdrag og nivåøkning",
+      "ROLEPLAY": "Rollespill",
+      "TOOLTIPS": "Verktøytips",
+      "UNIT_FRAMES": "Enhetsrammer"
     },
     "ADDON_STATE": {
       "IGNORED": "Ignorert",
@@ -184,13 +191,13 @@
       "INSTALLING": "Installerer",
       "INSTALLING_DEPENDENCIES": "Avhengigheter {completed}/{total}",
       "PENDING": "Venter",
-      "RETRY": "Retrying...",
+      "RETRY": "Prøver på nytt...",
       "UNINSTALLING": "Avinstallerer",
       "UPDATING": "Oppdaterer..."
     },
     "ADDON_WARNING": {
-      "GAME_VERSION_TOC_MISSING_DESCRIPTION": "This addon or its children have one or more missing toc files for this game version",
-      "GAME_VERSION_TOC_MISSING_TOOLTIP": "One or more missing toc files for this game version",
+      "GAME_VERSION_TOC_MISSING_DESCRIPTION": "Denne utvidelsen eller dens underutvidelser mangler én eller flere TOC-filer for denne spillversjonen",
+      "GAME_VERSION_TOC_MISSING_TOOLTIP": "Én eller flere TOC-filer mangler for denne spillversjonen",
       "GENERIC_DESCRIPTION": "Vi har støtt på et problem med denne utvidelsen. Vi kan ikke lenger oppdatere denne utvidelsen eller gi detaljer om den.",
       "GENERIC_TOOLTIP": "Vi har støtt på et problem med denne utvidelsen",
       "MISSING_ON_PROVIDER_DESCRIPTION": "{providerName} returnerte ikke utvidelsen da vi ba om den.<br>Vi kan ikke lenger oppdatere denne utvidelsen eller gi detaljer før {providerName} fikser det.",
@@ -246,7 +253,7 @@
     "ERRORS": {
       "ACCOUNT_PUSH_TOGGLE_FAILED_ERROR": "Live-oppdateringer kunne ikke slås på for kontoen din. Vennligst prøv igjen senere eller ta kontakt med oss på Discord.",
       "ADDON_INSTALL_ERROR": "Utvidelsen «{addonName}» kunne ikke installeres. Vennligst prøv igjen senere.",
-      "ADDON_INSTALL_NETWORK_ERROR": "Failed to download {addonName} due to a network error. This can be caused by an unstable connection or IPv6 issues on your network — try disabling IPv6 on your network adapter if this keeps happening.",
+      "ADDON_INSTALL_NETWORK_ERROR": "Kunne ikke laste ned {addonName} på grunn av en nettverksfeil. Dette kan skyldes en ustabil tilkobling eller IPv6-problemer i nettverket ditt — prøv å deaktivere IPv6 på nettverkskortet ditt hvis dette fortsetter å skje.",
       "ADDON_SCAN_ERROR": "Det oppstod en feil når vi skulle matche mappene til utvidelsen med {providerName}. Vennligst prøv igjen senere.",
       "ADDON_SYNC_ERROR": "Det oppstod en feil under søk etter oppdateringer fra {providerName}. Vennligst prøv igjen senere.",
       "ADDON_SYNC_FULL_ERROR": "[{installationName}]: Det oppstod en feil under søk etter oppdateringer til «{addonName}» fra {providerName}. Vennligst prøv igjen senere.",
@@ -261,7 +268,11 @@
     "SEARCH": {
       "NO_ADDONS": "Ingen utvidelser funnet"
     },
-    "WOW_EXE_SELECTION_NAME": "WoW App (kjørbar)"
+    "WOW_EXE_SELECTION_NAME": "WoW App (kjørbar)",
+    "CLOSE": "Lukk",
+    "PREVIOUS": "Forrige",
+    "NEXT": "Neste",
+    "MORE_ACTIONS": "Flere handlinger"
   },
   "DIALOGS": {
     "ADDON_DETAILS": {
@@ -327,13 +338,13 @@
       "ERROR": {
         "ASSET_NOT_FOUND": "Ingen ressurs ble funnet for å laste ned {message}.\n\nEn gyldig Zip-fil må inkluderes med utgivelsen for at WowUp skal kunne laste den ned.",
         "BURNING_CRUSADE_ASSET_NOT_FOUND": "Ingen ressurs ble funnet for å laste ned fra {message}.\n\nEn gyldig Zip-fil som slutter på '-bc' må inkluderes i utgivelsen for at WowUp skal kunne laste den ned.",
-        "CATACLYSM_ASSET_NOT_FOUND": "No asset was found to download from {message}.\n\nA valid zip file ending with '-cata' is required in order for WowUp to download it.",
+        "CATACLYSM_ASSET_NOT_FOUND": "Ingen ressurs ble funnet å laste ned fra {message}.\n\nEn gyldig Zip-fil som slutter på '-cata' kreves for at WowUp skal kunne laste den ned.",
         "CLASSIC_ASSET_NOT_FOUND": "Ingen ressurs ble funnet for å laste ned fra {message}.\n\nEn gyldig Zip-fil som slutter på '-classic' må inkluderes i utgivelsen for at WowUp skal kunne laste den ned.",
         "FAILED_TO_CONNECT": "Kunne ikke koble til API-et. Vent litt og prøv igjen.",
-        "FOREVER_ASSET_NOT_FOUND": "No asset was found to download from {message}.\n\nA valid zip file ending with '-forever' is required in order for WowUp to download it.",
+        "FOREVER_ASSET_NOT_FOUND": "Ingen ressurs ble funnet å laste ned fra {message}.\n\nEn gyldig Zip-fil som slutter på '-forever' kreves for at WowUp skal kunne laste den ned.",
         "INSTALL_FAILED": "Noe gikk galt under forsøket på å installere utvidelsen, vennligst prøv igjen.\n\nHvis du får denne meldingen gjentatte ganger kan du be om hjelp på vår Discord i kanalen #help-me",
         "INVALID_URL": "Den angitte nettadressen er ugyldig. Eksempler på gyldige nettadresser er:\n\t- https://github.com/WowUp/WowUp.Addon\n\t- https://www.wowinterface.com/downloads/info25610-8.3-014.html\n\t- https://www.curseforge.com/wow/addons/altoholic",
-        "MISTS_ASSET_NOT_FOUND": "No asset was found to download from {message}.\n\nA valid zip file ending with '-mists' is required in order for WowUp to download it.",
+        "MISTS_ASSET_NOT_FOUND": "Ingen ressurs ble funnet å laste ned fra {message}.\n\nEn gyldig Zip-fil som slutter på '-mists' kreves for at WowUp skal kunne laste den ned.",
         "NO_ADDON_FOUND": "Ingen utvidelser ble funnet. Sørg for at URL-en går til riktig nettsted.\n\nHvis du prøver å installere en utvidelse fra GitHub, sørg for at repoet har Release-Tags med et Zip-arkiv som inneholder utvidelsen.",
         "NO_RELEASE_FOUND": "Ingen utgivelse ble funnet for {message}.\n\nEn gyldig utgivelse med Zip-fil-ressurser kreves for at WowUp skal kunne laste den ned.",
         "NO_SEARCH_RESULTS": "Ingen søkeresultater ble funnet",
@@ -350,10 +361,10 @@
     },
     "PERMISSIONS": {
       "CURSEFORGE": {
-        "DESCRIPTION_AD_LINK": "ad vendors",
-        "DESCRIPTION_BOTTOM": ". Click on the Manage button to control you consents, or to object to the processing of your data. You can change your preferences any time via the settings screen.",
-        "DESCRIPTION_TOP": " In order to use this application's integration with CurseForge they require that you allow them to show you an ad from one of their ",
-        "MANAGE_BUTTON": "Manage",
+        "DESCRIPTION_AD_LINK": "annonseleverandører",
+        "DESCRIPTION_BOTTOM": ". Klikk på Administrer-knappen for å styre samtykkene dine, eller for å motsette deg behandlingen av dataene dine. Du kan når som helst endre preferansene dine i innstillingene.",
+        "DESCRIPTION_TOP": " For å bruke denne applikasjonens integrasjon med CurseForge krever de at du lar dem vise deg en annonse fra en av deres ",
+        "MANAGE_BUTTON": "Administrer",
         "TITLE": "CurseForge"
       },
       "MESSAGE": "Før vi kan komme igang må vi sette opp noen tillatelser for appen.",
@@ -518,7 +529,8 @@
         "UPDATE_RETAIL_CLASSIC_BUTTON": "Oppdater Retail/Classic"
       },
       "VERSION_MISMATCH_TOOLTIP": "Denne oppdateringen krever WoW {required}. Du har WoW {current}.",
-      "WTF_BACKUP_BUTTON": "Opprett sikkerhetskopi av WTF-mappen"
+      "WTF_BACKUP_BUTTON": "Opprett sikkerhetskopi av WTF-mappen",
+      "UPDATE_ALL_TOOLTIP_MORE": "…og {count} til"
     },
     "NEWS": {
       "NEWS_LINK_COPY_TOAST": "Nyhetslenken er kopiert til utklippstavlen",
@@ -560,13 +572,13 @@
         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "Kanal",
         "APP_RELEASE_CHANNEL_LABEL": "Apputgivelseskanal",
         "CURRENT_LANGUAGE_LABEL": "Nåværende språk",
-        "CURSE_PROTOCOL_DESCRIPTION": "When downloading addons from the CurseForge website, WowUp will handle the install",
-        "CURSE_PROTOCOL_LABEL": "Handle CurseForge download links",
-        "DISABLE_IPV6_CONFIRMATION_LABEL": "Do you want to restart?",
-        "DISABLE_IPV6_DESCRIPTION": "If addon downloads keep failing with a network error, your network's IPv6 connectivity may be broken. Enabling this forces WowUp to use IPv4 only.<br>Changing this setting requires a restart.",
-        "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "Re-enabling IPv6 requires the application to restart.",
-        "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Forcing IPv4-only networking requires the application to restart.",
-        "DISABLE_IPV6_LABEL": "Force IPv4 (disable IPv6)",
+        "CURSE_PROTOCOL_DESCRIPTION": "Når du laster ned utvidelser fra CurseForge-nettstedet, vil WowUp håndtere installasjonen",
+        "CURSE_PROTOCOL_LABEL": "Håndter CurseForge-nedlastingslenker",
+        "DISABLE_IPV6_CONFIRMATION_LABEL": "Vil du starte på nytt?",
+        "DISABLE_IPV6_DESCRIPTION": "Hvis nedlasting av utvidelser stadig feiler med en nettverksfeil, kan IPv6-tilkoblingen i nettverket ditt være ødelagt. Aktivering av dette tvinger WowUp til å bruke kun IPv4.<br>Endring av denne innstillingen krever omstart.",
+        "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "Reaktivering av IPv6 krever at du starter programmet på nytt.",
+        "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Å tvinge nettverket til kun IPv4 krever at du starter programmet på nytt.",
+        "DISABLE_IPV6_LABEL": "Tving IPv4 (deaktiver IPv6)",
         "ENABLE_APP_BADGE_DESCRIPTION": "Viser en teller på appikonet med antall tilgjengelige oppdateringer.",
         "ENABLE_APP_BADGE_LABEL": "Aktiver notifikasjonsbadge for appen",
         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Aktiver ulike systemvarsler, som for eksempel for automatisk oppdaterte utvidelser.",
@@ -606,9 +618,9 @@
         "USE_SYMLINK_SUPPORT_DESCRIPTION": "Tillat WowUp å skanne symlink-mapper i utvidelsesmappen din. Advarsel: de vil bli erstattet ved oppdatering/installering."
       },
       "CURSEFORGE": {
-        "ADS_OPTION_DESCRIPTION": "View and manage how CurseForge advertisers may use your data for ad personalization",
-        "ADS_OPTION_LABEL": "Ads Personalization & Data",
-        "ADS_OPTION_MANAGE": "Manage",
+        "ADS_OPTION_DESCRIPTION": "Se og administrer hvordan annonsørene til CurseForge kan bruke dataene dine til personlig tilpassede annonser",
+        "ADS_OPTION_LABEL": "Annonsetilpasning og data",
+        "ADS_OPTION_MANAGE": "Administrer",
         "TITLE": "CurseForge"
       },
       "DEBUG": {
@@ -621,7 +633,7 @@
         "LOG_FILES_BUTTON": "Vis loggfiler",
         "LOG_FILES_DESCRIPTION": "Åpne mappen som inneholder de siste loggfilene dine.",
         "LOG_FILES_LABEL": "Loggfiler",
-        "TITLE": "Debug"
+        "TITLE": "Feilsøking"
       },
       "TABS": {
         "ABOUT": "Om",
@@ -629,13 +641,13 @@
         "APPLICATION": "Applikasjon",
         "CLIENTS": "Klienter",
         "CURSEFORGE": "CurseForge",
-        "DEBUG": "Debug",
-        "WTF_EXPLORER": "WTF Explorer"
+        "DEBUG": "Feilsøking",
+        "WTF_EXPLORER": "WTF-utforsker"
       },
       "WAGO": {
-        "AD_CONSENT_DESCRIPTION": "View and manage how Wago ad partners may use your data for ad personalization",
-        "AD_CONSENT_LABEL": "Wago Ads Personalization & Data",
-        "AD_CONSENT_MANAGE": "Manage"
+        "AD_CONSENT_DESCRIPTION": "Se og administrer hvordan annonsepartnerne til Wago kan bruke dataene dine til personlig tilpassede annonser",
+        "AD_CONSENT_LABEL": "Annonsetilpasning og data for Wago",
+        "AD_CONSENT_MANAGE": "Administrer"
       },
       "WOW": {
         "ADD_CLIENT_BUTTON": "Legg til ny",
@@ -665,9 +677,9 @@
         "UPDATE_FROM_TRAY_LABEL": "Oppdater fra varselområdet"
       },
       "WTF_EXPLORER": {
-        "FOLDER_PATH_LABEL": "Folder: ",
-        "PAGE_EXPLANATION": "The WTF Explorer allows you to inspect all the data your addons have saved.\nFiles in grey are typically things you can ignore such as backup files.\nFiles in red should belong to addons that you no longer have installed.",
-        "TITLE": "WTF Explorer"
+        "FOLDER_PATH_LABEL": "Mappe: ",
+        "PAGE_EXPLANATION": "WTF-utforskeren lar deg inspisere alle dataene utvidelsene dine har lagret.\nFiler i grått er vanligvis ting du kan ignorere, for eksempel sikkerhetskopier.\nFiler i rødt tilhører trolig utvidelser du ikke lenger har installert.",
+        "TITLE": "WTF-utforsker"
       }
     }
   },

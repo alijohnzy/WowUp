@@ -37,14 +37,14 @@
     "VERSION_MISMATCH": "Versões não correspondem"
   },
   "ADS": {
-    "AD_EXPLAINER_BUTTON": "This ad supports addon creators ❤",
+    "AD_EXPLAINER_BUTTON": "Este anúncio apoia os criadores de addons ❤",
     "AD_EXPLAINER_DIALOG": {
       "MESSAGE": "Para poder usar <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> como provedor de addon e apoiar seus autores pelo trabalho duro em seus addons favoritos nós precisamos mostrar este anúncio.\n\nSe você não quer mais ver esse anúncio, você pode sempre desabilitar wago.io como provedor na guia de opções.",
       "TITLE": "Por que estou vendo este anúncio?"
     },
     "AD_EXPLAINER_DIALOG_CF": {
-      "MESSAGE": "In order to use <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> as an addon provider and help support authors for their hard work on your favorite addons we are required to show this advertisement.\n\nIf you do not want to see this ad, you can always disable CurseForge as a provider in the options tab.",
-      "TITLE": "Why am I seeing this ad?"
+      "MESSAGE": "Para poder usar o <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> como provedor de addon e apoiar os autores pelo trabalho duro em seus addons favoritos, nós precisamos mostrar este anúncio.\n\nSe você não quer ver esse anúncio, você pode sempre desabilitar o CurseForge como provedor na guia de opções.",
+      "TITLE": "Por que estou vendo este anúncio?"
     }
   },
   "APP": {
@@ -118,14 +118,21 @@
     "WINDOW_TITLE_CF": "WowUp.io CF",
     "WINDOW_TITLE_FULLSCREEN": "WowUp.io - Tela Cheia",
     "WOWUP_UPDATE": {
+      "BUNDLE_OVERDUE_TEXT": "Uma atualização do WowUp está aguardando há algum tempo. Reinicie o WowUp para concluir a atualização.",
+      "BUNDLE_READY_TEXT": "Uma atualização do WowUp foi baixada. Reinicie agora para usá-la, ou o WowUp pedirá que você reinicie dentro de 6 horas.",
+      "BUNDLE_REQUIRED_TEXT": "Esta versão do WowUp tem um problema e foi substituída. Reinicie o WowUp para concluir a atualização.",
       "CHECKING_FOR_UPDATE": "Verificando por atualizações",
       "DOWNLOADED_TOOLTIP": "Instalar atualização do WowUp",
       "DOWNLOADING_UPDATE": "Fazendo download da atualização",
       "INSTALL_MESSAGE": "Você gostaria de reiniciar o WowUp para instalar a atualização?",
       "INSTALL_TITLE": "Atualização do WowUp Pronta",
+      "LATER": "Mais tarde",
       "NOT_AVAILABLE": "A última atualização do WowUp já está instalada",
       "PORTABLE_DOWNLOAD_MESSAGE": "Deseja baixar manualmente a versão portátil mais recente?\n\nVocê precisará fechar o aplicativo manualmente e copiar a nova versão.",
       "PORTABLE_DOWNLOAD_TITLE": "Download manual é necessário",
+      "RESTART_NOW": "Reiniciar agora",
+      "RESTART_TO_UPDATE": "Reiniciar para atualizar",
+      "RESTART_TO_UPDATE_TOOLTIP": "Reinicie o WowUp para usar a atualização baixada",
       "SNACKBAR_ACTION": "Atualizar & Reiniciar",
       "SNACKBAR_TEXT": "Uma nova versão do WowUp está disponível",
       "TOOLTIP": "Atualização do WowUp disponível",
@@ -146,7 +153,7 @@
       "CHAT_COMMUNICATION": "Chat & Comunicação",
       "CLASS": "Classe",
       "COMBAT": "Combate",
-      "COMPANIONS": "Companions",
+      "COMPANIONS": "Companheiros",
       "DATA_EXPORT": "Exportação de Dados",
       "DEVELOPMENT_TOOLS": "Ferramentas de Desenvolvimento",
       "GUILD": "Guilda",
@@ -161,14 +168,14 @@
       "QUESTS_LEVELING": "Missões & Nivelamento",
       "ROLEPLAY": "Roleplay",
       "TOOLTIPS": "Dica de ferramenta",
-      "UNIT_FRAMES": "Unit Frames"
+      "UNIT_FRAMES": "Quadros de Unidade"
     },
     "ADDON_STATE": {
       "IGNORED": "Ignorado",
       "INSTALL": "Instalar",
       "PENDING": "Pendente",
-      "UNAVAILABLE": "Unavailable",
-      "UNAVAILABLE_TOOLTIP": "This author or provider has made this addon unavailable",
+      "UNAVAILABLE": "Indisponível",
+      "UNAVAILABLE_TOOLTIP": "Este autor ou provedor tornou este addon indisponível",
       "UNINSTALL": "Desinstalar",
       "UNKNOWN": "",
       "UPDATE": "Atualizar",
@@ -184,21 +191,21 @@
       "INSTALLING": "Instalando",
       "INSTALLING_DEPENDENCIES": "Dependências {completed}/{total}",
       "PENDING": "Pendente",
-      "RETRY": "Retrying...",
+      "RETRY": "Tentando novamente...",
       "UNINSTALLING": "Desinstalando",
       "UPDATING": "Atualizando..."
     },
     "ADDON_WARNING": {
-      "GAME_VERSION_TOC_MISSING_DESCRIPTION": "This addon or its children have one or more missing toc files for this game version",
-      "GAME_VERSION_TOC_MISSING_TOOLTIP": "One or more missing toc files for this game version",
+      "GAME_VERSION_TOC_MISSING_DESCRIPTION": "Este addon ou seus sub-addons estão sem um ou mais arquivos toc para esta versão do jogo",
+      "GAME_VERSION_TOC_MISSING_TOOLTIP": "Um ou mais arquivos toc ausentes para esta versão do jogo",
       "GENERIC_DESCRIPTION": "Nós detectamos um problema com este addon. Não poderemos mais atualizar este addon ou providenciar detalhes.",
       "GENERIC_TOOLTIP": "Nós detectamos um problema com este addon",
-      "MISSING_ON_PROVIDER_DESCRIPTION": "Este addon parece ter sido removido pelo autor ou pelo provedor de addon.<br>Nós não poderemos mais atualizar este addon ou providenciar detalhes.",
-      "MISSING_ON_PROVIDER_TOOLTIP": "Este addon parece ter sido removido pelo provedor",
+      "MISSING_ON_PROVIDER_DESCRIPTION": "{providerName} não retornou o addon quando o solicitamos.<br>Não poderemos mais atualizar este addon ou providenciar detalhes até que {providerName} corrija isso.",
+      "MISSING_ON_PROVIDER_TOOLTIP": "{providerName} não está retornando este addon como esperado",
       "NO_PROVIDER_FILES_DESCRIPTION": "{providerName} retornou este addon apropriadamente, porém, não teve nenhum arquivo que corresponde à versão do jogo.<br>Assim que houver uma atualização que corresponda à versão do jogo este aviso deverá ir embora.",
       "NO_PROVIDER_FILES_TOOLTIP": "{providerName} não teve nenhum arquivo de versão do jogo correspondente",
-      "TOC_NAME_MISMATCH_DESCRIPTION": "This addon's folder name did not match with the expected toc file, you may experience issues with this addon in-game.",
-      "TOC_NAME_MISMATCH_TOOLTIP": "This addon's folder does not match the toc"
+      "TOC_NAME_MISMATCH_DESCRIPTION": "O nome da pasta deste addon não corresponde ao arquivo toc esperado, você pode ter problemas com este addon no jogo.",
+      "TOC_NAME_MISMATCH_TOOLTIP": "A pasta deste addon não corresponde ao toc"
     },
     "CLIENT_TYPES": {
       "ANNIVERSARY": "Burning Crusade Anniversary",
@@ -246,7 +253,7 @@
     "ERRORS": {
       "ACCOUNT_PUSH_TOGGLE_FAILED_ERROR": "Falha ao alternar atualizações instantâneas para sua conta. Por favor tente mais tarde ou entre em contato no Discord.",
       "ADDON_INSTALL_ERROR": "Falha ao instalar o addon, {addonName}. Por favor tente mais tarde.",
-      "ADDON_INSTALL_NETWORK_ERROR": "Failed to download {addonName} due to a network error. This can be caused by an unstable connection or IPv6 issues on your network — try disabling IPv6 on your network adapter if this keeps happening.",
+      "ADDON_INSTALL_NETWORK_ERROR": "Falha ao baixar {addonName} devido a um erro de rede. Isso pode ser causado por uma conexão instável ou por problemas de IPv6 na sua rede — tente desabilitar o IPv6 no seu adaptador de rede se isso continuar acontecendo.",
       "ADDON_SCAN_ERROR": "Ocorreu um erro ao corresponder suas pastas de addon com {providerName}, por favor tente mais tarde.",
       "ADDON_SYNC_ERROR": "Ocorreu um erro ao procurar por atualizações em: {providerName}",
       "ADDON_SYNC_FULL_ERROR": "[{installationName}]: Ocorreu um erro ao procurar por atualizações para {addonName} de {providerName}, por favor tente mais tarde.",
@@ -261,13 +268,17 @@
     "SEARCH": {
       "NO_ADDONS": "Nenhum Addon encontrado"
     },
-    "WOW_EXE_SELECTION_NAME": "Executável do WoW"
+    "WOW_EXE_SELECTION_NAME": "Executável do WoW",
+    "CLOSE": "Fechar",
+    "PREVIOUS": "Anterior",
+    "NEXT": "Próximo",
+    "MORE_ACTIONS": "Mais ações"
   },
   "DIALOGS": {
     "ADDON_DETAILS": {
       "ADDON_ID_PREFIX": "ID do Addon:",
       "BY_AUTHOR": "Por {authorName}",
-      "CHANGELOG_TAB": "Changelog",
+      "CHANGELOG_TAB": "Registro de Alterações",
       "COPY_ADDON_ID_SNACKBAR": "ID do Addon copiado para a área de transferência",
       "COPY_ADDON_ID_TOOLTIP": "Copiar ID do addon para área de transferência",
       "DEPENDENCY_TEXT": "Este Addon tem {dependencyCount} {dependencyCount, plural, one{dependência necessária} other{dependências necessárias}}",
@@ -289,12 +300,12 @@
       "POSITIVE_BUTTON": "Sim"
     },
     "CURSE_MIGRATION": {
-      "MESSAGE": "The CurseForge API has been shutdown so WowUp can no longer fetch addon information from it.<br/>Unfortunately, this means that the CurseForge provider has been removed and your addons from CurseForge will no longer be updated.<br/>It is recommended that you perform a re-scan in order to see what addons can be found on other providers.<br/>The Re-Scan process may take a while.<br/><a appExternalLink href=\"https://wowup.io/guide/wowup/curseforge-migration\">Read more here.</a>",
-      "NEGATIVE_BUTTON": "Manually Re-Scan",
-      "POSITIVE_BUTTON": "Automatically Re-Scan",
-      "RE_SCAN_ERROR": "The automatic Re-Scan failed, please try again manually.",
-      "RE_SCAN_SUCCESS": "The automatic Re-Scan has finished you're ready to go.",
-      "TITLE": "CurseForge Migration"
+      "MESSAGE": "A API do CurseForge foi desativada, então o WowUp não pode mais obter informações de addons dela.<br/>Infelizmente, isso significa que o provedor CurseForge foi removido e seus addons do CurseForge não serão mais atualizados.<br/>É recomendado que você faça um reescaneamento para ver quais addons podem ser encontrados em outros provedores.<br/>O processo de reescaneamento pode demorar um pouco.<br/><a appExternalLink href=\"https://wowup.io/guide/wowup/curseforge-migration\">Leia mais aqui.</a>",
+      "NEGATIVE_BUTTON": "Reescanear manualmente",
+      "POSITIVE_BUTTON": "Reescanear automaticamente",
+      "RE_SCAN_ERROR": "O reescaneamento automático falhou, por favor tente novamente manualmente.",
+      "RE_SCAN_SUCCESS": "O reescaneamento automático foi concluído, está tudo pronto.",
+      "TITLE": "Migração do CurseForge"
     },
     "GAME_VERSION_MISMATCH": {
       "ADDON_NEEDS": "{name} exige WoW {version}",
@@ -327,18 +338,18 @@
       "ERROR": {
         "ASSET_NOT_FOUND": "Nenhum recurso encontrado para download de {message}.\n\nUm arquivo zip valido é necessário conter no release para que o WowUp possa fazer o download.",
         "BURNING_CRUSADE_ASSET_NOT_FOUND": "Nenhum recurso encontrado para download de {message}.\n\nUm arquivo zip válido terminando com '-bc' é necessário para que o WowUp possa fazer o download.",
-        "CATACLYSM_ASSET_NOT_FOUND": "No asset was found to download from {message}.\n\nA valid zip file ending with '-cata' is required in order for WowUp to download it.",
+        "CATACLYSM_ASSET_NOT_FOUND": "Nenhum recurso encontrado para download de {message}.\n\nUm arquivo zip válido terminando com '-cata' é necessário para que o WowUp possa fazer o download.",
         "CLASSIC_ASSET_NOT_FOUND": "Nenhum recurso encontrado para download de {message}.\n\nUm arquivo zip válido terminando com '-classic' é necessário para que o WowUp possa fazer o download.",
         "FAILED_TO_CONNECT": "Não foi possível conectar à API, por favor espere um pouco e tente novamente.",
-        "FOREVER_ASSET_NOT_FOUND": "No asset was found to download from {message}.\n\nA valid zip file ending with '-forever' is required in order for WowUp to download it.",
+        "FOREVER_ASSET_NOT_FOUND": "Nenhum recurso encontrado para download de {message}.\n\nUm arquivo zip válido terminando com '-forever' é necessário para que o WowUp possa fazer o download.",
         "INSTALL_FAILED": "Algo deu errado ao tentar instalar o Addon, por favor tente novamente.\n\nSe esta mensagem continuar aparecendo, você pode conseguir ajuda no Discord no canal #help-me.",
         "INVALID_URL": "O valor fornecido não é uma URL válida. Exemplos de URLs de Addon válidos são:\n\t- https://github.com/WowUp/WowUp.Addon\n\t- https://www.wowinterface.com/downloads/info25610-8.3-014.html\n\t- https://www.curseforge.com/wow/addons/altoholic",
-        "MISTS_ASSET_NOT_FOUND": "No asset was found to download from {message}.\n\nA valid zip file ending with '-mists' is required in order for WowUp to download it.",
+        "MISTS_ASSET_NOT_FOUND": "Nenhum recurso encontrado para download de {message}.\n\nUm arquivo zip válido terminando com '-mists' é necessário para que o WowUp possa fazer o download.",
         "NO_ADDON_FOUND": "O Addon não foi encontrado, tenha certeza de que a URL está apontando para a página correta.\n\nQuanto estiver instalando do github, certifique-se de que o repositório possui uma tag release com um arquivo zip contendo o Addon.",
         "NO_RELEASE_FOUND": "Nenhum release foi encontrado para {message}.\n\nRelease válido com recursos em arquivo zip são necessários para que o WowUp possa fazer o download.",
         "NO_SEARCH_RESULTS": "Nenhum resultado de busca encontrado.",
         "TITLE": "Instalação do Addon Falhou",
-        "WRATH_ASSET_NOT_FOUND": "No asset was found to download from {message}.\n\nA valid zip file ending with '-wrath' is required in order for WowUp to download it."
+        "WRATH_ASSET_NOT_FOUND": "Nenhum recurso encontrado para download de {message}.\n\nUm arquivo zip válido terminando com '-wrath' é necessário para que o WowUp possa fazer o download."
       },
       "IMPORT_ASSET_WARNING": "Não foi possivel verificar se o ultimo release desse addon é compatível com o seu cliente selecionado.\n\nMas nós encontramos um arquivo zip \"{zipName}\".\n\nInstale por sua conta e risco.",
       "IMPORT_BUTTON": "Importar",
@@ -350,10 +361,10 @@
     },
     "PERMISSIONS": {
       "CURSEFORGE": {
-        "DESCRIPTION_AD_LINK": "ad vendors",
-        "DESCRIPTION_BOTTOM": ". Click on the Manage button to control you consents, or to object to the processing of your data. You can change your preferences any time via the settings screen.",
-        "DESCRIPTION_TOP": " In order to use this application's integration with CurseForge they require that you allow them to show you an ad from one of their ",
-        "MANAGE_BUTTON": "Manage",
+        "DESCRIPTION_AD_LINK": "fornecedores de anúncios",
+        "DESCRIPTION_BOTTOM": ". Clique no botão Gerenciar para controlar seus consentimentos ou para se opor ao processamento dos seus dados. Você pode alterar suas preferências a qualquer momento na tela de configurações.",
+        "DESCRIPTION_TOP": " Para usar a integração deste aplicativo com o CurseForge, eles exigem que você permita que exibam um anúncio de um de seus ",
+        "MANAGE_BUTTON": "Gerenciar",
         "TITLE": "CurseForge"
       },
       "MESSAGE": "Antes de começarmos nós precisamos configurar algumas permissões para o app.",
@@ -364,7 +375,7 @@
       },
       "TITLE": "Configurar permissões do WowUp",
       "WAGO": {
-        "DESCRIPTION": "Provedor de addons Wago.io ativado, isso irá mostrar um anúncio necessário para usar o serviço deles.\nOs anúncios beneficiam diretamente os autores dos seus addons favoritos!",
+        "DESCRIPTION": "Habilite o provedor de addons Wago.io para ajudar a apoiar os autores dos seus addons favoritos! Isso irá mostrar um painel promocional necessário para usar o serviço deles.\nAo aceitar, você concorda com os <a appExternalLink href=\"{termsUrl}\" >Termos de Serviço</a> deles.",
         "TOGGLE_LABEL": "Habilitar o provedor Wago.io"
       }
     },
@@ -496,7 +507,7 @@
         "GAME_VERSION_COLUMN_HEADER": "Versão do Jogo",
         "LATEST_VERSION_COLUMN_HEADER": "Última versão",
         "PROVIDER_COLUMN_HEADER": "Provedor",
-        "PROVIDER_RELEASE_CHANNEL": "Provider Channel",
+        "PROVIDER_RELEASE_CHANNEL": "Canal do Provedor",
         "RELEASED_AT_COLUMN_HEADER": "Lançado em",
         "STATUS_COLUMN_HEADER": "Estado",
         "UPDATED_AT_COLUMN_HEADER": "Atualizado em"
@@ -510,7 +521,7 @@
         "DEPENDENCY_TITLE": "Remover dependências do Addon?",
         "TITLE": "Desinstalar {count, plural, =1{Addon} other{Addons}}?"
       },
-      "UNKNOWN_ADDON_INFO_TOOLTIP": "The installed addon did not match with any of the configured providers",
+      "UNKNOWN_ADDON_INFO_TOOLTIP": "O addon instalado não corresponde a nenhum dos provedores configurados",
       "UPDATE_ALL_BUTTON": "Atualizar todos",
       "UPDATE_ALL_BUTTON_TOOLTIP": "Atualizar todos os Addons",
       "UPDATE_ALL_CONTEXT_MENU": {
@@ -518,11 +529,12 @@
         "UPDATE_RETAIL_CLASSIC_BUTTON": "Atualizar Retail/Clássico"
       },
       "VERSION_MISMATCH_TOOLTIP": "Esta atualização exige WoW {required}. Você tem WoW {current}.",
-      "WTF_BACKUP_BUTTON": "Backup de configurações de Interface"
+      "WTF_BACKUP_BUTTON": "Backup de configurações de Interface",
+      "UPDATE_ALL_TOOLTIP_MORE": "…e mais {count}"
     },
     "NEWS": {
-      "NEWS_LINK_COPY_TOAST": "News link copied to clipboard",
-      "NEWS_LINK_COPY_TOOLTIP": "Copy news link",
+      "NEWS_LINK_COPY_TOAST": "Link da notícia copiado para a área de transferência",
+      "NEWS_LINK_COPY_TOOLTIP": "Copiar link da notícia",
       "PAGE_CONTEXT_FOOTER": "{count} notícias",
       "REFRESH_TOOLTIP": "Atualizar feed de notícias"
     },
@@ -530,9 +542,9 @@
       "ADDON": {
         "AD_REQUIRED_HINT": "Anúncio necessário",
         "CURSE_FORGE_V2": {
-          "API_KEY_DESCRIPTION": "If you have requested a CurseForge API key you can input it here to connect to their API.",
-          "API_KEY_TITLE": "CurseForge API Key",
-          "PROVIDER_NOTE": "API Key Required"
+          "API_KEY_DESCRIPTION": "Se você solicitou uma chave de API do CurseForge, pode inseri-la aqui para se conectar à API deles.",
+          "API_KEY_TITLE": "Chave de API do CurseForge",
+          "PROVIDER_NOTE": "Chave de API necessária"
         },
         "ENABLED_PROVIDERS": {
           "DESCRIPTION": "Selecionar quais provedores serão usados para buscar, e instalar novos addons",
@@ -540,15 +552,15 @@
           "INPUT_LABEL": "Provedores"
         },
         "GITHUB_PERSONAL_ACCESS_TOKEN": {
-          "MESSAGE": "A personal access token will increase the amount of GitHub API calls you can make, it is freely available. <a href=\"https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token\">Learn More</a>",
-          "PLACEHOLDER": "Personal Access Token",
-          "TITLE": "GitHub Personal Access Token"
+          "MESSAGE": "Um token de acesso pessoal aumenta a quantidade de chamadas à API do GitHub que você pode fazer, e é gratuito. <a href=\"https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token\">Saiba mais</a>",
+          "PLACEHOLDER": "Token de acesso pessoal",
+          "TITLE": "Token de acesso pessoal do GitHub"
         },
         "TITLE": "Addons",
         "WAGO_ACCESS_KEY": {
-          "MESSAGE": "Use the Wago provider without seeing advertisements. <a href=\"https://addons.wago.io/patreon\">Learn More</a>",
-          "PLACEHOLDER": "Access Key",
-          "TITLE": "Wago Access Key"
+          "MESSAGE": "Use o provedor Wago sem ver anúncios. <a href=\"https://addons.wago.io/patreon\">Saiba mais</a>",
+          "PLACEHOLDER": "Chave de acesso",
+          "TITLE": "Chave de acesso do Wago"
         }
       },
       "APPLICATION": {
@@ -562,17 +574,17 @@
         "CURRENT_LANGUAGE_LABEL": "Idioma Atual",
         "CURSE_PROTOCOL_DESCRIPTION": "Quando baixando addons do site CurseForge, WowUp ira cuidar da instalação",
         "CURSE_PROTOCOL_LABEL": "Gerenciar links de download CurseForge",
-        "DISABLE_IPV6_CONFIRMATION_LABEL": "Do you want to restart?",
-        "DISABLE_IPV6_DESCRIPTION": "If addon downloads keep failing with a network error, your network's IPv6 connectivity may be broken. Enabling this forces WowUp to use IPv4 only.<br>Changing this setting requires a restart.",
-        "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "Re-enabling IPv6 requires the application to restart.",
-        "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Forcing IPv4-only networking requires the application to restart.",
-        "DISABLE_IPV6_LABEL": "Force IPv4 (disable IPv6)",
+        "DISABLE_IPV6_CONFIRMATION_LABEL": "Você quer reiniciar?",
+        "DISABLE_IPV6_DESCRIPTION": "Se os downloads de addons continuarem falhando com um erro de rede, a conectividade IPv6 da sua rede pode estar com problemas. Habilitar esta opção força o WowUp a usar apenas IPv4.<br>Mudar esta opção exige reiniciar o aplicativo.",
+        "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "Reabilitar o IPv6 exige reiniciar o aplicativo.",
+        "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Forçar a rede a usar apenas IPv4 exige reiniciar o aplicativo.",
+        "DISABLE_IPV6_LABEL": "Forçar IPv4 (desabilitar IPv6)",
         "ENABLE_APP_BADGE_DESCRIPTION": "Mostrar um selo no icone da aplicação com o número de atualizações de addon disponíveis.",
         "ENABLE_APP_BADGE_LABEL": "Habilitar selo de notificação do app",
         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Habilitar várias notificações e popups do sistema, como os de aviso de Addons atualizados automaticamente.",
         "ENABLE_SYSTEM_NOTIFICATIONS_LABEL": "Habilitar notificações do sistema",
-        "KEEP_LAST_OPENED_TAB_DESCRIPTION": "When opening an addon detail page, automatically select the last opened tab",
-        "KEEP_LAST_OPENED_TAB_LABEL": "Keep last opened tab",
+        "KEEP_LAST_OPENED_TAB_DESCRIPTION": "Ao abrir a página de detalhes de um addon, selecionar automaticamente a última guia aberta",
+        "KEEP_LAST_OPENED_TAB_LABEL": "Manter a última guia aberta",
         "MINIMIZE_ON_CLOSE_DESCRIPTION_MAC": "Ao fechar a janela do WowUp, minimize para a barra de menu",
         "MINIMIZE_ON_CLOSE_DESCRIPTION_WINDOWS": "Ao fechar a janela do WowUp, minimize para a bandeja do sistema.",
         "MINIMIZE_ON_CLOSE_LABEL": "Minimizar ao Fechar",
@@ -606,15 +618,15 @@
         "USE_SYMLINK_SUPPORT_DESCRIPTION": "Permitir ao WowUp escanear pastas symlink na sua pasta de Addons. Aviso: elas serão substituidas quando atualizar/instalar."
       },
       "CURSEFORGE": {
-        "ADS_OPTION_DESCRIPTION": "View and manage how CurseForge advertisers may use your data for ad personalization",
-        "ADS_OPTION_LABEL": "Ads Personalization & Data",
-        "ADS_OPTION_MANAGE": "Manage",
+        "ADS_OPTION_DESCRIPTION": "Veja e gerencie como os anunciantes do CurseForge podem usar seus dados para personalização de anúncios",
+        "ADS_OPTION_LABEL": "Personalização de Anúncios e Dados",
+        "ADS_OPTION_MANAGE": "Gerenciar",
         "TITLE": "CurseForge"
       },
       "DEBUG": {
-        "CONFIG_FILES_BUTTON": "Show Config Files",
-        "CONFIG_FILES_DESCRIPTION": "Open the folder where for example your addons.json and preferences.json are stored.",
-        "CONFIG_FILES_LABEL": "Config Files",
+        "CONFIG_FILES_BUTTON": "Mostrar Arquivos de Configuração",
+        "CONFIG_FILES_DESCRIPTION": "Abre a pasta onde, por exemplo, seus arquivos addons.json e preferences.json estão armazenados.",
+        "CONFIG_FILES_LABEL": "Arquivos de Configuração",
         "DEBUG_DATA_BUTTON": "Esvaziar log de depuração de dados",
         "DEBUG_DATA_DESCRIPTION": "Registra os dados de depuração e ajuda a diagnosticar problemas potenciais. Apenas por o curiosidade, isso pode ser encontrado em seu último arquivo de registro.",
         "DEBUG_DATA_LABEL": "Depurar Dados",
@@ -629,13 +641,13 @@
         "APPLICATION": "Aplicação",
         "CLIENTS": "Clientes",
         "CURSEFORGE": "CurseForge",
-        "DEBUG": "Debug",
-        "WTF_EXPLORER": "WTF Explorer"
+        "DEBUG": "Depurar",
+        "WTF_EXPLORER": "Explorador WTF"
       },
       "WAGO": {
-        "AD_CONSENT_DESCRIPTION": "View and manage how Wago ad partners may use your data for ad personalization",
-        "AD_CONSENT_LABEL": "Wago Ads Personalization & Data",
-        "AD_CONSENT_MANAGE": "Manage"
+        "AD_CONSENT_DESCRIPTION": "Veja e gerencie como os parceiros de anúncios do Wago podem usar seus dados para personalização de anúncios",
+        "AD_CONSENT_LABEL": "Personalização de Anúncios e Dados do Wago",
+        "AD_CONSENT_MANAGE": "Gerenciar"
       },
       "WOW": {
         "ADD_CLIENT_BUTTON": "Adicionar Novo",
@@ -643,7 +655,7 @@
         "AUTO_UPDATE_LABEL": "Atualização Automática",
         "CANCEL_WOW_DIRECTORY_SELECT_BUTTON": "Cancelar",
         "CLEAR_INSTALL_LOCATION_DIALOG": {
-          "MESSAGE": "Tem certeza de que deseja apagar o local de instalação para {clientName}? Isso irá remover todas as informações de addon guardadas para este cliente.\n\nSuas pastas de addons não serão removidas.",
+          "MESSAGE": "Tem certeza de que deseja remover a instalação em \"{location}\"? Isso irá remover todas as informações de addon guardadas para este cliente.\n\nSuas pastas de addons não serão removidas.",
           "TITLE": "Apagar Local de Instalação?"
         },
         "CLIENT_TYPE_INPUT_HINT": "A pasta \"{clientFolderName}\" que contém o {clientTypeName}",
@@ -665,9 +677,9 @@
         "UPDATE_FROM_TRAY_LABEL": "Atualizar pela bandeja do sistema"
       },
       "WTF_EXPLORER": {
-        "FOLDER_PATH_LABEL": "Folder: ",
-        "PAGE_EXPLANATION": "The WTF Explorer allows you to inspect all the data your addons have saved.\nFiles in grey are typically things you can ignore such as backup files.\nFiles in red should belong to addons that you no longer have installed.",
-        "TITLE": "WTF Explorer"
+        "FOLDER_PATH_LABEL": "Pasta: ",
+        "PAGE_EXPLANATION": "O Explorador WTF permite que você inspecione todos os dados que seus addons salvaram.\nArquivos em cinza normalmente são coisas que você pode ignorar, como arquivos de backup.\nArquivos em vermelho devem pertencer a addons que você não tem mais instalados.",
+        "TITLE": "Explorador WTF"
       }
     }
   },

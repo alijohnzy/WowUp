@@ -37,13 +37,13 @@
     "VERSION_MISMATCH": "版本號不匹配"
   },
   "ADS": {
-    "AD_EXPLAINER_BUTTON": "This ad supports addon creators ❤",
+    "AD_EXPLAINER_BUTTON": "此廣告用於支援插件作者 ❤",
     "AD_EXPLAINER_DIALOG": {
       "MESSAGE": "顯示此廣告是為了支援 <a appExternalLink href=\"https://addons.wago.io/\">wago.io</a> 上辛勤工作、開發出優秀插件的作者們。如果不想看到此廣告，可以在「選項」中禁用 Wago.io 安裝源。",
       "TITLE": "為什麼會看見廣告？"
     },
     "AD_EXPLAINER_DIALOG_CF": {
-      "MESSAGE": "In order to use <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> as an addon provider and help support authors for their hard work on your favorite addons we are required to show this advertisement.\n\nIf you do not want to see this ad, you can always disable CurseForge as a provider in the options tab.",
+      "MESSAGE": "要使用 <a appExternalLink href=\"https://curseforge.com/\">CurseForge</a> 作為插件安裝源，並支援插件作者們為您喜愛的插件付出的辛勤工作，我們需要顯示此廣告。\n\n如果不想看到此廣告，可以隨時在「選項」中禁用 CurseForge 安裝源。",
       "TITLE": "為什麼會看見廣告？"
     }
   },
@@ -118,14 +118,21 @@
     "WINDOW_TITLE_CF": "WowUp.io CF",
     "WINDOW_TITLE_FULLSCREEN": "WowUp.io - 全螢幕模式",
     "WOWUP_UPDATE": {
+      "BUNDLE_OVERDUE_TEXT": "WowUp 更新已等待一段時間。請重新啟動 WowUp 以完成更新。",
+      "BUNDLE_READY_TEXT": "WowUp 更新已下載。立即重新啟動即可使用，否則 WowUp 將在 6 小時內提示您重新啟動。",
+      "BUNDLE_REQUIRED_TEXT": "此版本的 WowUp 有問題，已被替換。請重新啟動 WowUp 以完成更新。",
       "CHECKING_FOR_UPDATE": "檢查更新",
       "DOWNLOADED_TOOLTIP": "安裝 WowUp 更新",
       "DOWNLOADING_UPDATE": "正在下載更新",
       "INSTALL_MESSAGE": "是否重新啟動 WowUp 以完成更新？",
       "INSTALL_TITLE": "WowUp 更新已準備就緒",
+      "LATER": "稍後",
       "NOT_AVAILABLE": "已安裝最新版 WowUp",
       "PORTABLE_DOWNLOAD_MESSAGE": "是否手動下載最新綠色版？\n\n下載完成後請關閉本應用程式，然後用新版本覆蓋。",
       "PORTABLE_DOWNLOAD_TITLE": "需要手動下載",
+      "RESTART_NOW": "立即重新啟動",
+      "RESTART_TO_UPDATE": "重新啟動以更新",
+      "RESTART_TO_UPDATE_TOOLTIP": "重新啟動 WowUp 以使用已下載的更新",
       "SNACKBAR_ACTION": "更新並重啟",
       "SNACKBAR_TEXT": "新版本 WowUp 可用",
       "TOOLTIP": "WowUp 更新可用",
@@ -184,17 +191,17 @@
       "INSTALLING": "正在安裝",
       "INSTALLING_DEPENDENCIES": "相依項目 {completed}/{total}",
       "PENDING": "等待中",
-      "RETRY": "Retrying...",
+      "RETRY": "正在重試...",
       "UNINSTALLING": "正在解除安裝",
       "UPDATING": "正在更新..."
     },
     "ADDON_WARNING": {
-      "GAME_VERSION_TOC_MISSING_DESCRIPTION": "This addon or its children have one or more missing toc files for this game version",
-      "GAME_VERSION_TOC_MISSING_TOOLTIP": "One or more missing toc files for this game version",
+      "GAME_VERSION_TOC_MISSING_DESCRIPTION": "此插件或其子插件缺少一個或多個適用於此遊戲版本的 TOC 檔案",
+      "GAME_VERSION_TOC_MISSING_TOOLTIP": "缺少一個或多個適用於此遊戲版本的 TOC 檔案",
       "GENERIC_DESCRIPTION": "WowUp 檢測到此插件存在問題，無法更新此插件或提供詳細資訊。",
       "GENERIC_TOOLTIP": "檢測到此插件存在問題",
-      "MISSING_ON_PROVIDER_DESCRIPTION": "此插件可能已被作者或安裝源移除。<br>WowUp 無法更新此插件或提供詳細資訊。",
-      "MISSING_ON_PROVIDER_TOOLTIP": "此插件可能已被安裝源移除",
+      "MISSING_ON_PROVIDER_DESCRIPTION": "請求此插件時，{providerName} 未返回該插件。<br>在 {providerName} 修復此問題之前，WowUp 無法更新此插件或提供詳細資訊。",
+      "MISSING_ON_PROVIDER_TOOLTIP": "{providerName} 未如預期返回此插件",
       "NO_PROVIDER_FILES_DESCRIPTION": "{providerName} 返回了該插件的相關資訊，但不包含匹配當前遊戲版本的檔案。<br>一旦有匹配該遊戲版本的更新，此提示資訊將會消失。",
       "NO_PROVIDER_FILES_TOOLTIP": "{providerName} 沒有匹配該遊戲版本的檔案",
       "TOC_NAME_MISMATCH_DESCRIPTION": "此插件的資料夾名字和 TOC 檔案中記錄的名字不匹配，遊戲中可能會出現一些問題。",
@@ -246,7 +253,7 @@
     "ERRORS": {
       "ACCOUNT_PUSH_TOGGLE_FAILED_ERROR": "無法為戰網賬戶啟用實時更新。請稍後再試，或者到 Discord 上尋求幫助。",
       "ADDON_INSTALL_ERROR": "安裝插件 {addonName} 失敗。請稍後再試。",
-      "ADDON_INSTALL_NETWORK_ERROR": "Failed to download {addonName} due to a network error. This can be caused by an unstable connection or IPv6 issues on your network — try disabling IPv6 on your network adapter if this keeps happening.",
+      "ADDON_INSTALL_NETWORK_ERROR": "由於網路錯誤，{addonName} 下載失敗。這可能是網路連線不穩定或網路的 IPv6 問題所致——如果此問題反覆發生，請嘗試在網路介面卡上禁用 IPv6。",
       "ADDON_SCAN_ERROR": "在與 {providerName} 匹配插件資料夾時出現錯誤，請稍後再試。",
       "ADDON_SYNC_ERROR": "從 {providerName} 上檢查更新時出現錯誤。",
       "ADDON_SYNC_FULL_ERROR": "[{installationName}]: 從 {providerName} 上檢查 {addonName} 的更新時出現錯誤，請稍後再試。",
@@ -261,7 +268,11 @@
     "SEARCH": {
       "NO_ADDONS": "未找到插件"
     },
-    "WOW_EXE_SELECTION_NAME": "WoW 可執行檔案"
+    "WOW_EXE_SELECTION_NAME": "WoW 可執行檔案",
+    "CLOSE": "關閉",
+    "PREVIOUS": "上一個",
+    "NEXT": "下一個",
+    "MORE_ACTIONS": "更多操作"
   },
   "DIALOGS": {
     "ADDON_DETAILS": {
@@ -327,13 +338,13 @@
       "ERROR": {
         "ASSET_NOT_FOUND": "未找到可下載的附件 {message}。\n\n要通過 WowUp 下載插件，釋出頁面（Releases）上需要有效的 zip 檔案。",
         "BURNING_CRUSADE_ASSET_NOT_FOUND": "未找到可下載的附件 {message}。\n\n要通過 WowUp 下載插件，釋出頁面（Releases）上需要檔名以「-bc」結尾的有效的 zip 檔案。",
-        "CATACLYSM_ASSET_NOT_FOUND": "No asset was found to download from {message}.\n\nA valid zip file ending with '-cata' is required in order for WowUp to download it.",
+        "CATACLYSM_ASSET_NOT_FOUND": "未找到可下載的附件 {message}。\n\n要通過 WowUp 下載插件，釋出頁面（Releases）上需要檔名以「-cata」結尾的有效的 zip 檔案。",
         "CLASSIC_ASSET_NOT_FOUND": "未找到可下載的附件 {message}。\n\n要通過 WowUp 下載插件，釋出頁面（Releases）上需要檔名以「-classic」結尾的有效的 zip 檔案。",
         "FAILED_TO_CONNECT": "無法連線 API，請稍後重試。",
-        "FOREVER_ASSET_NOT_FOUND": "No asset was found to download from {message}.\n\nA valid zip file ending with '-forever' is required in order for WowUp to download it.",
+        "FOREVER_ASSET_NOT_FOUND": "未找到可下載的附件 {message}。\n\n要通過 WowUp 下載插件，釋出頁面（Releases）上需要檔名以「-forever」結尾的有效的 zip 檔案。",
         "INSTALL_FAILED": "安裝插件時出現了一些錯誤，請重試。\n\n如果一直出現此訊息，可以加入 Discord #help-me 頻道尋求幫助（英語）。",
         "INVALID_URL": "輸入的 URL 無效。有效 URL 示例：\n\t- https://github.com/WowUp/WowUp.Addon\n\t- https://www.wowinterface.com/downloads/info25610-8.3-014.html\n\t- https://www.curseforge.com/wow/addons/altoholic",
-        "MISTS_ASSET_NOT_FOUND": "No asset was found to download from {message}.\n\nA valid zip file ending with '-mists' is required in order for WowUp to download it.",
+        "MISTS_ASSET_NOT_FOUND": "未找到可下載的附件 {message}。\n\n要通過 WowUp 下載插件，釋出頁面（Releases）上需要檔名以「-mists」結尾的有效的 zip 檔案。",
         "NO_ADDON_FOUND": "未找到插件，請檢查 URL 是否指向正確的頁面。\n\n從 GitHub 安裝時，請檢查是否存在帶有 zip 包的 release tag。",
         "NO_RELEASE_FOUND": "未找到釋出版本 {message}.\n\n要通過 WowUp 下載插件，需要帶有 zip 附件的釋出版本。",
         "NO_SEARCH_RESULTS": "无搜索结果。",
@@ -350,10 +361,10 @@
     },
     "PERMISSIONS": {
       "CURSEFORGE": {
-        "DESCRIPTION_AD_LINK": "ad vendors",
-        "DESCRIPTION_BOTTOM": ". Click on the Manage button to control you consents, or to object to the processing of your data. You can change your preferences any time via the settings screen.",
-        "DESCRIPTION_TOP": " In order to use this application's integration with CurseForge they require that you allow them to show you an ad from one of their ",
-        "MANAGE_BUTTON": "Manage",
+        "DESCRIPTION_AD_LINK": "廣告供應商",
+        "DESCRIPTION_BOTTOM": "之一的廣告。點選「管理」按鈕可以管理您的同意選項，或拒絕對您資料的處理。您可以隨時在設定頁面中變更偏好設定。",
+        "DESCRIPTION_TOP": "要使用本應用程式的 CurseForge 整合功能，CurseForge 要求您允許其顯示來自其",
+        "MANAGE_BUTTON": "管理",
         "TITLE": "CurseForge"
       },
       "MESSAGE": "在開始使用 WowUp 之前，請設定此應用程式的許可權。",
@@ -364,7 +375,7 @@
       },
       "TITLE": "WowUp 許可權設定",
       "WAGO": {
-        "DESCRIPTION": "啟用 Wago.io 插件安裝源。啟用此選項將會顯示一個廣告，以支援你喜歡的插件的作者。",
+        "DESCRIPTION": "啟用 Wago.io 插件安裝源，支援您喜愛的插件的作者！使用其服務需要顯示一個推廣面板。\n選擇啟用即表示您同意其<a appExternalLink href=\"{termsUrl}\" >服務條款</a>。",
         "TOGGLE_LABEL": "啟用 Wago.io 安裝源"
       }
     },
@@ -383,7 +394,7 @@
     "ABOUT": {
       "ATTRIBUTIONS_TITLE": "圖源",
       "CHANGE_LOG_SECTION_LABEL": "更新記錄",
-      "SHELL_VERSION": "Shell v{version}",
+      "SHELL_VERSION": "外殼程式 v{version}",
       "TITLE": "WowUp.io",
       "WEBSITE_LINK_LABEL": "訪問網站！"
     },
@@ -508,7 +519,7 @@
         "CONFIRMATION_ONE": "是否確定要刪除 {addonName}？",
         "DEPENDENCY_MESSAGE": "{addonName} 有 {dependencyCount} 個依賴項，是否一併刪除？",
         "DEPENDENCY_TITLE": "是否刪除插件依賴項？",
-        "TITLE": "是否解除安裝插件？"
+        "TITLE": "是否解除安裝{count, plural, =1{插件} other{插件}}？"
       },
       "UNKNOWN_ADDON_INFO_TOOLTIP": "已安裝的插件與所有安裝源均無法匹配。",
       "UPDATE_ALL_BUTTON": "全部更新",
@@ -518,7 +529,8 @@
         "UPDATE_RETAIL_CLASSIC_BUTTON": "更新正式服/經典懷舊服"
       },
       "VERSION_MISMATCH_TOOLTIP": "此更新需要 WoW {required}。你目前為 WoW {current}。",
-      "WTF_BACKUP_BUTTON": "備份介面設定"
+      "WTF_BACKUP_BUTTON": "備份介面設定",
+      "UPDATE_ALL_TOOLTIP_MORE": "…以及另外 {count} 個"
     },
     "NEWS": {
       "NEWS_LINK_COPY_TOAST": "新聞連結已複製到剪貼簿",
@@ -562,11 +574,11 @@
         "CURRENT_LANGUAGE_LABEL": "當前語言",
         "CURSE_PROTOCOL_DESCRIPTION": "從 CurseForge 網站下載插件時，WowUp 將會接管安裝過程",
         "CURSE_PROTOCOL_LABEL": "接管 CurseForge 下載連結",
-        "DISABLE_IPV6_CONFIRMATION_LABEL": "Do you want to restart?",
-        "DISABLE_IPV6_DESCRIPTION": "If addon downloads keep failing with a network error, your network's IPv6 connectivity may be broken. Enabling this forces WowUp to use IPv4 only.<br>Changing this setting requires a restart.",
-        "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "Re-enabling IPv6 requires the application to restart.",
-        "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Forcing IPv4-only networking requires the application to restart.",
-        "DISABLE_IPV6_LABEL": "Force IPv4 (disable IPv6)",
+        "DISABLE_IPV6_CONFIRMATION_LABEL": "是否重新啟動？",
+        "DISABLE_IPV6_DESCRIPTION": "如果插件下載一直因網路錯誤而失敗，可能是您網路的 IPv6 連線有問題。啟用此項將強制 WowUp 僅使用 IPv4。<br>更改此項需要重新啟動。",
+        "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "重新啟用 IPv6 需要重新啟動 WowUp。",
+        "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "強制僅使用 IPv4 網路需要重新啟動 WowUp。",
+        "DISABLE_IPV6_LABEL": "強制使用 IPv4（禁用 IPv6）",
         "ENABLE_APP_BADGE_DESCRIPTION": "在應用程式圖示上用角標顯示可更新的插件數量。",
         "ENABLE_APP_BADGE_LABEL": "啟用數字角標通知",
         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "啟用各種系統通知彈窗，如自動更新插件通知。",
@@ -606,9 +618,9 @@
         "USE_SYMLINK_SUPPORT_DESCRIPTION": "允許 WowUp 掃描插件所在路徑下的符號連結。警告：符號連結在安裝或更新插件時會被替換。"
       },
       "CURSEFORGE": {
-        "ADS_OPTION_DESCRIPTION": "View and manage how CurseForge advertisers may use your data for ad personalization",
-        "ADS_OPTION_LABEL": "Ads Personalization & Data",
-        "ADS_OPTION_MANAGE": "Manage",
+        "ADS_OPTION_DESCRIPTION": "查看並管理 CurseForge 廣告商如何使用您的資料進行個人化廣告",
+        "ADS_OPTION_LABEL": "廣告個人化與資料",
+        "ADS_OPTION_MANAGE": "管理",
         "TITLE": "CurseForge"
       },
       "DEBUG": {
@@ -630,12 +642,12 @@
         "CLIENTS": "客戶端",
         "CURSEFORGE": "CurseForge",
         "DEBUG": "除錯",
-        "WTF_EXPLORER": "WTF Explorer"
+        "WTF_EXPLORER": "WTF 檔案總管"
       },
       "WAGO": {
-        "AD_CONSENT_DESCRIPTION": "View and manage how Wago ad partners may use your data for ad personalization",
-        "AD_CONSENT_LABEL": "Wago Ads Personalization & Data",
-        "AD_CONSENT_MANAGE": "Manage"
+        "AD_CONSENT_DESCRIPTION": "查看並管理 Wago 廣告合作夥伴如何使用您的資料進行個人化廣告",
+        "AD_CONSENT_LABEL": "Wago 廣告個人化與資料",
+        "AD_CONSENT_MANAGE": "管理"
       },
       "WOW": {
         "ADD_CLIENT_BUTTON": "新增",
@@ -643,7 +655,7 @@
         "AUTO_UPDATE_LABEL": "自動更新",
         "CANCEL_WOW_DIRECTORY_SELECT_BUTTON": "取消",
         "CLEAR_INSTALL_LOCATION_DIALOG": {
-          "MESSAGE": "是否忘記 {clientName} 的安裝路徑？此操作將會刪除 WowUp 記錄的此客戶端所安裝插件資訊。\n\n插件資料夾不會被刪除。",
+          "MESSAGE": "是否忘記安裝路徑「{location}」？此操作將會刪除 WowUp 記錄的此客戶端的所有插件資訊。\n\n插件資料夾不會被刪除。",
           "TITLE": "忘記此路徑？"
         },
         "CLIENT_TYPE_INPUT_HINT": "{clientTypeName} 客戶端「{clientFolderName}」主程式路徑",
@@ -665,9 +677,9 @@
         "UPDATE_FROM_TRAY_LABEL": "從系統托盤更新"
       },
       "WTF_EXPLORER": {
-        "FOLDER_PATH_LABEL": "Folder: ",
-        "PAGE_EXPLANATION": "The WTF Explorer allows you to inspect all the data your addons have saved.\nFiles in grey are typically things you can ignore such as backup files.\nFiles in red should belong to addons that you no longer have installed.",
-        "TITLE": "WTF Explorer"
+        "FOLDER_PATH_LABEL": "資料夾：",
+        "PAGE_EXPLANATION": "WTF 檔案總管可用於查看插件儲存的所有資料。\n灰色檔案通常可以忽略，例如備份檔案。\n紅色檔案應屬於您已不再安裝的插件。",
+        "TITLE": "WTF 檔案總管"
       }
     }
   },
