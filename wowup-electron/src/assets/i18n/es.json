@@ -633,6 +633,9 @@
         "LOG_FILES_BUTTON": "Mostrar archivos de registro",
         "LOG_FILES_DESCRIPTION": "Abre la carpeta que contiene los últimos archivos de registro.",
         "LOG_FILES_LABEL": "Archivos de registro",
+        "REPORT_BUG_BUTTON": "Informar de un error",
+        "REPORT_BUG_DESCRIPTION": "Abre una nueva incidencia en GitHub con la versión de la aplicación y las últimas líneas del registro ya rellenadas. No se envía nada hasta que usted la publique.",
+        "REPORT_BUG_LABEL": "Informar de un error",
         "TITLE": "Depuración"
       },
       "TABS": {

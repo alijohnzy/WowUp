@@ -167,6 +167,11 @@ pub fn run() {
                 // at Info the sync is a black box, which is exactly the wrong place to be
                 // blind when addons stop reporting updates.
                 .level(log::LevelFilter::Debug)
+                // The plugin's defaults are 40 KB and KeepOne, which at Debug level deleted the
+                // whole log every few minutes, taking "Dump debug data" and anything a bug
+                // report needed with it. The Debug page promises "your last couple of log files".
+                .max_file_size(5 * 1024 * 1024)
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepSome(5))
                 // ...but only ours. reqwest logs a line per connection and hyper logs the
                 // wire, which buries the app's own output and puts request URLs in a file
                 // users attach to bug reports.

@@ -633,6 +633,9 @@
         "LOG_FILES_BUTTON": "Zobraz logovací soubory",
         "LOG_FILES_DESCRIPTION": "Otevře složku s logovacími soubory.",
         "LOG_FILES_LABEL": "Logovací soubory",
+        "REPORT_BUG_BUTTON": "Nahlásit chybu",
+        "REPORT_BUG_DESCRIPTION": "Otevře nové hlášení na GitHubu s vyplněnou verzí aplikace a posledními řádky logu. Nic se neodešle, dokud ho sami neodešlete.",
+        "REPORT_BUG_LABEL": "Nahlásit chybu",
         "TITLE": "Debug aplikace"
       },
       "TABS": {

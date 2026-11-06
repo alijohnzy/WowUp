@@ -633,6 +633,9 @@
         "LOG_FILES_BUTTON": "Vis loggfiler",
         "LOG_FILES_DESCRIPTION": "Åpne mappen som inneholder de siste loggfilene dine.",
         "LOG_FILES_LABEL": "Loggfiler",
+        "REPORT_BUG_BUTTON": "Rapporter en feil",
+        "REPORT_BUG_DESCRIPTION": "Åpner en ny sak på GitHub med appversjonen og de siste logglinjene fylt inn. Ingenting sendes før du sender den inn.",
+        "REPORT_BUG_LABEL": "Rapporter en feil",
         "TITLE": "Feilsøking"
       },
       "TABS": {

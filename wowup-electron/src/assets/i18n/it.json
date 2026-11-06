@@ -633,6 +633,9 @@
         "LOG_FILES_BUTTON": "Mostra File di Log",
         "LOG_FILES_DESCRIPTION": "Aprire la cartella che contiene i tuoi ultimi file di log.",
         "LOG_FILES_LABEL": "File di Log",
+        "REPORT_BUG_BUTTON": "Segnala un bug",
+        "REPORT_BUG_DESCRIPTION": "Apre una nuova segnalazione su GitHub con la versione dell'app e le ultime righe del log già compilate. Non viene inviato nulla finché non la invii tu.",
+        "REPORT_BUG_LABEL": "Segnala un bug",
         "TITLE": "Debug"
       },
       "TABS": {

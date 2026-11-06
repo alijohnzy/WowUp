@@ -633,6 +633,9 @@
         "LOG_FILES_BUTTON": "로그 파일 보기",
         "LOG_FILES_DESCRIPTION": "최근 로그파일이 포함된 폴더 열기",
         "LOG_FILES_LABEL": "로그 파일",
+        "REPORT_BUG_BUTTON": "버그 신고",
+        "REPORT_BUG_DESCRIPTION": "앱 버전과 최근 로그가 미리 입력된 새 이슈를 GitHub에서 엽니다. 직접 제출하기 전에는 아무것도 전송되지 않습니다.",
+        "REPORT_BUG_LABEL": "버그 신고",
         "TITLE": "디버그"
       },
       "TABS": {

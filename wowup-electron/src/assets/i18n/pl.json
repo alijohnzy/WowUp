@@ -633,6 +633,9 @@
         "LOG_FILES_BUTTON": "Pokaż pliki dziennika",
         "LOG_FILES_DESCRIPTION": "Otwórz folder, w którym znajduje się kilka ostatnich plików dziennika.",
         "LOG_FILES_LABEL": "Pliki dziennika",
+        "REPORT_BUG_BUTTON": "Zgłoś błąd",
+        "REPORT_BUG_DESCRIPTION": "Otwiera nowe zgłoszenie na GitHubie z uzupełnioną wersją aplikacji i ostatnimi wierszami logu. Nic nie zostanie wysłane, dopóki go nie wyślesz.",
+        "REPORT_BUG_LABEL": "Zgłoś błąd",
         "TITLE": "Debugowanie"
       },
       "TABS": {

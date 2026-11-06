@@ -633,6 +633,9 @@
         "LOG_FILES_BUTTON": "Log-Dateien anzeigen",
         "LOG_FILES_DESCRIPTION": "Den Ordner öffnen, der Deine letzten Log-Dateien enthält.",
         "LOG_FILES_LABEL": "Log-Dateien",
+        "REPORT_BUG_BUTTON": "Fehler melden",
+        "REPORT_BUG_DESCRIPTION": "Öffnet ein neues Issue auf GitHub, in dem Deine App-Version und die letzten Logzeilen bereits ausgefüllt sind. Es wird nichts gesendet, bis Du es abschickst.",
+        "REPORT_BUG_LABEL": "Fehler melden",
         "TITLE": "Debuggen"
       },
       "TABS": {

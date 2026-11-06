@@ -1559,7 +1559,11 @@ class AddonService {
 
 	// ---- debug ---------------------------------------------------------------------------
 
-	async logDebugData(): Promise<void> {
+	/** Fingerprints of every installed addon, per client. Logged, and returned so the Debug page
+	 *  can also save it: under Tauri the log rotates, and one oversized line is easy to lose. */
+	async logDebugData(): Promise<
+		Record<string, { curse: Record<string, string>; hub: Record<string, string> }>
+	> {
 		const curseProvider = addonProviders.getProvider<CurseAddonProvider>(ADDON_PROVIDER_CURSEFORGE);
 		const hubProvider = addonProviders.getProvider<WowUpAddonProvider>(ADDON_PROVIDER_HUB);
 
@@ -1596,6 +1600,7 @@ class AddonService {
 		}
 
 		console.log(JSON.stringify(clientMap));
+		return clientMap;
 	}
 }
 

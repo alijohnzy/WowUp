@@ -633,6 +633,9 @@
         "LOG_FILES_BUTTON": "Show Log Files",
         "LOG_FILES_DESCRIPTION": "Open the folder that contains your last couple of log files.",
         "LOG_FILES_LABEL": "Log Files",
+        "REPORT_BUG_BUTTON": "Report a Bug",
+        "REPORT_BUG_DESCRIPTION": "Open a new issue on GitHub with your app version and recent log lines filled in. Nothing is sent until you submit it.",
+        "REPORT_BUG_LABEL": "Report a Bug",
         "TITLE": "Debug"
       },
       "TABS": {

@@ -633,6 +633,9 @@
         "LOG_FILES_BUTTON": "显示日志文件",
         "LOG_FILES_DESCRIPTION": "打开包含您最后几个日志文件的文件夹。",
         "LOG_FILES_LABEL": "日志文件",
+        "REPORT_BUG_BUTTON": "报告问题",
+        "REPORT_BUG_DESCRIPTION": "在 GitHub 上新建一个已填好应用版本和最近日志的问题。在您提交之前不会发送任何内容。",
+        "REPORT_BUG_LABEL": "报告问题",
         "TITLE": "调试"
       },
       "TABS": {

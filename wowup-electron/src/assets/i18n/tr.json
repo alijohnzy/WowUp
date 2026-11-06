@@ -633,6 +633,9 @@
         "LOG_FILES_BUTTON": "Günlük Dosyalarını Göster",
         "LOG_FILES_DESCRIPTION": "Son birkaç günlük dosyanızı içeren klasörü açın.",
         "LOG_FILES_LABEL": "Günlük Dosyaları",
+        "REPORT_BUG_BUTTON": "Hata Bildir",
+        "REPORT_BUG_DESCRIPTION": "GitHub'da uygulama sürümünüz ve son günlük satırlarınızla doldurulmuş yeni bir sorun kaydı açar. Siz göndermeden hiçbir şey paylaşılmaz.",
+        "REPORT_BUG_LABEL": "Hata Bildir",
         "TITLE": "Hata Ayıklama"
       },
       "TABS": {

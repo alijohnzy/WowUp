@@ -633,6 +633,9 @@
         "LOG_FILES_BUTTON": "顯示日誌檔案",
         "LOG_FILES_DESCRIPTION": "開啟包含您最後幾個日誌檔案的資料夾。",
         "LOG_FILES_LABEL": "日誌檔案",
+        "REPORT_BUG_BUTTON": "回報問題",
+        "REPORT_BUG_DESCRIPTION": "在 GitHub 上建立一個已填入應用程式版本和最近日誌的問題。在您送出之前不會傳送任何內容。",
+        "REPORT_BUG_LABEL": "回報問題",
         "TITLE": "除錯"
       },
       "TABS": {

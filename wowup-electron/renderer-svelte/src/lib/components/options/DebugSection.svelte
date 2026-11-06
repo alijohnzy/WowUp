@@ -11,12 +11,18 @@
 	// 'show-config-folder', 'log-debug-data'), none of which the main process registers — the
 	// real work already lived in the state modules, exactly as it did in the Angular services.
 
-	import { t } from '$lib/i18n.svelte';
+	import { i18n, t } from '$lib/i18n.svelte';
+	import { isTauri, platform } from '$lib/ipc';
+	import { buildIssueUrl, bugReportRepoUrl, readLogTail } from '$lib/services/bug-report';
+	import { writeFile } from '$lib/services/files';
+	import { openExternalLink } from '$lib/services/links';
 	import { addonService } from '$lib/state/addon.svelte';
 	import { session } from '$lib/state/session.svelte';
 	import { wowup } from '$lib/state/wowup.svelte';
+	import { join } from '$lib/utils/path';
 
 	let dumpingDebugData = $state(false);
+	let reportingBug = $state(false);
 
 	async function onShowLogs() {
 		await wowup.showLogsFolder();
@@ -29,11 +35,36 @@
 	async function onLogDebugData() {
 		try {
 			dumpingDebugData = true;
-			await addonService.logDebugData();
+			const data = await addonService.logDebugData();
+			// Also saved on its own: the log rotates, and this one line can be most of a file.
+			const logs = wowup.applicationLogsFolderPath;
+			if (logs) {
+				const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+				await writeFile(join(logs, `debug-data-${stamp}.json`), JSON.stringify(data, null, 2));
+				await wowup.showLogsFolder();
+			}
 		} catch (e) {
 			console.error(e);
 		} finally {
 			dumpingDebugData = false;
+		}
+	}
+
+	async function onReportBug() {
+		try {
+			reportingBug = true;
+			const url = buildIssueUrl({
+				repoUrl: bugReportRepoUrl(),
+				version: session.appVersion ?? '',
+				platform: platform(),
+				locale: i18n.locale,
+				logLines: await readLogTail(wowup.applicationLogsFolderPath)
+			});
+			await openExternalLink(url);
+		} catch (e) {
+			console.error('report a bug failed', e);
+		} finally {
+			reportingBug = false;
 		}
 	}
 </script>
@@ -81,25 +112,44 @@
 			</button>
 		</div>
 
+		<div>
+			<div>{t('PAGES.OPTIONS.DEBUG.REPORT_BUG_LABEL')}</div>
+			<small class="text-2">{t('PAGES.OPTIONS.DEBUG.REPORT_BUG_DESCRIPTION')}</small>
+		</div>
+		<div>
+			<button
+				id="report-bug-btn"
+				class="wu-btn wu-btn-primary w-full"
+				onclick={onReportBug}
+				disabled={reportingBug}
+			>
+				{t('PAGES.OPTIONS.DEBUG.REPORT_BUG_BUTTON')}
+			</button>
+		</div>
+
 		<!--
 		  AdWebView already listens on session.debugAdFrame, but nothing emitted — this button was
 		  dropped, so the listener was unreachable. The two labels are untranslated in the original
 		  too: they are passed through `| translate` with no matching key, which returns the string
 		  itself. Kept verbatim rather than inventing locale entries for a developer affordance.
 		-->
-		<div>
-			<div>Debug ad frame</div>
-			<small class="text-2">Show the dev tools for the ad frame</small>
-		</div>
-		<div>
-			<button
-				id="debug-ad-frame-btn"
-				class="wu-btn wu-btn-primary w-full"
-				onclick={() => session.debugAdFrame.emit(true)}
-			>
-				Open Dev Tools
-			</button>
-		</div>
+		<!-- Not under Tauri: the ad is an <iframe> there and release builds have no devtools, so
+		     this did nothing at all. -->
+		{#if !isTauri()}
+			<div>
+				<div>Debug ad frame</div>
+				<small class="text-2">Show the dev tools for the ad frame</small>
+			</div>
+			<div>
+				<button
+					id="debug-ad-frame-btn"
+					class="wu-btn wu-btn-primary w-full"
+					onclick={() => session.debugAdFrame.emit(true)}
+				>
+					Open Dev Tools
+				</button>
+			</div>
+		{/if}
 	</div>
 </div>
 

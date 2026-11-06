@@ -633,6 +633,9 @@
         "LOG_FILES_BUTTON": "Afficher les fichiers de log",
         "LOG_FILES_DESCRIPTION": "Ouvrez le dossier qui contient vos derniers fichiers journaux.",
         "LOG_FILES_LABEL": "Fichiers de log",
+        "REPORT_BUG_BUTTON": "Signaler un bug",
+        "REPORT_BUG_DESCRIPTION": "Ouvre un nouveau ticket sur GitHub avec la version de l'application et les dernières lignes du journal déjà remplies. Rien n'est envoyé tant que vous ne l'avez pas soumis.",
+        "REPORT_BUG_LABEL": "Signaler un bug",
         "TITLE": "Déboguage"
       },
       "TABS": {
