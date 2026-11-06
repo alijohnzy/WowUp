@@ -89,13 +89,16 @@ jobs:
             key: windows
             artifacts: |
               wowup-electron/src-tauri/target/release/bundle/nsis/*.exe
+              wowup-electron/src-tauri/target/release/bundle/nsis/*.sig
               wowup-electron/portable/*.zip
           - os: ubuntu-22.04
             label: Linux (AppImage + deb)
             key: linux
             artifacts: |
               wowup-electron/src-tauri/target/release/bundle/appimage/*.AppImage
+              wowup-electron/src-tauri/target/release/bundle/appimage/*.sig
               wowup-electron/src-tauri/target/release/bundle/deb/*.deb
+              wowup-electron/src-tauri/target/release/bundle/deb/*.sig
 
     steps:
       - name: Skip platforms not requested
@@ -221,6 +224,24 @@ jobs:
           cd ./wowup-electron/src-tauri
           cargo test
 
+      # The updater (src-tauri/src/updater.rs) orders builds by version, and every build of
+      # 2.25.4 used to report 2.25.4. The run number goes in as semver build metadata,
+      # 2.25.4+18, which semver orders numerically and the NSIS bundler turns into the Windows
+      # file version 2.25.4.18. Only the checkout is changed; local builds stay at 2.25.4, and
+      # updater.rs does not offer updates to those.
+      - name: Stamp the build number into the version
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          cd ./wowup-electron
+          node -e '
+            const fs = require("fs");
+            const f = "src-tauri/tauri.conf.json";
+            const c = JSON.parse(fs.readFileSync(f, "utf8"));
+            c.version = `${c.version.split("+")[0]}+${process.env.GITHUB_RUN_NUMBER}`;
+            fs.writeFileSync(f, JSON.stringify(c, null, 2) + "\n");
+            console.log(`Building version ${c.version}`);
+          '
+
       # tauri:build runs the renderer build itself, through beforeBuildCommand, in the tauri
       # flavour — CurseForge for addons plus the Wago ad frame.
       - name: Build app
@@ -299,6 +320,29 @@ jobs:
           rm -rf "${name}-${version}-portable"
           ls -l
 
+      # The updater installs nothing whose minisign signature does not match the public key in
+      # tauri.conf.json. Signed here rather than with bundle.createUpdaterArtifacts, which
+      # would make every local `npm run tauri:build` fail without the private key, and which
+      # does not sign the .deb.
+      - name: Sign the installers for the updater
+        if: steps.gate.outputs.run == 'true' && steps.build.outcome == 'success'
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
+        run: |
+          if [ -z "${TAURI_SIGNING_PRIVATE_KEY}" ]; then
+            echo "::warning::TAURI_SIGNING_PRIVATE_KEY is not set, so these installers cannot be offered as updates."
+            exit 0
+          fi
+          cd ./wowup-electron
+          bundle=src-tauri/target/release/bundle
+          shopt -s nullglob
+          for f in "$bundle"/nsis/*-setup.exe "$bundle"/appimage/*.AppImage "$bundle"/deb/*.deb; do
+            # Prints the signature it also writes to "$f.sig"; the file is what is used.
+            npx tauri signer sign "$f" > /dev/null
+            echo "signed $(basename "$f")"
+          done
+
       # The renderer bundle is the same one the verifier reads for the Electron build, so this
       # catches a key that arrived mangled rather than missing.
       - name: Verify the key was baked into the bundle
@@ -360,6 +404,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      # For scripts/tauri-updater-manifest.mts, which is TypeScript run directly.
+      - name: Use Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+
       # merge-multiple flattens both platforms into one directory, so the release gets the
       # installers rather than a folder per platform.
       - name: Download installers
@@ -376,7 +426,14 @@ jobs:
           # Searched recursively: upload-artifact keeps each file's path below the common
           # ancestor (portable/…zip, src-tauri/target/release/bundle/nsis/…exe), so a glob over
           # the top of dist/ found nothing and the first real publish failed with this error.
-          mapfile -t files < <(find dist -type f \( -name '*.exe' -o -name '*.AppImage' -o -name '*.deb' -o -name '*.zip' \) | sort)
+          # The stamped version (2.25.4+18) is in every file name. '+' means a space in a URL
+          # query and is easy to mangle, so the released names use '.' instead; the manifest is
+          # written from these final names, and the signatures cover content, not names.
+          find dist -type f -name '*+*' -print0 | while IFS= read -r -d '' f; do
+            mv "$f" "$(dirname "$f")/$(basename "$f" | tr '+' '.')"
+          done
+
+          mapfile -t files < <(find dist -type f \( -name '*.exe' -o -name '*.AppImage' -o -name '*.deb' -o -name '*.zip' -o -name '*.sig' \) | sort)
           if [ ${#files[@]} -eq 0 ]; then
             echo "::error::No installers were produced, so there is nothing to release."
             exit 1
@@ -423,3 +480,33 @@ jobs:
             echo
             echo "**$tag** — ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/$tag"
           } >> "$GITHUB_STEP_SUMMARY"
+
+          # The updater feed: latest.json on one fixed release, replaced on every publish, so
+          # installed copies have a stable URL (tauri.conf.json plugins.updater.endpoints).
+          # GitHub's /releases/latest skips pre-releases, and listing them needs the rate-
+          # limited API. Every published build goes in: there are no release channels.
+          #
+          # Only a release with every platform moves the feed. The manifest has one version,
+          # so a Windows-only build would leave Linux copies with no entry, and the updater
+          # treats a missing entry as an error on every check.
+          if [ "${{ inputs.platforms }}" != "all" ]; then
+            echo "::warning::Built for '${{ inputs.platforms }}' only, so the updater feed was left on the previous build."
+            exit 0
+          fi
+          if ! find dist -name '*.sig' | grep -q .; then
+            echo "::warning::No signatures (TAURI_SIGNING_PRIVATE_KEY unset), so the updater feed was not changed."
+            exit 0
+          fi
+
+          node wowup-electron/scripts/tauri-updater-manifest.mts \
+            --dir dist --repo "${GITHUB_REPOSITORY}" --tag "$tag" \
+            --version "${version}+${GITHUB_RUN_NUMBER}" --out latest.json
+
+          feed=tauri-updater
+          if ! gh release view "$feed" >/dev/null 2>&1; then
+            gh release create "$feed" --prerelease --target "${GITHUB_SHA}" \
+              --title "Updater feed (do not delete)" \
+              --notes "latest.json here is what installed Tauri builds check for updates. Rewritten by every published build of .github/workflows/tauri-build.yml; deleting this release stops updates."
+          fi
+          gh release upload "$feed" latest.json --clobber
+          echo "Updater feed now offers ${version}+${GITHUB_RUN_NUMBER} (${tag})." >> "$GITHUB_STEP_SUMMARY"
