@@ -530,7 +530,7 @@
       },
       "VERSION_MISMATCH_TOOLTIP": "This update needs WoW {required}. You have WoW {current}.",
       "WTF_BACKUP_BUTTON": "Interface Settings Backup",
-      "UPDATE_ALL_TOOLTIP_MORE": "…and {{count}} more"
+      "UPDATE_ALL_TOOLTIP_MORE": "…and {count} more"
     },
     "NEWS": {
       "NEWS_LINK_COPY_TOAST": "News link copied to clipboard",
