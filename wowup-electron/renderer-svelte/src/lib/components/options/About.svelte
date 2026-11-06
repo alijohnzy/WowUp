@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { AppConfig } from '$config/environment';
 	// Port of src/app/components/options/about/about.component.{ts,html}
 	//
 	// Angular: 73 LOC .ts + 51 .html + 92 .scss = 216
@@ -32,11 +33,8 @@
 				<a class="wu-btn wu-btn-flat" href="https://wowup.io" {@attach externalLink()}>
 					{t('PAGES.ABOUT.WEBSITE_LINK_LABEL')}
 				</a>
-				<a
-					class="wu-btn wu-btn-flat"
-					href="https://github.com/WowUp/WowUp"
-					{@attach externalLink()}
-				>
+				<!-- This build's own repository (the fork), not upstream WowUp/WowUp. -->
+				<a class="wu-btn wu-btn-flat" href={AppConfig.wowupRepositoryUrl} {@attach externalLink()}>
 					{t('PAGES.MY_ADDONS.PAGE_CONTEXT_FOOTER.VIEW_GITHUB')}
 				</a>
 			</div>
