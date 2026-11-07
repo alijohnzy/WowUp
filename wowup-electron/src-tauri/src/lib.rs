@@ -351,6 +351,7 @@ pub fn run() {
                     // flag is what `restore_window` clears, so set it for symmetry with the
                     // close-to-tray path.
                     let _ = main.set_skip_taskbar(true);
+                    window::set_in_dock(app.handle(), false);
                 } else if let Err(e) = main.show() {
                     log::error!("could not show the main window: {e}");
                 }

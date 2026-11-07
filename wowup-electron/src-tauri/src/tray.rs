@@ -73,6 +73,8 @@ pub(crate) fn restore_window(app: &AppHandle) {
     let Some(window) = app.get_webview_window("main") else {
         return;
     };
+    // Back in the Dock before the window shows, so it comes up as a normal app.
+    crate::window::set_in_dock(app, true);
     // Unminimise first: `set_focus` on a minimised window is a no-op on some window
     // managers, which reads as the Show item doing nothing.
     if window.is_minimized().unwrap_or(false) {

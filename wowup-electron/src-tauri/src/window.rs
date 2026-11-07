@@ -64,7 +64,11 @@ pub fn close_window(app: AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 pub fn focus_window(app: AppHandle) -> Result<(), String> {
-    main_window(&app)?.set_focus().map_err(|e| e.to_string())
+    // Called when a notification is clicked, which may be while the window is closed to the
+    // tray: bring it back the whole way (shown, in the taskbar and the Dock), not just focused.
+    main_window(&app)?;
+    crate::tray::restore_window(&app);
+    Ok(())
 }
 
 #[tauri::command]
@@ -123,6 +127,31 @@ fn should_collapse_to_tray(app: &AppHandle) -> bool {
 /// The `!== "true"` comparison, isolated so it can be tested.
 fn collapse_preference(stored: Option<&serde_json::Value>) -> bool {
     stored.and_then(|v| v.as_str()) == Some("true")
+}
+
+/// macOS: whether the app has a Dock icon (and its own menu at the top of the screen).
+///
+/// Off while the window is closed to the tray or started hidden, so the app lives in the menu
+/// bar alone, as Mac tray apps do — the counterpart of `set_skip_taskbar`, which macOS ignores.
+/// Without it the closed app sat in the Dock looking like any open one. `restore_window` turns
+/// it back on before showing the window. Elsewhere this does nothing.
+pub fn set_in_dock(app: &AppHandle, visible: bool) {
+    #[cfg(target_os = "macos")]
+    {
+        let policy = if visible {
+            tauri::ActivationPolicy::Regular
+        } else {
+            tauri::ActivationPolicy::Accessory
+        };
+        if let Err(e) = app.set_activation_policy(policy) {
+            log::warn!(
+                "could not {} the Dock icon: {e}",
+                if visible { "show" } else { "hide" }
+            );
+        }
+    }
+    #[cfg(not(target_os = "macos"))]
+    let _ = (app, visible);
 }
 
 /// The flag the login item launches us with. Still registered, to match what Electron writes
@@ -225,6 +254,7 @@ pub fn forward_window_events(window: &WebviewWindow) {
                 let _ = handle.hide();
                 // Otherwise the window keeps a taskbar entry it can no longer be raised from.
                 let _ = handle.set_skip_taskbar(true);
+                set_in_dock(handle.app_handle(), false);
                 return;
             }
         }
