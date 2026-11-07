@@ -79,10 +79,28 @@ pub fn command(program: impl AsRef<OsStr>) -> Command {
     cmd
 }
 
-/// Whether this process runs from an AppImage (the launcher sets both).
+/// The AppImage file this process runs from, or `None` when it does not.
+///
+/// APPIMAGE and APPDIR alone are not enough: every program started from an AppImage inherits
+/// them. A copy of this app launched from inside another AppImage (a terminal, an IDE) saw
+/// that one's variables, and its restart started the *other* AppImage. So the executable
+/// must also live inside APPDIR, the mount the launcher set up for it.
+pub fn appimage_path() -> Option<OsString> {
+    let appimage = std::env::var_os("APPIMAGE").filter(|v| !v.is_empty())?;
+    let appdir = std::env::var_os("APPDIR").filter(|v| !v.is_empty())?;
+    let exe = std::env::current_exe().ok()?;
+    exe_inside(&exe, std::path::Path::new(&appdir)).then_some(appimage)
+}
+
+/// Whether `exe` is inside `dir`, comparing real paths where they resolve.
+pub fn exe_inside(exe: &std::path::Path, dir: &std::path::Path) -> bool {
+    let real = |p: &std::path::Path| std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf());
+    real(exe).starts_with(real(dir))
+}
+
+/// Whether this process runs from an AppImage of its own (see `appimage_path`).
 pub fn in_appimage() -> bool {
-    let set = |k: &str| std::env::var_os(k).is_some_and(|v| !v.is_empty());
-    set("APPIMAGE") && set("APPDIR")
+    appimage_path().is_some()
 }
 
 /// Open a URL or path with the desktop's handler, outside the AppImage's environment.
@@ -109,9 +127,13 @@ pub fn open_detached(target: &str) -> Result<(), String> {
 /// the old mount's variables to the next launcher. Elsewhere it is Tauri's `restart`.
 pub fn relaunch(app: &AppHandle) {
     app.state::<crate::window::Quitting>().set();
+    // The new copy starts while this one is still running. Holding the single-instance lock,
+    // this copy would look like the one to hand over to: the new copy would focus it and exit,
+    // and then this one exits too, leaving nothing running.
+    tauri_plugin_single_instance::destroy(app);
 
-    if in_appimage() {
-        if let Some(appimage) = std::env::var_os("APPIMAGE") {
+    {
+        if let Some(appimage) = appimage_path() {
             let args: Vec<OsString> = std::env::args_os().skip(1).collect();
             match command(&appimage).args(&args).stdin(Stdio::null()).spawn() {
                 Ok(_) => {
@@ -183,6 +205,18 @@ mod tests {
         assert!(!allowed_url("javascript:alert(1)"));
         assert!(!allowed_url("steam://run/1"));
         assert!(!allowed_url("not a url"));
+    }
+
+    #[test]
+    fn only_an_executable_inside_the_mount_counts_as_the_appimage() {
+        let mount = std::path::Path::new("/tmp/.mount_WowUpN-x1");
+        assert!(exe_inside(&mount.join("usr/bin/wowup"), mount));
+        // A copy started from another AppImage inherits its APPDIR but lives elsewhere.
+        assert!(!exe_inside(std::path::Path::new("/usr/bin/wowup"), mount));
+        assert!(!exe_inside(
+            std::path::Path::new("/tmp/.mount_WowUpN-x1-other/usr/bin/wowup"),
+            mount
+        ));
     }
 
     #[test]

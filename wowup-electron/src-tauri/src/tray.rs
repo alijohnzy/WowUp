@@ -49,7 +49,7 @@ pub struct TrayState {
     config: Mutex<Option<SystemTrayConfig>>,
 }
 
-fn restore_window(app: &AppHandle) {
+pub(crate) fn restore_window(app: &AppHandle) {
     let Some(window) = app.get_webview_window("main") else {
         return;
     };

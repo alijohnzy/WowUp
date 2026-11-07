@@ -153,13 +153,21 @@ pub fn run() {
     // Before GTK and WebKit initialise, and before any other thread exists to race set_var.
     #[cfg(target_os = "linux")]
     if should_disable_dmabuf(
-        std::env::var_os("APPIMAGE").as_deref(),
+        host::appimage_path().as_deref(),
         std::env::var_os(WEBKIT_DMABUF_VAR).as_deref(),
     ) {
         std::env::set_var(WEBKIT_DMABUF_VAR, "1");
     }
 
     tauri::Builder::default()
+        // First, as the plugin requires: a second launch — the launcher clicked again, or
+        // autostart while the app already sits in the tray — hands over to the copy that is
+        // running and exits, instead of opening a second window on the same data. The running
+        // copy comes forward the way the tray's Show item brings it.
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            log::info!("second launch: bringing the running window forward");
+            tray::restore_window(app);
+        }))
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_store::Builder::default().build())
