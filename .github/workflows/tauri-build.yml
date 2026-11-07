@@ -168,7 +168,7 @@ jobs:
           if dpkg -s libunwind-14-dev >/dev/null 2>&1; then
             sudo apt-get remove -y libunwind-14-dev
           fi
-          # desktop-file-utils: appimagetool, in the AppImage repack below, refuses to run
+          # desktop-file-utils: appimagetool, in the thin AppImage repack below, refuses to run
           # without desktop-file-validate.
           sudo apt-get install -y \
             libwebkit2gtk-4.1-dev \
@@ -332,7 +332,10 @@ jobs:
       # AppImage repacked it started normally. Every desktop that can run the app has its own
       # copies (GTK depends on them), so they come out. Before signing, so the updater's
       # signature covers the final file.
-      - name: Drop the bundled Wayland libraries from the AppImage
+      # Tauri's AppImage carries WebKitGTK, GTK, ICU and GStreamer: 154 MB for a 27 MB app.
+      # This keeps WowUpNight only and runs it on the system's WebKitGTK, as the .deb does —
+      # see scripts/thin-appimage.sh. Before signing, so the signature covers the thin file.
+      - name: Make the AppImage use the system WebKitGTK
         if: steps.gate.outputs.run == 'true' && matrix.key == 'linux' && steps.build.outcome == 'success'
         run: |
           cd ./wowup-electron/src-tauri/target/release/bundle/appimage
@@ -342,26 +345,11 @@ jobs:
             echo "::error::Expected one AppImage, found ${#images[@]}: ${images[*]}"
             exit 1
           fi
-          app="${images[0]}"
-
-          # Extraction needs no FUSE, which the runner does not have.
-          ./"$app" --appimage-extract > /dev/null
-          removed=0
-          for lib in squashfs-root/usr/lib/libwayland-{client,egl,server,cursor}.so* squashfs-root/usr/lib/libepoxy.so*; do
-            rm -f "$lib"
-            echo "removed ${lib#squashfs-root/}"
-            removed=$((removed + 1))
-          done
-          [ "$removed" -gt 0 ] || echo "::warning::No bundled Wayland or libepoxy libraries found; the AppImage is repacked unchanged."
-
           curl -fsSL -o "$RUNNER_TEMP/appimagetool" \
             https://github.com/AppImage/appimagetool/releases/download/1.9.0/appimagetool-x86_64.AppImage
           chmod +x "$RUNNER_TEMP/appimagetool"
-          # Absolute paths: extract-and-run changes the tool's working directory.
-          ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 "$RUNNER_TEMP/appimagetool" --no-appstream \
-            "$PWD/squashfs-root" "$PWD/$app"
-          rm -rf squashfs-root
-          ls -l "$app"
+          bash "$GITHUB_WORKSPACE/wowup-electron/scripts/thin-appimage.sh" "$PWD/${images[0]}" "$RUNNER_TEMP/appimagetool"
+          ls -l "${images[0]}"
 
       # The updater installs nothing whose minisign signature does not match the public key in
       # tauri.conf.json. Signed here rather than with bundle.createUpdaterArtifacts, which
@@ -509,6 +497,8 @@ jobs:
             "Unsigned, so Windows SmartScreen will warn on first run: **More info → Run anyway**." \
             "" \
             "The portable zip needs WebView2 on the machine; Windows 10 and 11 ship it. The installer bundles it." \
+            "" \
+            "The Linux AppImage and .deb use the WebKitGTK 4.1 already on the system rather than bundling a browser engine. If it is missing: \`sudo pacman -S webkit2gtk-4.1\` (Arch, Manjaro), \`sudo apt install libwebkit2gtk-4.1-0\` (Debian, Ubuntu), \`sudo dnf install webkit2gtk4.1\` (Fedora)." \
             "" \
             "Built by [run ${GITHUB_RUN_NUMBER}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}).")
 

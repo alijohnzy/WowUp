@@ -94,7 +94,7 @@
     "tauri:renderer:build": "cd renderer-svelte && cross-env BUILD_SHELL=tauri BUILD_FLAVOR=tauri NODE_ENV=production npm run build",
     "tauri:renderer:dev": "cd renderer-svelte && cross-env BUILD_SHELL=tauri BUILD_FLAVOR=tauri npm run dev",
     "tauri:verify:boot": "node scripts/verify-tauri-boot.mjs",
-    "tauri:link": "node scripts/link-tauri-appimage.mjs"
+    "tauri:link": "bash scripts/thin-appimage.sh && node scripts/link-tauri-appimage.mjs"
   },
   "browserslist": [
     "chrome 98"
