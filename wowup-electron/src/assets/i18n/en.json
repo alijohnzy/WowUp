@@ -462,6 +462,7 @@
       },
       "ADDON_IS_CODE_REPOSITORY": "Addon appears to be a code repository",
       "ADDON_REMOVED_SNACKBAR": "Successfully removed: {addonName} ",
+      "ALSO_INSTALLED_TOOLTIP": "Also installed in: {clients}\nTo copy its settings from there: right-click → Copy settings from.",
       "CHANGE_ADDON_PROVIDER_CONFIRMATION": {
         "MESSAGE": "Do you want to change the addon provider for {addonName} to {providerName}? This operation will uninstall your existing addon and replace it with a copy from the new provider.",
         "TITLE": "Change Addon Provider?"

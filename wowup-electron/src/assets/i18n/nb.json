@@ -462,6 +462,7 @@
       },
       "ADDON_IS_CODE_REPOSITORY": "Utvidelsen ser ut til å være et koderepository",
       "ADDON_REMOVED_SNACKBAR": "{addonName} ble fjernet",
+      "ALSO_INSTALLED_TOOLTIP": "Også installert i: {clients}\nFor å kopiere innstillingene derfra: høyreklikk → Kopier innstillinger fra.",
       "CHANGE_ADDON_PROVIDER_CONFIRMATION": {
         "MESSAGE": "Vil du endre utvidelsesleverandøren for {addonName} til {providerName}? Denne operasjonen vil avinstallere den eksisterende utvidelsen og erstatte den med en ny kopi fra den nye leverandøren.",
         "TITLE": "Endre utvidelsesleverandør?"

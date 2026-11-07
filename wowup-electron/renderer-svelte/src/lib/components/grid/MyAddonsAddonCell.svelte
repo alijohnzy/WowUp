@@ -25,6 +25,7 @@
 	import FundingButton from '$lib/components/addons/FundingButton.svelte';
 	import { session } from '$lib/state/session.svelte';
 	import { addonProviders } from '$lib/state/addon-providers.svelte';
+	import { addonFlavors } from '$lib/state/addon-flavors.svelte';
 
 	interface Props {
 		params: ICellRendererParams;
@@ -66,6 +67,17 @@
 			!hasIgnoreReason &&
 			!hasWarning &&
 			item?.addon?.providerName === ADDON_PROVIDER_UNKNOWN
+	);
+
+	// The user's other WoW installations that also have this addon — the ones "Copy settings
+	// from" offers on right-click.
+	let alsoInstalledIn = $derived(
+		item?.addon
+			? addonFlavors
+					.installedIn(item.addon, item.addon.installationId)
+					.map((i) => i.displayName)
+					.join(', ')
+			: ''
 	);
 
 	let showUpdateVersion = $derived(session.myAddonsCompactVersion && item?.needsUpdate());
@@ -129,6 +141,15 @@
 
 			{#if hasMultipleProviders}
 				<Icon name="fas:code-branch" label={t('PAGES.MY_ADDONS.MULTIPLE_PROVIDERS_TOOLTIP')} />
+			{/if}
+
+			{#if alsoInstalledIn}
+				<span
+					class="also-installed"
+					title={i18n.t('PAGES.MY_ADDONS.ALSO_INSTALLED_TOOLTIP', { clients: alsoInstalledIn })}
+				>
+					<Icon name="fas:layer-group" />
+				</span>
 			{/if}
 
 			{#if item?.addon?.autoUpdateEnabled}
@@ -266,6 +287,10 @@
 
 	.channel.alpha {
 		color: var(--epic-color);
+	}
+
+	.also-installed {
+		color: var(--control-color);
 	}
 
 	.ignore-icon {

@@ -462,6 +462,7 @@
       },
       "ADDON_IS_CODE_REPOSITORY": "Bu eklenti bir kaynak kodu deposu gibi görünüyor",
       "ADDON_REMOVED_SNACKBAR": "Başarıyla kaldırıldı: {addonName} ",
+      "ALSO_INSTALLED_TOOLTIP": "Şuralarda da yüklü: {clients}\nAyarlarını oradan kopyalamak için: sağ tıklayın → Ayarları şuradan kopyala.",
       "CHANGE_ADDON_PROVIDER_CONFIRMATION": {
         "MESSAGE": "{addonName} eklentisinin sağlayıcısını {providerName} olarak değiştirmek istiyor musunuz? Bu işlem mevcut eklentiyi kaldıracak ve yeni sağlayıcıdan bir kopya ile değiştirecektir.",
         "TITLE": "Eklenti Sağlayıcısını Değiştir?"

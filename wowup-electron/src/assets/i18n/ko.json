@@ -462,6 +462,7 @@
       },
       "ADDON_IS_CODE_REPOSITORY": "애드온이 코드 저장소인 것 같습니다",
       "ADDON_REMOVED_SNACKBAR": "삭제 완료: {addonName} ",
+      "ALSO_INSTALLED_TOOLTIP": "다른 곳에도 설치됨: {clients}\n그곳의 설정을 복사하려면 우클릭 → 다음에서 설정 복사.",
       "CHANGE_ADDON_PROVIDER_CONFIRMATION": {
         "MESSAGE": "{addonName} 애드온의 제공자를 {providerName}로 변경하시겠습니까? 애드온이 먼저 삭제된 후, 새 제공자의 버전으로 다시 설치됩니다",
         "TITLE": "애드온 제공자를 변경할까요?"

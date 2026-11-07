@@ -462,6 +462,7 @@
       },
       "ADDON_IS_CODE_REPOSITORY": "Addon wydaje się być repozytorium kodu",
       "ADDON_REMOVED_SNACKBAR": "Pomyślnie usunięto: {addonName} ",
+      "ALSO_INSTALLED_TOOLTIP": "Zainstalowano także w: {clients}\nAby skopiować stamtąd ustawienia: prawy przycisk → Kopiuj ustawienia z.",
       "CHANGE_ADDON_PROVIDER_CONFIRMATION": {
         "MESSAGE": "Chcesz zmienić dostawcę addonu dla {addonName} na {providerName}? Ta operacja spowoduje odinstalowanie istniejącego addonu i zastąpi go kopią od nowego dostawcy.",
         "TITLE": "Zmienić dostawcę addonu?"

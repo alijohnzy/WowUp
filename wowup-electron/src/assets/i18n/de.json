@@ -462,6 +462,7 @@
       },
       "ADDON_IS_CODE_REPOSITORY": "Addon scheint ein Code-Repository zu sein",
       "ADDON_REMOVED_SNACKBAR": "{addonName} erfolgreich entfernt",
+      "ALSO_INSTALLED_TOOLTIP": "Auch installiert in: {clients}\nUm die Einstellungen von dort zu übernehmen: Rechtsklick → Einstellungen kopieren von.",
       "CHANGE_ADDON_PROVIDER_CONFIRMATION": {
         "MESSAGE": "Möchtest Du den Anbieter für {addonName} auf {providerName} festlegen? Dies wird das aktuelle Addon deinstallieren und durch eine Version vom neuen Anbieter ersetzen.",
         "TITLE": "Addon-Anbieter wechseln?"

@@ -462,6 +462,7 @@
       },
       "ADDON_IS_CODE_REPOSITORY": "Jedná se o addon z repozitáře kódu",
       "ADDON_REMOVED_SNACKBAR": "Úspěšně odebráno: {addonName} ",
+      "ALSO_INSTALLED_TOOLTIP": "Nainstalováno také v: {clients}\nNastavení odtud zkopírujete přes pravé tlačítko → Kopírovat nastavení z.",
       "CHANGE_ADDON_PROVIDER_CONFIRMATION": {
         "MESSAGE": "Opravdu chcete změnit poskytovatele pro {addonName} na {providerName}? Tato operace odinstaluje existující addon a nainstaluje verzi od nového poskytovatele.",
         "TITLE": "Změnit poskytovatele addonu?"

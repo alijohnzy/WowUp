@@ -462,6 +462,7 @@
       },
       "ADDON_IS_CODE_REPOSITORY": "L'addon semble être un référentiel de code",
       "ADDON_REMOVED_SNACKBAR": "Supprimé avec succès : {addonName} ",
+      "ALSO_INSTALLED_TOOLTIP": "Également installé dans : {clients}\nPour en copier les paramètres : clic droit → Copier les paramètres depuis.",
       "CHANGE_ADDON_PROVIDER_CONFIRMATION": {
         "MESSAGE": "Souhaitez-vous changer le fournisseur d´addons pour {addonName} par {providerName}? Cette opération désinstallera l´addon existant et le remplacera par une copie du nouveau fournisseur.",
         "TITLE": "Changer de fournisseur d´addon"

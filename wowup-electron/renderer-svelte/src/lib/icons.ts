@@ -25,6 +25,7 @@ import {
 	faDiceD6,
 	faEllipsisVertical,
 	faGear,
+	faLayerGroup,
 	faLink,
 	faMagnifyingGlass,
 	faMinimize,
@@ -77,6 +78,8 @@ export const ICONS = {
 	'fas:dice-d6': faDiceD6,
 	'fas:magnifying-glass': faMagnifyingGlass,
 	'fas:newspaper': faNewspaper,
+	// My Addons: the addon is also installed in another WoW installation.
+	'fas:layer-group': faLayerGroup,
 
 	'far:circle-check': farCircleCheck,
 	'far:circle-question': faCircleQuestion,

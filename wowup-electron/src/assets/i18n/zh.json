@@ -462,6 +462,7 @@
       },
       "ADDON_IS_CODE_REPOSITORY": "插件似乎是代码仓库",
       "ADDON_REMOVED_SNACKBAR": "{addonName} 已成功移除",
+      "ALSO_INSTALLED_TOOLTIP": "也安装于：{clients}\n如需从那里复制设置：右键 → 从以下版本复制设置。",
       "CHANGE_ADDON_PROVIDER_CONFIRMATION": {
         "MESSAGE": "是否将 {addonName} 的安装源修改为 {providerName}？此操作将会用 {providerName} 的版本替换现有版本。",
         "TITLE": "修改插件安装源？"

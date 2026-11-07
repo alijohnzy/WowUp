@@ -440,6 +440,8 @@
 
 		try {
 			baseRowData = formatAddons(await addonService.getAddons(installation, reScan));
+			// For the "also installed in" icon on each row: other installations may have changed.
+			void addonFlavors.refresh();
 		} catch (e) {
 			console.error(e);
 		} finally {
