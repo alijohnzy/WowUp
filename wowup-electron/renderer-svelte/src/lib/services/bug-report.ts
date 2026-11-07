@@ -23,6 +23,17 @@ export interface BugReportInfo {
  */
 export const MAX_ISSUE_URL_LENGTH = 7000;
 
+/**
+ * Longer log lines are cut. The app logs whole API responses at debug level (one line of
+ * 17,757 characters was the newest in a real log), and a single line that size used to push
+ * the URL over the limit on its own, so every line was dropped and the report said "No log
+ * lines found".
+ */
+export const MAX_LOG_LINE_LENGTH = 300;
+
+const shorten = (line: string): string =>
+	line.length > MAX_LOG_LINE_LENGTH ? `${line.slice(0, MAX_LOG_LINE_LENGTH)} …` : line;
+
 function body(info: BugReportInfo, logLines: string[]): string {
 	const log = logLines.length
 		? ['<details><summary>Recent log</summary>', '', '```', ...logLines, '```', '</details>']
@@ -50,7 +61,7 @@ function body(info: BugReportInfo, logLines: string[]): string {
 /** The new-issue URL, trimmed from the oldest log line until it fits. */
 export function buildIssueUrl(info: BugReportInfo): string {
 	const base = `${info.repoUrl.replace(/\/+$/, '')}/issues/new?body=`;
-	let lines = info.logLines;
+	let lines = info.logLines.map(shorten);
 	for (;;) {
 		const url = base + encodeURIComponent(body(info, lines));
 		if (url.length <= MAX_ISSUE_URL_LENGTH || lines.length === 0) return url;

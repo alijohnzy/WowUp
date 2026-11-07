@@ -43,6 +43,21 @@ describe('buildIssueUrl', () => {
 		expect(body).not.toContain('line 0 ');
 	});
 
+	it('keeps recent lines even when the newest one is enormous', () => {
+		const logLines = [
+			'older line',
+			'recent line',
+			`[wago] getFeaturedAddons ${'x'.repeat(17_757)}`
+		];
+		const url = buildIssueUrl({ ...info, logLines });
+		expect(url.length).toBeLessThanOrEqual(MAX_ISSUE_URL_LENGTH);
+		const body = bodyOf(url);
+		expect(body).not.toContain('No log lines found');
+		expect(body).toContain('recent line');
+		expect(body).toContain(`[wago] getFeaturedAddons ${'x'.repeat(100)}`);
+		expect(body).toContain(' …');
+	});
+
 	it('still produces a report with no log at all', () => {
 		expect(bodyOf(buildIssueUrl({ ...info, logLines: [] }))).toContain('No log lines found');
 	});
