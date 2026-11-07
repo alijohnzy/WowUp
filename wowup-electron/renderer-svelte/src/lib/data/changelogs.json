@@ -1,6 +1,6 @@
 [
 	{
-		"Version": "2.25.4 #next",
+		"Version": "2.25.4 #42",
 		"Night": true,
 		"html": "\n    <h4>Fixes</h4>\n    <ul>\n    <li>Check Updates on My Addons checks every WoW version, not only the selected one, so the update counts in the version list are right for all of them</li>\n    <li>Updates found by Check Updates show on the system tray straight away, instead of at the next hourly check</li>\n    </ul>\n    "
 	},
