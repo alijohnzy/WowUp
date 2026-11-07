@@ -34,6 +34,8 @@ async function stubPreload(page: Page) {
 			rendererInvoke: (channel: string, ...args: unknown[]) => {
 				calls.push({ channel, args });
 				if (channel === 'get-app-version') return Promise.resolve('2.23.0');
+				// Both shells always answer with a locale tag, and startup relies on one.
+				if (channel === 'get-locale') return Promise.resolve('en');
 				if (channel === 'ow-is-cmp-required') return Promise.resolve(false);
 				if (channel === 'store-get-object') return Promise.resolve(store[args[1] as string]);
 				return Promise.resolve(undefined);
