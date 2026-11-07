@@ -427,6 +427,49 @@
 	color: var(--warn-color);
 }
 
+/* WowUpNight. Dark only: near-black surfaces with a midnight-purple cast, and accents built
+ * from the logo's #1E1C47. Unlike the other themes it tints the app root, because their
+ * panels are translucent over the gray page and the art behind it; here the art still shows,
+ * faintly, through a navy wash. */
+.night-theme {
+	--overlay-subtle: rgb(255 255 255 / 5%);
+	--overlay-hover: rgb(255 255 255 / 7%);
+	--overlay-selected: rgb(255 255 255 / 12%);
+	--overlay-strong: rgb(255 255 255 / 20%);
+	--overlay-border: rgb(255 255 255 / 14%);
+
+	color-scheme: dark;
+	background-color: rgb(12 11 26 / 82%);
+	--background-primary: #5b55c9;
+	--background-primary-2: #3a3690;
+	--background-primary-3: #1e1c47;
+	--background-secondary-1: rgba(40, 38, 70, 0.88);
+	--background-secondary-2: rgba(29, 27, 54, 0.92);
+	--background-secondary-2-fill: rgba(29, 27, 54, 1);
+	--background-secondary-3: rgba(21, 20, 40, 0.88);
+	--background-secondary-4: rgba(15, 14, 29, 0.88);
+	--background-secondary-5: rgba(9, 9, 19, 0.88);
+	--control-color: #8b7dff;
+	--epic-color: #a335ee;
+	--rare-color: #3b8eea;
+	--scrollbar-track-color: #141329;
+	--text-1: #f4f3ff;
+	--text-2: #d9d7f0;
+	--text-3: #c3c0e0;
+	--text-4: #a9a6cc;
+	--warn-color: #ff5c5c;
+	--tab-text: #f4f3ff;
+	--tab-disabled: #f4f3ff;
+	--tab-inactive: #a9a6cc;
+	--divider-color: #3b3866;
+	--grid-border: rgba(255, 255, 255, 0.1);
+	--footer-hover: #2b2950;
+
+	--title-logo: url('/assets/images/wowup-night-white-1.png');
+	--theme-logo: url('/assets/images/wowup-night-white-1.png');
+	--ad-placeholder: url('/assets/images/wowup-placeholder.png');
+}
+
 /* Two logo variables, and the difference matters. --title-logo is always the white mark; the
  * nav rail uses it and the light themes invert it to black (see below). --theme-logo is already
  * theme-appropriate and is used undimmed as the page watermark on About / Account / News.

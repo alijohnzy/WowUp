@@ -110,7 +110,8 @@
       "DEFAULT": "WowUp",
       "GROUP_DARK": "Koyu",
       "GROUP_LIGHT": "Açık",
-      "HORDE": "Horde"
+      "HORDE": "Horde",
+      "NIGHT": "Gece"
     },
     "UPDATES_ON_HOLD_NOTIFICATION_BODY": "Bazı eklenti güncellemeleri, yüklü olandan daha yeni bir World of Warcraft sürümü gerektiriyor. İncelemek için WowUp'ı açın.",
     "UPDATES_ON_HOLD_NOTIFICATION_TITLE": "Güncellemeler beklemede",

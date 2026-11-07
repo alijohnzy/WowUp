@@ -110,7 +110,8 @@
       "DEFAULT": "WowUp",
       "GROUP_DARK": "Tmavý",
       "GROUP_LIGHT": "Světlý",
-      "HORDE": "Horda"
+      "HORDE": "Horda",
+      "NIGHT": "Noc"
     },
     "UPDATES_ON_HOLD_NOTIFICATION_BODY": "Některé aktualizace addonů vyžadují novější verzi World of Warcraft, než je nainstalovaná. Otevřete WowUp a zkontrolujte je.",
     "UPDATES_ON_HOLD_NOTIFICATION_TITLE": "Aktualizace pozastaveny",

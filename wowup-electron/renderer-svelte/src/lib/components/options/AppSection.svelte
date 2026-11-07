@@ -18,6 +18,7 @@
 		DEFAULT_THEME,
 		HORDE_LIGHT_THEME,
 		HORDE_THEME,
+		NIGHT_THEME,
 		IPC_RESTART_APP
 	} from '$common/constants';
 	import { WowUpReleaseChannelType } from '$common/wowup/wowup-release-channel-type';
@@ -56,7 +57,8 @@
 			themes: [
 				{ display: 'APP.THEME.DEFAULT', class: DEFAULT_THEME },
 				{ display: 'APP.THEME.ALLIANCE', class: ALLIANCE_THEME },
-				{ display: 'APP.THEME.HORDE', class: HORDE_THEME }
+				{ display: 'APP.THEME.HORDE', class: HORDE_THEME },
+				{ display: 'APP.THEME.NIGHT', class: NIGHT_THEME }
 			]
 		},
 		{

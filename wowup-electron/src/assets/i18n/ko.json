@@ -110,7 +110,8 @@
       "DEFAULT": "기본",
       "GROUP_DARK": "다크모드",
       "GROUP_LIGHT": "라이트모드",
-      "HORDE": "호드"
+      "HORDE": "호드",
+      "NIGHT": "밤"
     },
     "UPDATES_ON_HOLD_NOTIFICATION_BODY": "일부 애드온 업데이트에는 설치된 버전보다 최신 World of Warcraft가 필요합니다. WowUp을 열어 확인하세요.",
     "UPDATES_ON_HOLD_NOTIFICATION_TITLE": "업데이트 보류됨",

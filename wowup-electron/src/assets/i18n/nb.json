@@ -110,7 +110,8 @@
       "DEFAULT": "Standard",
       "GROUP_DARK": "Mørk",
       "GROUP_LIGHT": "Lys",
-      "HORDE": "Horden"
+      "HORDE": "Horden",
+      "NIGHT": "Natt"
     },
     "UPDATES_ON_HOLD_NOTIFICATION_BODY": "Noen utvidelsesoppdateringer krever en nyere versjon av World of Warcraft enn den som er installert. Åpne WowUp for å se dem.",
     "UPDATES_ON_HOLD_NOTIFICATION_TITLE": "Oppdateringer satt på vent",

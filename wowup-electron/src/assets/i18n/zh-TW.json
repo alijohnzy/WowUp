@@ -110,7 +110,8 @@
       "DEFAULT": "WowUp",
       "GROUP_DARK": "暗色",
       "GROUP_LIGHT": "亮色",
-      "HORDE": "部落"
+      "HORDE": "部落",
+      "NIGHT": "夜晚"
     },
     "UPDATES_ON_HOLD_NOTIFICATION_BODY": "部分插件更新需要比目前已安裝版本更新的《魔獸世界》。開啟 WowUp 查看。",
     "UPDATES_ON_HOLD_NOTIFICATION_TITLE": "更新已暫緩",

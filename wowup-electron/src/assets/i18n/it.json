@@ -110,7 +110,8 @@
       "DEFAULT": "WowUp",
       "GROUP_DARK": "Scuro",
       "GROUP_LIGHT": "Chiaro",
-      "HORDE": "Orda"
+      "HORDE": "Orda",
+      "NIGHT": "Notte"
     },
     "UPDATES_ON_HOLD_NOTIFICATION_BODY": "Alcuni aggiornamenti degli addon richiedono una versione di World of Warcraft più recente di quella installata. Apri WowUp per controllarli.",
     "UPDATES_ON_HOLD_NOTIFICATION_TITLE": "Aggiornamenti in sospeso",

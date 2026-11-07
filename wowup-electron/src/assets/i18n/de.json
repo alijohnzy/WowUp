@@ -110,7 +110,8 @@
       "DEFAULT": "Standard",
       "GROUP_DARK": "Dunkel",
       "GROUP_LIGHT": "Hell",
-      "HORDE": "Horde"
+      "HORDE": "Horde",
+      "NIGHT": "Nacht"
     },
     "UPDATES_ON_HOLD_NOTIFICATION_BODY": "Einige Addon-Updates benötigen eine neuere Version von World of Warcraft als die installierte. Öffne WowUp, um sie zu prüfen.",
     "UPDATES_ON_HOLD_NOTIFICATION_TITLE": "Updates zurückgehalten",

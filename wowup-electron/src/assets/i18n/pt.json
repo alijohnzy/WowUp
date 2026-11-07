@@ -110,7 +110,8 @@
       "DEFAULT": "Padrão",
       "GROUP_DARK": "Escuro",
       "GROUP_LIGHT": "Claro",
-      "HORDE": "Horda"
+      "HORDE": "Horda",
+      "NIGHT": "Noite"
     },
     "UPDATES_ON_HOLD_NOTIFICATION_BODY": "Algumas atualizações de addons exigem uma versão do World of Warcraft mais recente do que a instalada. Abra o WowUp para revisá-las.",
     "UPDATES_ON_HOLD_NOTIFICATION_TITLE": "Atualizações em espera",

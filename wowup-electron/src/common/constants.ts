@@ -229,6 +229,8 @@ export const HORDE_THEME = "horde-theme";
 export const HORDE_LIGHT_THEME = "horde-theme-light-theme";
 export const ALLIANCE_THEME = "alliance-theme";
 export const ALLIANCE_LIGHT_THEME = "alliance-theme-light-theme";
+// WowUpNight: a darker theme in the midnight purple of its logo (Tauri renderer only).
+export const NIGHT_THEME = "night-theme";
 export const DEFAULT_BG_COLOR = "#444444";
 export const DEFAULT_LIGHT_BG_COLOR = "#f3f3f3";
 
