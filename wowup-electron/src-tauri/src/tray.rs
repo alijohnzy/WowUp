@@ -65,6 +65,14 @@ fn restore_window(app: &AppHandle) {
     let _ = window.set_focus();
 }
 
+/// The tray's own icon: the plain WowUpNight mark, without the "Night" the app icon carries,
+/// which at tray size is a smudge under the W — right where the update badge goes.
+fn tray_icon() -> Result<Image<'static>, String> {
+    Image::from_bytes(include_bytes!("../icons/tray.png"))
+        .map(|i| i.to_owned())
+        .map_err(|e| format!("tray icon: {e}"))
+}
+
 /// Build the tray menu.
 ///
 /// The pending addons go in as disabled items under the action. That is not where a tooltip
@@ -134,10 +142,7 @@ pub fn create_tray_menu(
     let name = app.package_info().name.clone();
     let menu = build_menu(&app, &config, 0, &[])?;
 
-    let icon = app
-        .default_window_icon()
-        .cloned()
-        .ok_or_else(|| "no bundled window icon to use for the tray".to_string())?;
+    let icon = tray_icon()?;
 
     let tray = TrayIconBuilder::with_id("main")
         .icon(icon)
@@ -197,6 +202,12 @@ fn nonempty<'a>(value: &'a str, fallback: &'a str) -> &'a str {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_tray_icon_is_the_plain_mark() {
+        let icon = tray_icon().unwrap();
+        assert_eq!((icon.width(), icon.height()), (128, 128));
+    }
 
     #[test]
     fn labels_fall_back_when_the_renderer_sends_nothing() {
@@ -624,10 +635,7 @@ pub fn set_tray_update_count(
             tray.set_menu(Some(menu)).map_err(|e| e.to_string())?;
         }
 
-        let base = app
-            .default_window_icon()
-            .cloned()
-            .ok_or_else(|| "no bundled window icon to badge".to_string())?;
+        let base = tray_icon()?;
 
         let badged = draw_badge(base.rgba(), base.width(), base.height(), count, state);
         tray.set_icon(Some(Image::new_owned(badged, base.width(), base.height())))

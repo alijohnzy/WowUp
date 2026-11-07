@@ -98,7 +98,7 @@ export function buildUpdaterManifest(opts: ManifestOptions): UpdaterManifest {
 
   return {
     version: opts.version,
-    notes: opts.notes ?? `WowUp-CF Tauri ${opts.version}`,
+    notes: opts.notes ?? `WowUpNight ${opts.version}`,
     pub_date: opts.pubDate,
     releaseUrl: `${base}/tag/${encodeURIComponent(opts.tag)}`,
     platforms,

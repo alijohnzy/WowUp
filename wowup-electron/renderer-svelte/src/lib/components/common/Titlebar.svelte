@@ -15,21 +15,13 @@
 		IPC_WINDOW_IS_MAXIMIZED,
 		IPC_WINDOW_LEAVE_FULLSCREEN
 	} from '$common/constants';
-	import { AppConfig } from '$config/environment';
 	import { invoke, isDesktop, isLinux, isMac, isWin, on } from '$lib/ipc';
 	import { t } from '$lib/i18n.svelte';
 	import { electron } from '$lib/state/electron.svelte';
 	import { snackbar } from '$lib/state/snackbar.svelte';
+	import AppName from './AppName.svelte';
 
 	let isFullscreen = $state(false);
-
-	let titleKey = $derived(
-		isFullscreen
-			? 'APP.WINDOW_TITLE_FULLSCREEN'
-			: AppConfig.curseforge.enabled
-				? 'APP.WINDOW_TITLE_CF'
-				: 'APP.WINDOW_TITLE'
-	);
 
 	$effect(() => {
 		if (!isDesktop()) return;
@@ -92,7 +84,7 @@
 	<div class="titlebar-drag-region" data-tauri-drag-region ondblclick={onDblClick}></div>
 
 	<div class="title-container">
-		<div>{t(titleKey)}</div>
+		<div><AppName /></div>
 	</div>
 
 	{#if isWin() || isLinux()}

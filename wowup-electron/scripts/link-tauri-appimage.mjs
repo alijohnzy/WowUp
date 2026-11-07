@@ -1,8 +1,12 @@
-// Points ~/Applications/WowUp-CF-Tauri.AppImage at the AppImage just built, and installs the
+// Points ~/Applications/WowUpNight.AppImage at the AppImage just built, and installs the
 // desktop entry and icons that go with it.
 //
+// The app was WowUp-CF-Tauri before it became WowUpNight. An existing
+// ~/Applications/WowUp-CF-Tauri.AppImage link is repointed too, because other things launch
+// it by that name — the autostart entry, for one.
+//
 // Convenience for running the Tauri build alongside the Electron one during the migration.
-// The bundler emits a versioned filename (WowUp-CF-Tauri_2.23.0_amd64.AppImage), so a
+// The bundler emits a versioned filename (WowUpNight_2.25.4_amd64.AppImage), so a
 // symlink made by hand goes stale the next time the version changes; this repoints it.
 //
 // The desktop entry is not cosmetic. On Wayland a window carries no icon of its own — there
@@ -36,7 +40,8 @@ const args = process.argv.slice(2);
 const dirFlag = args.indexOf("--dir");
 const targetDir = dirFlag !== -1 ? args[dirFlag + 1] : path.join(homedir(), "Applications");
 
-const LINK_NAME = "WowUp-CF-Tauri.AppImage";
+const LINK_NAME = "WowUpNight.AppImage";
+const LEGACY_LINK_NAME = "WowUp-CF-Tauri.AppImage";
 
 const bundleDir = path.join(root, "src-tauri/target/release/bundle/appimage");
 const built = existsSync(bundleDir) && readdirSync(bundleDir).find((f) => f.endsWith(".AppImage"));
@@ -52,30 +57,31 @@ if (!existsSync(targetDir)) {
 
 const source = path.join(bundleDir, built);
 const link = path.join(targetDir, LINK_NAME);
-let alreadyLinked = false;
 
-// Replace only a symlink. A real file of that name is someone else's, and clobbering a
-// 100 MB binary because a name happened to match is not a thing to do silently.
-if (existsSync(link) || lstatSync(link, { throwIfNoEntry: false })) {
-  if (!lstatSync(link).isSymbolicLink()) {
-    console.error(`${link} exists and is not a symlink — refusing to replace it.`);
-    process.exit(1);
+/** Point `linkPath` at the new build. Only ever replaces a symlink. */
+function pointAt(linkPath) {
+  if (lstatSync(linkPath, { throwIfNoEntry: false })) {
+    // A real file of that name is someone else's, and clobbering a 100 MB binary because a
+    // name happened to match is not a thing to do silently.
+    if (!lstatSync(linkPath).isSymbolicLink()) {
+      console.error(`${linkPath} exists and is not a symlink — refusing to replace it.`);
+      process.exit(1);
+    }
+    if (readlinkSync(linkPath) === source) {
+      // Not an early exit: the desktop entry below still has to be written, and skipping it
+      // because the symlink happened to be current is how it silently never gets installed.
+      console.log(`already current: ${linkPath}\n             -> ${source}`);
+      return;
+    }
+    unlinkSync(linkPath);
   }
-  if (readlinkSync(link) === source) {
-    // Not an early exit: the desktop entry below still has to be written, and skipping it
-    // because the symlink happened to be current is how it silently never gets installed.
-    alreadyLinked = true;
-  } else {
-    unlinkSync(link);
-  }
+  symlinkSync(source, linkPath);
+  console.log(`linked: ${linkPath}\n     -> ${source}`);
 }
 
-if (alreadyLinked) {
-  console.log(`already current: ${link}\n             -> ${source}`);
-} else {
-  symlinkSync(source, link);
-  console.log(`linked: ${link}\n     -> ${source}`);
-}
+pointAt(link);
+const legacy = path.join(targetDir, LEGACY_LINK_NAME);
+if (lstatSync(legacy, { throwIfNoEntry: false })?.isSymbolicLink()) pointAt(legacy);
 
 // ---- desktop integration ---------------------------------------------------------------
 
@@ -115,7 +121,7 @@ writeFileSync(
   desktopFile,
   `[Desktop Entry]
 Type=Application
-Name=WowUp-CF (Tauri)
+Name=WowUpNight
 Comment=World of Warcraft addon updater
 Categories=Game;
 Terminal=false

@@ -427,7 +427,7 @@ jobs:
         if: ${{ !cancelled() && steps.gate.outputs.run == 'true' && steps.build.outcome == 'success' }}
         uses: actions/upload-artifact@v6
         with:
-          name: WowUp-CF-Tauri-${{ matrix.key }}-${{ steps.gate.outputs.ref }}
+          name: WowUpNight-${{ matrix.key }}-${{ steps.gate.outputs.ref }}
           path: ${{ matrix.artifacts }}
           retention-days: 7
           compression-level: 0
@@ -463,7 +463,7 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           path: dist
-          pattern: WowUp-CF-Tauri-*
+          pattern: WowUpNight-*
           merge-multiple: true
 
       - name: Publish
@@ -493,7 +493,7 @@ jobs:
           [ -n "$tag" ] || tag="tauri-v${version}-${GITHUB_RUN_NUMBER}"
 
           notes=$(printf '%s\n' \
-            "Tauri build of WowUp-CF from \`${GITHUB_REF_NAME}\` @ \`${GITHUB_SHA::8}\`." \
+            "WowUpNight build from \`${GITHUB_REF_NAME}\` @ \`${GITHUB_SHA::8}\`." \
             "" \
             "| platform | file |" \
             "|---|---|" \
@@ -512,7 +512,7 @@ jobs:
             "" \
             "Built by [run ${GITHUB_RUN_NUMBER}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}).")
 
-          flags=(--title "WowUp-CF Tauri ${version} (build ${GITHUB_RUN_NUMBER})" --notes "$notes" --target "${GITHUB_SHA}")
+          flags=(--title "WowUpNight ${version} (build ${GITHUB_RUN_NUMBER})" --notes "$notes" --target "${GITHUB_SHA}")
           [ "${{ inputs.prerelease }}" = "true" ] && flags+=(--prerelease)
 
           if gh release view "$tag" >/dev/null 2>&1; then

@@ -2,9 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 const listFiles = vi.fn();
 const readFile = vi.fn();
+const statFiles = vi.fn();
 vi.mock('$lib/services/files', () => ({
 	listFiles: (...a: unknown[]) => listFiles(...a),
-	readFile: (...a: unknown[]) => readFile(...a)
+	readFile: (...a: unknown[]) => readFile(...a),
+	statFiles: (...a: unknown[]) => statFiles(...a)
 }));
 
 import { buildIssueUrl, MAX_ISSUE_URL_LENGTH, readLogTail } from './bug-report';
@@ -64,11 +66,20 @@ describe('buildIssueUrl', () => {
 });
 
 describe('readLogTail', () => {
-	it('reads the live log, not a rotated one, and keeps the last lines', async () => {
-		listFiles.mockResolvedValue(['WowUp-CF-Tauri.log', 'WowUp-CF-Tauri_2026-11-05_10-00-00.log']);
+	it('reads the most recently written log, whatever the app was called', async () => {
+		listFiles.mockResolvedValue([
+			'WowUp-CF-Tauri.log',
+			'WowUpNight.log',
+			'WowUpNight_2026-11-05_10-00-00.log'
+		]);
+		statFiles.mockResolvedValue({
+			'/logs/WowUp-CF-Tauri.log': { mtimeMs: 1000 },
+			'/logs/WowUpNight.log': { mtimeMs: 3000 },
+			'/logs/WowUpNight_2026-11-05_10-00-00.log': { mtimeMs: 2000 }
+		});
 		readFile.mockResolvedValue('a\nb\n\nc\nd\n');
 		expect(await readLogTail('/logs', 2)).toEqual(['c', 'd']);
-		expect(readFile).toHaveBeenCalledWith('/logs/WowUp-CF-Tauri.log');
+		expect(readFile).toHaveBeenCalledWith('/logs/WowUpNight.log');
 	});
 
 	it('gives up quietly when the log cannot be read', async () => {

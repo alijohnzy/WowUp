@@ -4,7 +4,7 @@
 // the user decides what to submit.
 
 import { AppConfig } from '$config/environment';
-import { listFiles, readFile } from '$lib/services/files';
+import { listFiles, readFile, statFiles } from '$lib/services/files';
 import { join } from '$lib/utils/path';
 
 export interface BugReportInfo {
@@ -73,12 +73,16 @@ export function buildIssueUrl(info: BugReportInfo): string {
 export async function readLogTail(logDir: string, count = 80): Promise<string[]> {
 	if (!logDir) return [];
 	try {
-		// tauri-plugin-log names the live file after the app and rotated ones after their
-		// date, so the live file is the one ending in plain `.log`.
-		const files = (await listFiles(logDir, '*.log')).sort();
-		const live = files.find((f) => !/\d{4}-\d{2}-\d{2}/.test(f)) ?? files.at(-1);
-		if (!live) return [];
-		const text = await readFile(join(logDir, live));
+		// The live log is the one written most recently. Going by name is not enough: the file
+		// is named after the app, and WowUp-CF-Tauri.log stays next to WowUpNight.log after
+		// the rename, alongside rotated copies named by date.
+		const paths = (await listFiles(logDir, '*.log')).map((f) => join(logDir, f));
+		if (paths.length === 0) return [];
+		const stats = await statFiles(paths);
+		const live = paths.reduce((newest, p) =>
+			(stats[p]?.mtimeMs ?? 0) > (stats[newest]?.mtimeMs ?? 0) ? p : newest
+		);
+		const text = await readFile(live);
 		return text
 			.split(/\r?\n/)
 			.filter((l) => l.trim() !== '')
