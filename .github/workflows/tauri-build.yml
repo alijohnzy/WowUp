@@ -168,6 +168,8 @@ jobs:
           if dpkg -s libunwind-14-dev >/dev/null 2>&1; then
             sudo apt-get remove -y libunwind-14-dev
           fi
+          # desktop-file-utils: appimagetool, in the AppImage repack below, refuses to run
+          # without desktop-file-validate.
           sudo apt-get install -y \
             libwebkit2gtk-4.1-dev \
             libappindicator3-dev \
@@ -177,7 +179,8 @@ jobs:
             libgstreamer-plugins-base1.0-dev \
             gstreamer1.0-plugins-good \
             gstreamer1.0-plugins-bad \
-            gstreamer1.0-libav
+            gstreamer1.0-libav \
+            desktop-file-utils
 
       # wowup-electron depends on the local wowup-lib-core package, so the library is compiled
       # before the app installs.
@@ -433,7 +436,11 @@ jobs:
   release:
     name: Publish release
     needs: build
-    if: ${{ inputs.publish_release && !cancelled() }}
+    # Only when every requested platform built. With !cancelled() a failed Linux job still
+    # published its pre-repack AppImage, unsigned, as build 21 — the feed guard kept it out
+    # of updates, but the release page offered a file that crashed on current distributions.
+    # Platforms that were not requested skip their steps and still count as success.
+    if: ${{ inputs.publish_release && success() }}
     runs-on: ubuntu-latest
 
     # The default token is read-only on this repository; creating a release needs write.
