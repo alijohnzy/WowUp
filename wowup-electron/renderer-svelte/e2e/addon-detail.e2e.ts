@@ -151,6 +151,24 @@ test('double-clicking a row opens the detail dialog with the addon header', asyn
 	await expect(dialog.getByText('1.2.3')).toBeVisible();
 });
 
+// The dialog stays up for a moment, marked closing, while it animates out (styles/motion.css):
+// whether it is dismissed natively with Escape or removed by its close button.
+test('the detail dialog animates closed', async ({ page }) => {
+	await openDetail(page);
+	const dialog = page.locator('dialog.addon-detail');
+
+	await page.keyboard.press('Escape');
+	await expect(dialog).toHaveClass(/closing/);
+	await expect(dialog).toHaveCount(0);
+
+	await page.locator('.ag-row').first().dblclick();
+	await expect(dialog).toBeVisible();
+	await expect(dialog).not.toHaveClass(/closing/);
+	await dialog.getByRole('button', { name: 'Close' }).click();
+	await expect(dialog).toHaveClass(/closing/);
+	await expect(dialog).toHaveCount(0);
+});
+
 test('the description tab falls back when no provider supplies one', async ({ page }) => {
 	await openDetail(page);
 

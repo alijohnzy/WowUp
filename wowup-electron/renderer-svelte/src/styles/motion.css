@@ -6,9 +6,9 @@
  * the durations to zero, so everything lands in its final state at once. Loading spinners are
  * not decoration and keep turning.
  *
- * Each animation plays when its element appears: a new page, a dialog opening, a popup
- * mounting. None of them plays on the way out — the old page is gone before the new one starts,
- * so there is never a moment with both on screen.
+ * Most play when their element appears: a new page, a dialog opening, a popup mounting. Pages
+ * do not animate out — the old one is gone before the new one starts, so there is never a moment
+ * with both on screen. Dialogs do (see .closing below).
  */
 
 :root {
@@ -42,6 +42,19 @@ html.no-motion {
 	}
 }
 
+@keyframes wu-fade-out {
+	to {
+		opacity: 0;
+	}
+}
+
+@keyframes wu-pop-out {
+	to {
+		opacity: 0;
+		transform: scale(0.97);
+	}
+}
+
 @keyframes wu-drop-in {
 	from {
 		opacity: 0;
@@ -49,16 +62,40 @@ html.no-motion {
 	}
 }
 
-/* Every dialog is a native <dialog class="wu-dialog">: it grows in over a fading backdrop. */
+/* Every dialog is a native <dialog class="wu-dialog">: it grows in over a fading backdrop. The
+ * busy overlay over My Addons only fades. */
 .wu-dialog[open] {
 	animation: wu-pop-in var(--motion) var(--motion-ease);
 }
 
+.busy-overlay[open] {
+	animation: wu-fade-in var(--motion) ease-out;
+}
+
 /* Literal durations: in older engines ::backdrop inherits nothing, not even --motion. */
-.wu-dialog[open]::backdrop {
+.wu-dialog[open]::backdrop,
+.busy-overlay[open]::backdrop {
 	animation: wu-fade-in 180ms ease-out;
 }
 
-html.no-motion .wu-dialog[open]::backdrop {
+/* Closing: shrinks and fades, backdrop with it, and holds the end state until it is removed.
+ * Added by the modalDialog attachment when the dialog is closed (Escape, a click outside,
+ * close()), and by the dialogOut transition when it is removed while open. */
+.wu-dialog.closing,
+.busy-overlay.closing {
+	animation: wu-pop-out var(--motion-fast) ease-in forwards;
+}
+
+.busy-overlay.closing {
+	animation-name: wu-fade-out;
+}
+
+.wu-dialog.closing::backdrop,
+.busy-overlay.closing::backdrop {
+	animation: wu-fade-out 120ms ease-in forwards;
+}
+
+html.no-motion .wu-dialog::backdrop,
+html.no-motion .busy-overlay::backdrop {
 	animation: none;
 }

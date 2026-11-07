@@ -21,6 +21,7 @@
 
 	import ProgressSpinner from '$lib/components/common/ProgressSpinner.svelte';
 	import { modalDialog } from '$lib/attachments/modal-dialog';
+	import { dialogOut } from '$lib/state/motion.svelte';
 
 	interface Props {
 		message?: string;
@@ -29,7 +30,7 @@
 	let { message = '' }: Props = $props();
 </script>
 
-<dialog class="busy-overlay" {@attach modalDialog(true)}>
+<dialog class="busy-overlay" {@attach modalDialog(true)} out:dialogOut|global>
 	<ProgressSpinner {message} />
 </dialog>
 

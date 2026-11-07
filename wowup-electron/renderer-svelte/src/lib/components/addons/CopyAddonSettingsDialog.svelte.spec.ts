@@ -154,7 +154,8 @@ describe('CopyAddonSettingsDialog', () => {
 				replaces: false
 			}
 		]);
-		expect(onclose).toHaveBeenCalledWith(true);
+		// Once the closing animation has played (attachments/modal-dialog.ts).
+		await vi.waitFor(() => expect(onclose).toHaveBeenCalledWith(true));
 	});
 
 	it('cannot copy with nothing selected', async () => {

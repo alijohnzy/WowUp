@@ -9,6 +9,7 @@
 	// what await already does.
 
 	import { modalDialog } from '$lib/attachments/modal-dialog';
+	import { dialogOut } from '$lib/state/motion.svelte';
 	import { t } from '$lib/i18n.svelte';
 	import { invoke } from '$lib/ipc';
 	import { dialogs } from '$lib/state/dialogs.svelte';
@@ -147,7 +148,7 @@
 	}
 </script>
 
-<dialog class="wu-dialog wtf-backup" {@attach modalDialog()} {onclose}>
+<dialog class="wu-dialog wtf-backup" {@attach modalDialog()} out:dialogOut|global {onclose}>
 	<div class="backup-header">
 		<h2>
 			{t('WTF_BACKUP.DIALOG_TITLE', { clientType: installation?.displayName ?? '' })}

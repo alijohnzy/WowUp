@@ -442,6 +442,39 @@ test('the app checks for its own update on a timer', async ({ page }) => {
 	await expect.poll(() => sentChannels(page)).toContain('app-check-update');
 });
 
+// Switching clients reloads the list. A quick reload just swaps the rows: the busy overlay — a
+// modal, which also hides the ad panel — comes up only for work that takes a while.
+test('switching clients does not flash the busy overlay', async ({ page }) => {
+	const classic = {
+		...INSTALLATION,
+		id: 'inst-2',
+		label: 'Classic',
+		displayName: 'Classic',
+		selected: false,
+		location: '/games/wow/_classic_/WowClassic.exe'
+	};
+	await stubPreload(page, ADDONS, { wow_installations: [INSTALLATION, classic] });
+	await page.goto('/');
+	await page.locator('.tab-strip').getByRole('link', { name: 'My Addons' }).click();
+	await expect(page.locator('.ag-row').first()).toBeVisible();
+
+	await page.evaluate(() => {
+		const w = window as never as { __overlaySeen: boolean };
+		w.__overlaySeen = false;
+		new MutationObserver(() => {
+			if (document.querySelector('dialog.busy-overlay')) w.__overlaySeen = true;
+		}).observe(document.body, { childList: true, subtree: true });
+	});
+	await page.locator('.select-trigger').click();
+	await page.locator('.select-item', { hasText: 'Classic' }).click();
+	await expect(page.locator('.select-trigger')).toContainText('Classic');
+	await page.waitForTimeout(600);
+
+	expect(
+		await page.evaluate(() => (window as never as { __overlaySeen: boolean }).__overlaySeen)
+	).toBe(false);
+});
+
 test('renders installed addons as grid rows', async ({ page }) => {
 	await stubPreload(page);
 	await openMyAddons(page);

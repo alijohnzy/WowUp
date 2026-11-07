@@ -65,6 +65,7 @@
 	import { dialogs } from '$lib/state/dialogs.svelte';
 	import { session } from '$lib/state/session.svelte';
 	import { accentStyle, clientColor } from '$lib/utils/client-color';
+	import { BUSY_INDICATOR_DELAY_MS, delayed } from '$lib/utils/delayed.svelte';
 	import { theme } from '$lib/state/theme.svelte';
 	import { snackbar } from '$lib/state/snackbar.svelte';
 	import { wowup } from '$lib/state/wowup.svelte';
@@ -168,7 +169,10 @@
 	// table it is updating rather than behind a blank page. The full-page spinner is kept for
 	// the one case where there is genuinely nothing to show through: the first load, before
 	// any addon has been read off disk. An overlay over an empty page is just a worse spinner.
-	let showBusyOverlay = $derived(isBusy && hasData);
+	//
+	// Only once the work has run for a moment, though: switching clients reloads the list, and
+	// a quick reload flashed the blur on and straight back off.
+	const busyOverlay = delayed(() => isBusy && hasData, BUSY_INDICATOR_DELAY_MS);
 	let showPageSpinner = $derived(isBusy && !hasData);
 	let hideGrid = $derived(!hasData);
 	let showNoAddons = $derived(!isBusy && !hasData);
@@ -1006,13 +1010,14 @@
 	<div
 		class="grid-area client-frame"
 		class:hidden={hideGrid}
+		class:loading={isBusy}
 		style:--client-color={clientFrameColor}
 	>
 		<AgGrid options={gridOptions} {rowData} onGridReady={(api) => (gridApi = api)} />
 	</div>
 </div>
 
-{#if showBusyOverlay}
+{#if busyOverlay.current}
 	<BusyOverlay message={spinnerMessage} />
 {/if}
 
@@ -1287,6 +1292,12 @@
 
 	.grid-area.hidden {
 		display: none;
+	}
+
+	/* Until the busy overlay comes up, rows from before the reload must not take clicks. The
+	   overlay is modal; it used to come up at once, and hid the ad panel on every switch. */
+	.grid-area.loading {
+		pointer-events: none;
 	}
 
 	.spinner-container,

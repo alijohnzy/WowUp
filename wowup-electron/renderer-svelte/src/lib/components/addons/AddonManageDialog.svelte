@@ -16,6 +16,7 @@
 	// never copied or mutated.
 
 	import { modalDialog } from '$lib/attachments/modal-dialog';
+	import { dialogOut } from '$lib/state/motion.svelte';
 	import { AppConfig } from '$config/environment';
 	import { AddonInstallState } from '$lib/models/addon-install-state';
 	import {
@@ -183,7 +184,7 @@
 	}
 </script>
 
-<dialog class="wu-dialog addon-manage" {@attach modalDialog()} {onclose}>
+<dialog class="wu-dialog addon-manage" {@attach modalDialog()} out:dialogOut|global {onclose}>
 	<div class="manage-header">
 		<h2>
 			{t('ADDON_IMPORT.DIALOG_TITLE', {

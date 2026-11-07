@@ -11,6 +11,7 @@
 	import type { Addon, WowInstallation } from 'wowup-lib-core';
 	import { i18n, t } from '$lib/i18n.svelte';
 	import { modalDialog } from '$lib/attachments/modal-dialog';
+	import { dialogOut } from '$lib/state/motion.svelte';
 	import Icon from '$lib/components/common/Icon.svelte';
 	import ProgressSpinner from '$lib/components/common/ProgressSpinner.svelte';
 	import {
@@ -132,6 +133,7 @@
 	bind:this={dialog}
 	class="wu-dialog copy-settings"
 	{@attach modalDialog()}
+	out:dialogOut|global
 	oncancel={(e) => busy && e.preventDefault()}
 	onclose={() => onclose(copied)}
 >

@@ -50,6 +50,7 @@
 	import { dialogs } from '$lib/state/dialogs.svelte';
 	import { session } from '$lib/state/session.svelte';
 	import { accentStyle, clientColor } from '$lib/utils/client-color';
+	import { BUSY_INDICATOR_DELAY_MS, delayed } from '$lib/utils/delayed.svelte';
 	import { theme } from '$lib/state/theme.svelte';
 	import { motion } from '$lib/state/motion.svelte';
 	import { fade, fly } from 'svelte/transition';
@@ -64,7 +65,13 @@
 
 	let query = $state('');
 	let rowData = $state<GetAddonListItem[]>([]);
-	let showTable = $state(false);
+	// The grid is built once the first list arrives and then kept: a later load (a search, a
+	// category, another client) replaces its rows in place. Tearing it down for a spinner on
+	// every load made switching clients flicker. A load that takes a while dims the grid
+	// under a spinner instead, after a moment — a quick one just shows its result.
+	let loadedOnce = $state(false);
+	let loading = $state(false);
+	const busyOverGrid = delayed(() => loading && loadedOnce, BUSY_INDICATOR_DELAY_MS);
 	let showCategories = $state(false);
 	let showInstallFromUrl = $state(false);
 	let gridApi = $state<GridApi | undefined>(undefined);
@@ -303,7 +310,7 @@
 
 	async function withLoading(load: () => Promise<AddonSearchResult[]>) {
 		session.setEnableControls(false);
-		showTable = false;
+		loading = true;
 
 		try {
 			rowData = formatAddons(await load());
@@ -312,7 +319,8 @@
 			rowData = [];
 			displayError(error as Error);
 		} finally {
-			showTable = true;
+			loading = false;
+			loadedOnce = true;
 			session.setEnableControls(true);
 		}
 	}
@@ -333,7 +341,7 @@
 
 		if (addonProviders.getEnabledAddonProviders().length === 0) {
 			rowData = [];
-			showTable = true;
+			loadedOnce = true;
 			session.setEnableControls(true);
 			return;
 		}
@@ -522,11 +530,19 @@
 		</div>
 	</div>
 
-	<div class="grid-area client-frame bg-secondary-2" style:--client-color={clientFrameColor}>
-		{#if !showTable}
+	<div
+		class="grid-area client-frame bg-secondary-2"
+		class:loading
+		style:--client-color={clientFrameColor}
+	>
+		{#if !loadedOnce}
 			<div class="spinner-container"><ProgressSpinner /></div>
 		{:else}
 			<AgGrid options={gridOptions} {rowData} onGridReady={(api) => (gridApi = api)} />
+		{/if}
+
+		{#if busyOverGrid.current}
+			<div class="grid-busy"><ProgressSpinner /></div>
 		{/if}
 
 		{#if showCategories}
@@ -665,6 +681,20 @@
 
 	.spinner-container {
 		height: 100%;
+	}
+
+	/* Rows from the previous list must not take clicks while the next one loads. */
+	.grid-area.loading {
+		pointer-events: none;
+	}
+
+	/* Over the grid while a later load runs; fades in (styles/motion.css). */
+	.grid-busy {
+		position: absolute;
+		inset: 0;
+		z-index: 5;
+		background: rgb(0 0 0 / 30%);
+		animation: wu-fade-in var(--motion) ease-out;
 	}
 
 	.drawer-backdrop,

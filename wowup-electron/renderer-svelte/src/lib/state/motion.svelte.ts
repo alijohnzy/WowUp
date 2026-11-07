@@ -9,6 +9,7 @@
 // --motion and --motion-fast, which `html.no-motion` sets to zero; the shell toggles that class
 // from `enabled`. Svelte transitions take theirs from `ms()`.
 
+import type { TransitionConfig } from 'svelte/transition';
 import { preferenceStorage } from '$lib/services/storage';
 
 export const ANIMATIONS_KEY = 'animations_enabled';
@@ -49,3 +50,20 @@ class Motion {
 }
 
 export const motion = new Motion();
+
+/** How long a dialog takes to close (--motion-fast in styles/motion.css, plus a frame). */
+export const DIALOG_CLOSE_MS = 140;
+
+/**
+ * `out:` for a native <dialog>, for when it is removed while still open — which is how most of
+ * them close: the store or the parent drops it. Starts the CSS closing animation and keeps the
+ * element until it ends. The CSS does the work because a Svelte transition's own styles reach
+ * only the element, and the dimmed ::backdrop behind it would vanish at once.
+ *
+ * Use it as `out:dialogOut|global`: a dialog is usually its component's root, removed by a block
+ * in the parent, and a local transition plays only for its own block.
+ */
+export function dialogOut(node: Element): TransitionConfig {
+	node.classList.add('closing');
+	return { duration: motion.ms(DIALOG_CLOSE_MS) };
+}

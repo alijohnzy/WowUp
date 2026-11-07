@@ -16,6 +16,7 @@
 	} from '$lib/state/dialogs.svelte';
 	import AddonDetail from '$lib/components/addons/AddonDetail.svelte';
 	import { modalDialog } from '$lib/attachments/modal-dialog';
+	import { dialogOut } from '$lib/state/motion.svelte';
 	import { t } from '$lib/i18n.svelte';
 	import { AppConfig } from '$config/environment';
 	import { invoke } from '$lib/ipc';
@@ -59,6 +60,7 @@
 		<dialog
 			class="wu-dialog"
 			{@attach modalDialog(dialog.disableClose)}
+			out:dialogOut|global
 			onclose={() => dialogs.dismiss(dialog.id)}
 		>
 			<h1 class="dialog-title">{confirmData.title}</h1>

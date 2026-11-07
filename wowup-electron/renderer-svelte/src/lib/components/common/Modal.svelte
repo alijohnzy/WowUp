@@ -4,6 +4,7 @@
 	// DialogHost, so focus trapping, Escape and ::backdrop behave identically.
 
 	import { modalDialog } from '$lib/attachments/modal-dialog';
+	import { dialogOut } from '$lib/state/motion.svelte';
 	import type { Snippet } from 'svelte';
 
 	interface Props {
@@ -18,7 +19,12 @@
 	let { title, onclose, disableClose = false, children, actions }: Props = $props();
 </script>
 
-<dialog class="wu-dialog" {@attach modalDialog(disableClose)} onclose={() => onclose?.()}>
+<dialog
+	class="wu-dialog"
+	{@attach modalDialog(disableClose)}
+	out:dialogOut|global
+	onclose={() => onclose?.()}
+>
 	<h1 class="dialog-title">{title}</h1>
 	<div class="dialog-content">{@render children()}</div>
 	{#if actions}

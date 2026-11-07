@@ -13,6 +13,7 @@
 	// ImageGallery.svelte.
 
 	import { modalDialog } from '$lib/attachments/modal-dialog';
+	import { dialogOut } from '$lib/state/motion.svelte';
 	import { ADDON_PROVIDER_GITHUB, ADDON_PROVIDER_UNKNOWN } from '$common/constants';
 	import { AddonChannelType, AddonDependencyType, type Addon } from 'wowup-lib-core';
 	import { t } from '$lib/i18n.svelte';
@@ -293,7 +294,7 @@
 	}
 </script>
 
-<dialog class="wu-dialog addon-detail" {@attach modalDialog()} {onclose}>
+<dialog class="wu-dialog addon-detail" {@attach modalDialog()} out:dialogOut|global {onclose}>
 	<div class="detail-header">
 		<button
 			type="button"
