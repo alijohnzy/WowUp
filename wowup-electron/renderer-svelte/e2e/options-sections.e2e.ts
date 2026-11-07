@@ -216,7 +216,13 @@ test('a color picked for a client frames its addon table', async ({ page }) => {
 	await expect.poll(storedColor).toBe('#e3b02a');
 
 	await page.getByRole('link', { name: 'My Addons' }).click();
-	await expect(page.locator('.client-frame')).toHaveCSS('border-top-color', 'rgb(227, 176, 42)');
+	const frame = page.locator('.client-frame');
+	await expect(frame).toHaveCSS('--client-color', '#e3b02a');
+	// Drawn at half strength (styles/theme.css); Chromium reports the mix as color(srgb … / 0.5).
+	await expect(frame).toHaveCSS(
+		'border-top-color',
+		/^color\(srgb 0\.89\d* 0\.69\d* 0\.16\d* \/ 0\.5\)$/
+	);
 	await expect(page.locator('.select-trigger .client-dot')).toHaveCSS(
 		'background-color',
 		'rgb(227, 176, 42)'

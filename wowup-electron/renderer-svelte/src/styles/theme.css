@@ -287,9 +287,12 @@
  * rgb(255,255,255) on a dark theme. */
 /* The selected client's color around its addon table, so the table says which client it
  * belongs to (lib/utils/client-color.ts). Without a color the border is still there, invisible,
- * so the table does not shift when one is set. */
+ * so the table does not shift when one is set.
+ *
+ * At half strength: the full color drew the eye away from the table it frames. The dots and
+ * the buttons keep the full color — they are small. */
 .client-frame {
-	border: 2px solid var(--client-color, transparent);
+	border: 2px solid color-mix(in srgb, var(--client-color, transparent) 50%, transparent);
 	border-radius: 6px;
 	overflow: hidden;
 }
