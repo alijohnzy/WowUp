@@ -67,6 +67,10 @@ pub struct AppUpdateEvent {
     /// instead of calling `app-install-update`.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub manual: bool,
+    /// True when the check was skipped because this copy was built from source, so the
+    /// renderer can say so instead of "already up to date".
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub local_build: bool,
 }
 
 impl AppUpdateEvent {
@@ -78,6 +82,7 @@ impl AppUpdateEvent {
             version: None,
             release_url: None,
             manual: false,
+            local_build: false,
         }
     }
 
@@ -169,7 +174,10 @@ pub async fn app_check_update(
         // Still answered, or the footer's check button would spin forever.
         emit(
             &app,
-            AppUpdateEvent::state(AppUpdateState::UpdateNotAvailable),
+            AppUpdateEvent {
+                local_build: true,
+                ..AppUpdateEvent::state(AppUpdateState::UpdateNotAvailable)
+            },
         );
         return Ok(());
     }
@@ -398,6 +406,12 @@ mod tests {
         assert_eq!(json["state"], 2);
         assert_eq!(json["releaseUrl"], "https://example/r");
         assert_eq!(json["manual"], true);
+        let skipped = serde_json::to_value(AppUpdateEvent {
+            local_build: true,
+            ..AppUpdateEvent::state(AppUpdateState::UpdateNotAvailable)
+        })
+        .unwrap();
+        assert_eq!(skipped["localBuild"], true);
         // Absent rather than null/false, as Electron's events were.
         let plain = serde_json::to_value(AppUpdateEvent::state(AppUpdateState::UpdateNotAvailable))
             .unwrap();

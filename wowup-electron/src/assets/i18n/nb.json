@@ -127,6 +127,7 @@
       "INSTALL_MESSAGE": "Vil du restarte WowUp for å installere oppdateringen?",
       "INSTALL_TITLE": "WowUp-oppdatering er klar",
       "LATER": "Senere",
+      "LOCAL_BUILD_NO_UPDATES": "Denne kopien er bygget fra kildekoden, så den ser ikke etter oppdateringer. Kopier fra GitHub-utgivelsene gjør det.",
       "NOT_AVAILABLE": "Den nyeste versjonen av WowUp er allerede installert",
       "PORTABLE_DOWNLOAD_MESSAGE": "Vil du laste ned den nyeste portable versjonen manuelt?\n\nDu må lukke programmet manuelt og kopiere den nye versjonen over den gamle.",
       "PORTABLE_DOWNLOAD_TITLE": "Manuell nedlasting kreves",

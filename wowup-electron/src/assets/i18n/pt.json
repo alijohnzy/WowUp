@@ -127,6 +127,7 @@
       "INSTALL_MESSAGE": "Você gostaria de reiniciar o WowUp para instalar a atualização?",
       "INSTALL_TITLE": "Atualização do WowUp Pronta",
       "LATER": "Mais tarde",
+      "LOCAL_BUILD_NO_UPDATES": "Esta cópia foi compilada a partir do código-fonte, por isso não procura atualizações. As cópias baixadas das versões do GitHub procuram.",
       "NOT_AVAILABLE": "A última atualização do WowUp já está instalada",
       "PORTABLE_DOWNLOAD_MESSAGE": "Deseja baixar manualmente a versão portátil mais recente?\n\nVocê precisará fechar o aplicativo manualmente e copiar a nova versão.",
       "PORTABLE_DOWNLOAD_TITLE": "Download manual é necessário",

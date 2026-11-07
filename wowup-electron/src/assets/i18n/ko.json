@@ -127,6 +127,7 @@
       "INSTALL_MESSAGE": "업데이트를 설치하기 위해 프로그램을 재시작할까요?",
       "INSTALL_TITLE": "WowUp 업데이트 준비됨",
       "LATER": "나중에",
+      "LOCAL_BUILD_NO_UPDATES": "이 사본은 소스 코드에서 빌드되어 업데이트를 확인하지 않습니다. GitHub 릴리스에서 받은 사본은 확인합니다.",
       "NOT_AVAILABLE": "최신 버전입니다",
       "PORTABLE_DOWNLOAD_MESSAGE": "최신 포터블 버전을 수동 다운로드하시겠습니까?\n\n앱을 수동으로 닫고 새 버전 파일로 엎어써야 합니다.",
       "PORTABLE_DOWNLOAD_TITLE": "수동 다운로드 필요",

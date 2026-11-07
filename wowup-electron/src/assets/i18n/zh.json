@@ -127,6 +127,7 @@
       "INSTALL_MESSAGE": "是否重新启动 WowUp 以完成更新？",
       "INSTALL_TITLE": "WowUp 更新已准备就绪",
       "LATER": "稍后",
+      "LOCAL_BUILD_NO_UPDATES": "此副本由源代码构建，因此不会检查更新。从 GitHub 发布版下载的副本会检查。",
       "NOT_AVAILABLE": "已安装最新版 WowUp",
       "PORTABLE_DOWNLOAD_MESSAGE": "是否手动下载最新绿色版？\n\n下载完成后请关闭本应用程序，然后用新版本覆盖。",
       "PORTABLE_DOWNLOAD_TITLE": "需要手动下载",

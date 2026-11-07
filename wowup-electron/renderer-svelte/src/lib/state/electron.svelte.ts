@@ -40,6 +40,8 @@ export interface AppUpdateEvent {
 	releaseUrl?: string;
 	/** Tauri only: true for the portable zip, which cannot replace itself. */
 	manual?: boolean;
+	/** Tauri only: the check was skipped because this copy was built from source. */
+	localBuild?: boolean;
 }
 
 type Listener<T> = (value: T) => void;

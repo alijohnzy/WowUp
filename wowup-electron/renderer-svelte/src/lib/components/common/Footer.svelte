@@ -14,6 +14,7 @@
 	import { dialogs } from '$lib/state/dialogs.svelte';
 	import { electron } from '$lib/state/electron.svelte';
 	import { session } from '$lib/state/session.svelte';
+	import { snackbar } from '$lib/state/snackbar.svelte';
 	import { wowup } from '$lib/state/wowup.svelte';
 
 	let updateState = $derived(electron.appUpdate?.state);
@@ -38,6 +39,30 @@
 		}
 		wowup.installUpdate();
 	}
+
+	// A check the user asked for gets an answer. The hourly ones stay quiet, but a click that
+	// finds nothing left the footer exactly as it was, so the button looked dead.
+	let manualCheck = false;
+
+	function onCheckForUpdate(): void {
+		manualCheck = true;
+		wowup.checkForAppUpdate();
+	}
+
+	$effect(() => {
+		const evt = electron.appUpdate;
+		if (!evt || !manualCheck) return;
+		if (evt.state === AppUpdateState.CheckingForUpdate) return;
+		manualCheck = false;
+		if (evt.state === AppUpdateState.UpdateNotAvailable) {
+			snackbar.show(
+				evt.localBuild
+					? 'APP.WOWUP_UPDATE.LOCAL_BUILD_NO_UPDATES'
+					: 'APP.WOWUP_UPDATE.NOT_AVAILABLE'
+			);
+		}
+		// UpdateAvailable shows its button; errors already get a snackbar from the layout.
+	});
 
 	$effect(() => {
 		if (session.appVersion === undefined) {
@@ -85,7 +110,7 @@
 				class="footer-button text-1"
 				title={t('APP.SYSTEM_TRAY.CHECK_UPDATE')}
 				aria-label={t('APP.SYSTEM_TRAY.CHECK_UPDATE')}
-				onclick={() => wowup.checkForAppUpdate()}
+				onclick={onCheckForUpdate}
 			>
 				<Icon name="fas:rotate" />
 			</button>

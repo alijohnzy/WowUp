@@ -127,6 +127,7 @@
       "INSTALL_MESSAGE": "WowUp'ı yeniden başlatıp güncellemeyi yüklemek istiyor musunuz?",
       "INSTALL_TITLE": "WowUp Güncellemesi Hazır",
       "LATER": "Daha sonra",
+      "LOCAL_BUILD_NO_UPDATES": "Bu kopya kaynak koddan derlendiği için güncellemeleri denetlemez. GitHub sürümlerinden indirilen kopyalar denetler.",
       "NOT_AVAILABLE": "WowUp'ın en son sürümü zaten yüklü",
       "PORTABLE_DOWNLOAD_MESSAGE": "En son taşınabilir sürümü manuel olarak indirmek istiyor musunuz?\n\nUygulamayı manuel olarak kapatıp yeni sürümü kopyalamanız gerekecek.",
       "PORTABLE_DOWNLOAD_TITLE": "Manuel İndirme Gerekli",
