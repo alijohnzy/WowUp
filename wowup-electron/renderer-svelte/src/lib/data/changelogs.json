@@ -2,6 +2,11 @@
 	{
 		"Version": "2.25.4 #next",
 		"Night": true,
+		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>Pages, dialogs, menus and the version list now animate. On a slow computer, turn Animations off in Options &gt; Application</li>\n    <li>Optional: buttons in the selected WoW version's color on My Addons and Get Addons (Options &gt; Application)</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.4 #32",
+		"Night": true,
 		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>Each WoW version has its own color, taken from its logo: My Addons and Get Addons frame their table in it, so you always know which version you are looking at</li>\n    <li>The version list and the \"Installed in\" hints mark each WoW version with its color</li>\n    <li>Pick another color for any WoW version in Options &gt; Clients</li>\n    </ul>\n    <h4>Fixes</h4>\n    <ul>\n    <li>A WoW version renamed in Options shows its new name in the version list right away</li>\n    </ul>\n    "
 	},
 	{
