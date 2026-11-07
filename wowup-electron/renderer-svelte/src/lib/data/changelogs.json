@@ -2,7 +2,7 @@
 	{
 		"Version": "2.25.4 #next",
 		"Night": true,
-		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>Pages, dialogs, menus and the version list now animate. On a slow computer, turn Animations off in Options &gt; Application</li>\n    <li>Optional: buttons in the selected WoW version's color on My Addons and Get Addons (Options &gt; Application)</li>\n    </ul>\n    "
+		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>Pages, dialogs, menus and the version list now animate. On a slow computer, turn Animations off in Options &gt; Application</li>\n    <li>Optional: buttons in the selected WoW version's color on My Addons and Get Addons (Options &gt; Application)</li>\n    </ul>\n    <h4>Fixes</h4>\n    <ul>\n    <li>Switching WoW versions no longer flashes a loading overlay over the list, or reloads the whole Get Addons table</li>\n    <li>The colored frame around the addon list is softer</li>\n    </ul>\n    "
 	},
 	{
 		"Version": "2.25.4 #32",
