@@ -48,6 +48,7 @@
 	import DateTooltipCell from '$lib/components/grid/DateTooltipCell.svelte';
 	import GameVersionCell from '$lib/components/grid/GameVersionCell.svelte';
 	import TableContextHeaderCell from '$lib/components/grid/TableContextHeaderCell.svelte';
+	import { wrapTextCell } from '$lib/components/grid/wrap-text-cell';
 	import ClientSelector from '$lib/components/common/ClientSelector.svelte';
 	import ContextMenu from '$lib/components/common/ContextMenu.svelte';
 	import AddonManageDialog from '$lib/components/addons/AddonManageDialog.svelte';
@@ -327,8 +328,8 @@
 				sortable: true,
 				minWidth: 120,
 				flex: 1,
-				// See GetAddonsPage: replaces CellWrapTextComponent.
-				cellClass: 'cell-wrap-text',
+				// Long author lists: three lines, then an ellipsis (see wrap-text-cell.ts).
+				cellRenderer: wrapTextCell,
 				hide: hidden('author'),
 				headerName: t('PAGES.MY_ADDONS.TABLE.AUTHOR_COLUMN_HEADER'),
 				comparator: (_a, _b, na, nb) => compareElement(na, nb, 'author'),

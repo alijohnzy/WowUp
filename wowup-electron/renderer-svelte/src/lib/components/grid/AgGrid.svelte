@@ -74,18 +74,17 @@
 		height: 100%;
 	}
 
-	/* Replaces CellWrapTextComponent, an ag-grid renderer component that existed only to
-	   clamp a cell to three lines. Applied via `cellClass: 'cell-wrap-text'`, so the cell
-	   stays plain text — no component instance, no bridge, no mount/destroy per row. */
-	:global(.ag-cell.cell-wrap-text) {
-		white-space: normal;
-		line-height: 1.2em;
-		word-break: break-all;
+	/* wrap-text-cell.ts: the clamp sits on an element inside the cell, because the pages give
+	   each cell an inline flex/line-height style that a class on the cell cannot override.
+	   line-height is reset here for the same reason — the cell's would make each line a row tall. */
+	:global(.ag-cell .wrap-text-cell) {
 		display: -webkit-box;
 		-webkit-box-orient: vertical;
 		-webkit-line-clamp: 3;
 		line-clamp: 3;
 		overflow: hidden;
-		text-overflow: ellipsis;
+		white-space: normal;
+		overflow-wrap: anywhere;
+		line-height: 1.2em;
 	}
 </style>

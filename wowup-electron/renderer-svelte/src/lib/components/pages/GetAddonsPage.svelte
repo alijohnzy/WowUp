@@ -37,6 +37,7 @@
 	import PotentialAddonCell from '$lib/components/grid/PotentialAddonCell.svelte';
 	import GetAddonStatusCell from '$lib/components/grid/GetAddonStatusCell.svelte';
 	import TableContextHeaderCell from '$lib/components/grid/TableContextHeaderCell.svelte';
+	import { wrapTextCell } from '$lib/components/grid/wrap-text-cell';
 	import ClientSelector from '$lib/components/common/ClientSelector.svelte';
 	import Icon from '$lib/components/common/Icon.svelte';
 	import ProgressSpinner from '$lib/components/common/ProgressSpinner.svelte';
@@ -199,9 +200,8 @@
 					field: 'author',
 					flex: 1,
 					sortable: true,
-					// Was CellWrapTextComponent — a whole ag-grid renderer component whose entire
-					// job was a 3-line clamp. It is CSS, so it is CSS.
-					cellClass: 'cell-wrap-text',
+					// Long author lists: three lines, then an ellipsis (see wrap-text-cell.ts).
+					cellRenderer: wrapTextCell,
 					hide: hidden('author'),
 					headerName: t('PAGES.GET_ADDONS.TABLE.AUTHOR_COLUMN_HEADER'),
 					comparator: (_a, _b, na, nb) => compareElement(na, nb, 'author'),
