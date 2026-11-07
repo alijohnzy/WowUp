@@ -616,6 +616,18 @@
         "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "Volver a activar IPv6 requiere reiniciar la aplicación.",
         "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Forzar el uso exclusivo de IPv4 requiere reiniciar la aplicación.",
         "DISABLE_IPV6_LABEL": "Forzar IPv4 (desactivar IPv6)",
+        "EARLIER_VERSION": {
+          "CONFIRM_MESSAGE": "WowUpNight descarga esa versión, comprueba su firma, reemplaza esta y se reinicia. Tus addons y ajustes se quedan como están.\n\nDespués, la versión más reciente se seguirá ofreciendo como actualización; omítela hasta que se solucione el problema.",
+          "CONFIRM_TITLE": "¿Instalar {version}?",
+          "DESCRIPTION": "Si una actualización da problemas, vuelve a una versión anterior. La versión más reciente se seguirá ofreciendo como actualización; omítela hasta que se solucione el problema.",
+          "DOWNLOAD_BUTTON": "Descargar",
+          "INSTALL_BUTTON": "Instalar",
+          "LABEL": "Instalar una versión anterior",
+          "LOADING": "Buscando versiones anteriores…",
+          "LOAD_FAILED": "No se pudieron listar las versiones anteriores: {error}",
+          "LOCAL_BUILD": "Una copia compilada desde el código fuente no puede cambiar de versión.",
+          "NONE": "No se puede instalar ninguna versión anterior."
+        },
         "ENABLE_APP_BADGE_DESCRIPTION": "Muestra un contador en el icono de la aplicación en la barra de tareas con el número de addons con actualizaciones disponibles.",
         "ENABLE_APP_BADGE_LABEL": "Activar contador en el icono",
         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Activa varios mensajes de notificación del sistema, tales como cuando los addons son actualizados automáticamente.",

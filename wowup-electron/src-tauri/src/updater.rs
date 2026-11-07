@@ -253,7 +253,14 @@ pub async fn app_install_update(
         return Ok(());
     };
 
-    log::info!("app-install-update: downloading {}", update.version);
+    install_and_relaunch(&app, update, "app-install-update").await;
+    Ok(())
+}
+
+/// Downloads `update`, installs it and restarts, reporting progress through
+/// `app-update-state` events. Shared by updating and by installing an earlier version.
+async fn install_and_relaunch(app: &AppHandle, update: Update, what: &str) {
+    log::info!("{what}: downloading {}", update.version);
     let started = Instant::now();
     let mut transferred: u64 = 0;
     let mut last_percent = -1.0;
@@ -279,25 +286,195 @@ pub async fn app_install_update(
                     );
                 }
             },
-            || log::info!("app-install-update: download finished, installing"),
+            || log::info!("download finished, installing"),
         )
         .await;
 
     match result {
         Ok(()) => {
-            log::info!("app-install-update: installed, restarting");
+            log::info!("{what}: installed, restarting");
             // Not Tauri's restart: from the AppImage it would hand the old mount's environment
             // to the new launcher, which then fails to start (see src/host.rs).
-            crate::host::relaunch(&app);
-            Ok(())
+            crate::host::relaunch(app);
         }
         Err(e) => {
             // A cancelled pkexec prompt for a .deb lands here too.
-            log::error!("app-install-update failed: {e}");
-            emit(&app, AppUpdateEvent::error(e.to_string()));
-            Ok(())
+            log::error!("{what} failed: {e}");
+            emit(app, AppUpdateEvent::error(e.to_string()));
         }
     }
+}
+
+// ---- earlier versions ------------------------------------------------------------------
+//
+// "Install an earlier version" in Options, for when an update goes wrong. Every published
+// build puts its updater manifest on its own release as updater.json (tauri-build.yml), so an
+// earlier build is installed exactly like an update — same signature check, same installers
+// — by pointing the updater at that release's manifest and accepting that one version.
+
+/// The repository whose releases the updater reads. Must match plugins.updater.endpoints in
+/// tauri.conf.json; a test keeps the two in step.
+pub const RELEASES_REPO: &str = "alijohnzy/WowUp";
+
+/// A release this copy can go back to.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EarlierVersion {
+    pub tag: String,
+    /// e.g. `2.25.4+26`.
+    pub version: String,
+    pub published_at: String,
+    pub release_url: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EarlierVersions {
+    /// Newest first.
+    pub versions: Vec<EarlierVersion>,
+    /// False for the Windows portable zip, which is replaced by hand: the release page is
+    /// offered instead.
+    pub can_install: bool,
+    /// Built from source: there is no release to go back from.
+    pub local_build: bool,
+}
+
+/// The fields of GitHub's release listing that are used.
+#[derive(Debug, serde::Deserialize)]
+pub struct GitHubRelease {
+    pub tag_name: String,
+    #[serde(default)]
+    pub draft: bool,
+    pub published_at: Option<String>,
+    pub html_url: String,
+    #[serde(default)]
+    pub assets: Vec<GitHubAsset>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct GitHubAsset {
+    pub name: String,
+}
+
+/// `tauri-v2.25.4-26` → `2.25.4+26`. Anything else is not a build release.
+pub fn tag_version(tag: &str) -> Option<semver::Version> {
+    let (base, build) = tag.strip_prefix("tauri-v")?.rsplit_once('-')?;
+    build.parse::<u64>().ok()?;
+    semver::Version::parse(&format!("{base}+{build}")).ok()
+}
+
+/// How many earlier releases are offered.
+const EARLIER_VERSIONS_SHOWN: usize = 10;
+
+/// The releases older than `current` that carry an updater manifest, newest first.
+pub fn earlier_versions(
+    releases: Vec<GitHubRelease>,
+    current: &semver::Version,
+) -> Vec<EarlierVersion> {
+    let mut found: Vec<(semver::Version, EarlierVersion)> = releases
+        .into_iter()
+        .filter(|r| !r.draft && r.assets.iter().any(|a| a.name == "updater.json"))
+        .filter_map(|r| {
+            let version = tag_version(&r.tag_name)?;
+            (version < *current).then(|| {
+                (
+                    version.clone(),
+                    EarlierVersion {
+                        tag: r.tag_name,
+                        version: version.to_string(),
+                        published_at: r.published_at.unwrap_or_default(),
+                        release_url: r.html_url,
+                    },
+                )
+            })
+        })
+        .collect();
+    found.sort_by(|a, b| b.0.cmp(&a.0));
+    found
+        .into_iter()
+        .take(EARLIER_VERSIONS_SHOWN)
+        .map(|(_, v)| v)
+        .collect()
+}
+
+#[tauri::command]
+pub async fn app_list_earlier_versions(app: AppHandle) -> Result<EarlierVersions, String> {
+    let kind = InstallKind::current();
+    let current = app.package_info().version.clone();
+    if skip_reason(&current, kind).is_some() {
+        return Ok(EarlierVersions {
+            versions: vec![],
+            can_install: false,
+            local_build: true,
+        });
+    }
+
+    let url = format!("https://api.github.com/repos/{RELEASES_REPO}/releases?per_page=50");
+    let text = reqwest::Client::new()
+        .get(&url)
+        .header(reqwest::header::USER_AGENT, "WowUpNight")
+        .header(reqwest::header::ACCEPT, "application/vnd.github+json")
+        .send()
+        .await
+        .and_then(|r| r.error_for_status())
+        .map_err(|e| e.to_string())?
+        .text()
+        .await
+        .map_err(|e| e.to_string())?;
+    let releases: Vec<GitHubRelease> = serde_json::from_str(&text).map_err(|e| e.to_string())?;
+
+    Ok(EarlierVersions {
+        versions: earlier_versions(releases, &current),
+        can_install: kind.self_updating(),
+        local_build: false,
+    })
+}
+
+/// Installs the release `tag` in place of this version and restarts. Progress and failures
+/// arrive as `app-update-state` events, as for an update.
+#[tauri::command]
+pub async fn app_install_version(app: AppHandle, tag: String) -> Result<(), String> {
+    let kind = InstallKind::current();
+    if !kind.self_updating() {
+        emit(
+            &app,
+            AppUpdateEvent::error(format!("{kind:?} installs are changed by hand")),
+        );
+        return Ok(());
+    }
+    // Also what keeps the tag safe to put in the URL below.
+    let wanted = tag_version(&tag).ok_or_else(|| format!("not a release: {tag}"))?;
+
+    let manifest =
+        format!("https://github.com/{RELEASES_REPO}/releases/download/{tag}/updater.json");
+    let accept = wanted.clone();
+    let updater = app
+        .updater_builder()
+        .endpoints(vec![manifest
+            .parse()
+            .map_err(|e: url::ParseError| e.to_string())?])
+        .and_then(|b| {
+            b.version_comparator(move |_current, remote| remote.version == accept)
+                .build()
+        })
+        .map_err(|e| e.to_string())?;
+
+    emit(
+        &app,
+        AppUpdateEvent::state(AppUpdateState::CheckingForUpdate),
+    );
+    match updater.check().await {
+        Ok(Some(update)) => install_and_relaunch(&app, update, "app-install-version").await,
+        Ok(None) => emit(
+            &app,
+            AppUpdateEvent::error(format!("{wanted} has no build for this system")),
+        ),
+        Err(e) => {
+            log::warn!("app-install-version {tag}: {e}");
+            emit(&app, AppUpdateEvent::error(e.to_string()));
+        }
+    }
+    Ok(())
 }
 
 /// Download progress in the renderer's shape. `None` while the server has not said how big
@@ -323,6 +500,76 @@ pub fn progress(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn release(tag: &str, assets: &[&str]) -> GitHubRelease {
+        GitHubRelease {
+            tag_name: tag.to_string(),
+            draft: false,
+            published_at: Some("2026-11-07T00:00:00Z".to_string()),
+            html_url: format!("https://github.com/{RELEASES_REPO}/releases/tag/{tag}"),
+            assets: assets
+                .iter()
+                .map(|name| GitHubAsset {
+                    name: name.to_string(),
+                })
+                .collect(),
+        }
+    }
+
+    #[test]
+    fn release_tags_carry_the_build_number_as_build_metadata() {
+        assert_eq!(
+            tag_version("tauri-v2.25.4-26").unwrap().to_string(),
+            "2.25.4+26"
+        );
+        assert_eq!(tag_version("tauri-updater"), None);
+        assert_eq!(tag_version("tauri-v2.25.4-26/../x"), None);
+        assert_eq!(tag_version("v2.25.4"), None);
+    }
+
+    #[test]
+    fn only_older_releases_with_a_manifest_are_offered_newest_first() {
+        let current = semver::Version::parse("2.25.4+27").unwrap();
+        let mut draft = release("tauri-v2.25.4-25", &["updater.json"]);
+        draft.draft = true;
+        let offered = earlier_versions(
+            vec![
+                release("tauri-v2.25.4-23", &["updater.json"]),
+                release("tauri-v2.25.4-26", &["x.AppImage", "updater.json"]),
+                release("tauri-v2.25.4-24", &["x.AppImage"]), // no manifest
+                release("tauri-v2.25.4-27", &["updater.json"]), // this one
+                release("tauri-v2.25.4-28", &["updater.json"]), // newer
+                release("tauri-updater", &["latest.json"]),
+                draft,
+            ],
+            &current,
+        );
+        let versions: Vec<_> = offered.iter().map(|v| v.version.as_str()).collect();
+        assert_eq!(versions, ["2.25.4+26", "2.25.4+23"]);
+        assert_eq!(offered[0].tag, "tauri-v2.25.4-26");
+    }
+
+    #[test]
+    fn at_most_ten_earlier_versions_are_offered() {
+        let current = semver::Version::parse("2.25.4+100").unwrap();
+        let releases = (1..40)
+            .map(|n| release(&format!("tauri-v2.25.4-{n}"), &["updater.json"]))
+            .collect();
+        let offered = earlier_versions(releases, &current);
+        assert_eq!(offered.len(), 10);
+        assert_eq!(offered[0].version, "2.25.4+39");
+    }
+
+    #[test]
+    fn releases_repo_matches_the_updater_endpoint() {
+        let conf: serde_json::Value =
+            serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
+        let endpoint = conf["plugins"]["updater"]["endpoints"][0].as_str().unwrap();
+        assert!(
+            endpoint.starts_with(&format!("https://github.com/{RELEASES_REPO}/releases/")),
+            "{endpoint}"
+        );
+    }
 
     #[test]
     fn bundle_markers_map_to_install_kinds() {

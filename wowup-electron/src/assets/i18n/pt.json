@@ -616,6 +616,18 @@
         "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "Reabilitar o IPv6 exige reiniciar o aplicativo.",
         "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Forçar a rede a usar apenas IPv4 exige reiniciar o aplicativo.",
         "DISABLE_IPV6_LABEL": "Forçar IPv4 (desabilitar IPv6)",
+        "EARLIER_VERSION": {
+          "CONFIRM_MESSAGE": "O WowUpNight baixa essa versão, verifica a assinatura, substitui esta e reinicia. Seus addons e configurações continuam como estão.\n\nDepois, a versão mais recente continua sendo oferecida como atualização; ignore-a até o problema ser corrigido.",
+          "CONFIRM_TITLE": "Instalar {version}?",
+          "DESCRIPTION": "Se uma atualização causar problemas, volte para uma versão anterior. A versão mais recente continua sendo oferecida como atualização; ignore-a até o problema ser corrigido.",
+          "DOWNLOAD_BUTTON": "Baixar",
+          "INSTALL_BUTTON": "Instalar",
+          "LABEL": "Instalar uma versão anterior",
+          "LOADING": "Procurando versões anteriores…",
+          "LOAD_FAILED": "Não foi possível listar as versões anteriores: {error}",
+          "LOCAL_BUILD": "Uma cópia compilada a partir do código-fonte não pode trocar de versão.",
+          "NONE": "Nenhuma versão anterior pode ser instalada."
+        },
         "ENABLE_APP_BADGE_DESCRIPTION": "Mostrar um selo no icone da aplicação com o número de atualizações de addon disponíveis.",
         "ENABLE_APP_BADGE_LABEL": "Habilitar selo de notificação do app",
         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Habilitar várias notificações e popups do sistema, como os de aviso de Addons atualizados automaticamente.",

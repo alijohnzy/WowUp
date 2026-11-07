@@ -616,6 +616,18 @@
         "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "IPv6'yı yeniden etkinleştirmek uygulamanın yeniden başlatılmasını gerektirir.",
         "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Yalnızca IPv4 ağ kullanımına geçmek uygulamanın yeniden başlatılmasını gerektirir.",
         "DISABLE_IPV6_LABEL": "IPv4'ü zorla (IPv6'yı devre dışı bırak)",
+        "EARLIER_VERSION": {
+          "CONFIRM_MESSAGE": "WowUpNight o sürümü indirir, imzasını doğrular, bu sürümün yerine koyar ve yeniden başlar. Eklentileriniz ve ayarlarınız olduğu gibi kalır.\n\nEn yeni sürüm sonrasında yine güncelleme olarak önerilir; sorun düzelene kadar atlayın.",
+          "CONFIRM_TITLE": "{version} yüklensin mi?",
+          "DESCRIPTION": "Bir güncelleme sorun çıkarırsa önceki bir sürüme dönün. En yeni sürüm yine güncelleme olarak önerilir; sorun düzelene kadar atlayın.",
+          "DOWNLOAD_BUTTON": "İndir",
+          "INSTALL_BUTTON": "Yükle",
+          "LABEL": "Önceki bir sürümü yükle",
+          "LOADING": "Önceki sürümler aranıyor…",
+          "LOAD_FAILED": "Önceki sürümler listelenemedi: {error}",
+          "LOCAL_BUILD": "Kaynaktan derlenen bir kopya sürüm değiştiremez.",
+          "NONE": "Yüklenebilecek önceki bir sürüm yok."
+        },
         "ENABLE_APP_BADGE_DESCRIPTION": "Uygulama simgesinde, güncellemesi olan eklentilerin sayısını gösteren bir rozet görüntüle.",
         "ENABLE_APP_BADGE_LABEL": "Uygulama Rozeti Bildirimini Etkinleştir",
         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Otomatik güncellenen eklentiler gibi çeşitli sistem bildirimi açılır pencerelerini etkinleştir.",

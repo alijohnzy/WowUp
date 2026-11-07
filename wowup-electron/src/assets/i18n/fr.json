@@ -616,6 +616,18 @@
         "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "La réactivation d'IPv6 nécessite le redémarrage de l'application.",
         "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Forcer l'utilisation exclusive d'IPv4 nécessite le redémarrage de l'application.",
         "DISABLE_IPV6_LABEL": "Forcer IPv4 (désactiver IPv6)",
+        "EARLIER_VERSION": {
+          "CONFIRM_MESSAGE": "WowUpNight télécharge cette version, vérifie sa signature, remplace celle-ci et redémarre. Vos addons et paramètres restent tels quels.\n\nLa version la plus récente reste ensuite proposée en mise à jour ; ignorez-la jusqu'à ce que le problème soit corrigé.",
+          "CONFIRM_TITLE": "Installer {version} ?",
+          "DESCRIPTION": "Si une mise à jour pose problème, revenez à une version précédente. La version la plus récente reste proposée en mise à jour ; ignorez-la jusqu'à ce que le problème soit corrigé.",
+          "DOWNLOAD_BUTTON": "Télécharger",
+          "INSTALL_BUTTON": "Installer",
+          "LABEL": "Installer une version précédente",
+          "LOADING": "Recherche des versions précédentes…",
+          "LOAD_FAILED": "Impossible de lister les versions précédentes : {error}",
+          "LOCAL_BUILD": "Une copie compilée depuis les sources ne peut pas changer de version.",
+          "NONE": "Aucune version précédente ne peut être installée."
+        },
         "ENABLE_APP_BADGE_DESCRIPTION": "Afficher sur l'icône de l'application un badge indiquant le nombre d'addons ayant des mises à jour disponibles.",
         "ENABLE_APP_BADGE_LABEL": "Enable app badge notification",
         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Activer les fenêtres contextuelles système comme la mise à jour auto des addons.",

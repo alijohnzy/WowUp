@@ -616,6 +616,18 @@
         "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "Re-enabling IPv6 requires the application to restart.",
         "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Forcing IPv4-only networking requires the application to restart.",
         "DISABLE_IPV6_LABEL": "Force IPv4 (disable IPv6)",
+        "EARLIER_VERSION": {
+          "CONFIRM_MESSAGE": "WowUpNight downloads that version, checks its signature, replaces this one and restarts. Your addons and settings stay as they are.\n\nThe newest version is still offered as an update afterwards; skip it until the problem is fixed.",
+          "CONFIRM_TITLE": "Install {version}?",
+          "DESCRIPTION": "If an update causes problems, go back to an earlier release. The newest version is still offered as an update; skip it until the problem is fixed.",
+          "DOWNLOAD_BUTTON": "Download",
+          "INSTALL_BUTTON": "Install",
+          "LABEL": "Install an earlier version",
+          "LOADING": "Looking for earlier versions…",
+          "LOAD_FAILED": "Could not list the earlier versions: {error}",
+          "LOCAL_BUILD": "A copy built from source cannot switch versions.",
+          "NONE": "No earlier version can be installed."
+        },
         "ENABLE_APP_BADGE_DESCRIPTION": "Show a badge on the app icon with the number of addons with available updates.",
         "ENABLE_APP_BADGE_LABEL": "Enable App Badge Notification",
         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Enable various system notification popups, such as auto updated addons.",

@@ -540,6 +540,11 @@ jobs:
             --version "${version}+${GITHUB_RUN_NUMBER}" --out latest.json \
             --require linux-x86_64-appimage,linux-x86_64-deb,windows-x86_64-nsis
 
+          # The same manifest on this build's own release, so a later build can install this
+          # one again: Options → "Install an earlier version" points the updater at it.
+          cp latest.json updater.json
+          gh release upload "$tag" updater.json --clobber
+
           feed=tauri-updater
           if ! gh release view "$feed" >/dev/null 2>&1; then
             gh release create "$feed" --prerelease --target "${GITHUB_SHA}" \

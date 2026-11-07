@@ -616,6 +616,18 @@
         "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "Reaktivering av IPv6 krever at du starter programmet på nytt.",
         "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Å tvinge nettverket til kun IPv4 krever at du starter programmet på nytt.",
         "DISABLE_IPV6_LABEL": "Tving IPv4 (deaktiver IPv6)",
+        "EARLIER_VERSION": {
+          "CONFIRM_MESSAGE": "WowUpNight laster ned den versjonen, sjekker signaturen, erstatter denne og starter på nytt. Utvidelsene og innstillingene dine blir som de er.\n\nDen nyeste versjonen tilbys fortsatt som oppdatering etterpå; hopp over den til problemet er løst.",
+          "CONFIRM_TITLE": "Installere {version}?",
+          "DESCRIPTION": "Hvis en oppdatering skaper problemer, kan du gå tilbake til en tidligere versjon. Den nyeste versjonen tilbys fortsatt som oppdatering; hopp over den til problemet er løst.",
+          "DOWNLOAD_BUTTON": "Last ned",
+          "INSTALL_BUTTON": "Installer",
+          "LABEL": "Installer en tidligere versjon",
+          "LOADING": "Ser etter tidligere versjoner…",
+          "LOAD_FAILED": "Kunne ikke hente tidligere versjoner: {error}",
+          "LOCAL_BUILD": "En kopi bygget fra kildekoden kan ikke bytte versjon.",
+          "NONE": "Ingen tidligere versjon kan installeres."
+        },
         "ENABLE_APP_BADGE_DESCRIPTION": "Viser en teller på appikonet med antall tilgjengelige oppdateringer.",
         "ENABLE_APP_BADGE_LABEL": "Aktiver notifikasjonsbadge for appen",
         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Aktiver ulike systemvarsler, som for eksempel for automatisk oppdaterte utvidelser.",

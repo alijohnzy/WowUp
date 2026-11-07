@@ -616,6 +616,18 @@
         "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "Opětovné zapnutí IPv6 vyžaduje restartování aplikace.",
         "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Vynucení síťového provozu pouze přes IPv4 vyžaduje restartování aplikace.",
         "DISABLE_IPV6_LABEL": "Vynutit IPv4 (vypnout IPv6)",
+        "EARLIER_VERSION": {
+          "CONFIRM_MESSAGE": "WowUpNight tuto verzi stáhne, ověří její podpis, nahradí současnou a restartuje se. Addony a nastavení zůstanou beze změny.\n\nNejnovější verze se pak bude dál nabízet jako aktualizace; přeskakujte ji, dokud nebude problém opraven.",
+          "CONFIRM_TITLE": "Nainstalovat {version}?",
+          "DESCRIPTION": "Pokud aktualizace způsobí potíže, vraťte se k dřívější verzi. Nejnovější verze se bude dál nabízet jako aktualizace; přeskakujte ji, dokud nebude problém opraven.",
+          "DOWNLOAD_BUTTON": "Stáhnout",
+          "INSTALL_BUTTON": "Nainstalovat",
+          "LABEL": "Nainstalovat dřívější verzi",
+          "LOADING": "Hledání dřívějších verzí…",
+          "LOAD_FAILED": "Dřívější verze se nepodařilo načíst: {error}",
+          "LOCAL_BUILD": "Kopie sestavená ze zdrojového kódu nemůže měnit verzi.",
+          "NONE": "Žádnou dřívější verzi nelze nainstalovat."
+        },
         "ENABLE_APP_BADGE_DESCRIPTION": "Zobrazit na ikoně aplikace odznak s počtem addonů, pro které jsou k dispozici aktualizace.",
         "ENABLE_APP_BADGE_LABEL": "Enable app badge notification",
         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Povolí různé systémové notifikace, např. po automatické aktualizaci addonů.",

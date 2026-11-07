@@ -616,6 +616,18 @@
         "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "重新啟用 IPv6 需要重新啟動 WowUp。",
         "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "強制僅使用 IPv4 網路需要重新啟動 WowUp。",
         "DISABLE_IPV6_LABEL": "強制使用 IPv4（禁用 IPv6）",
+        "EARLIER_VERSION": {
+          "CONFIRM_MESSAGE": "WowUpNight 會下載該版本、驗證其簽章、取代目前版本並重新啟動。您的插件和設定保持不變。\n\n之後最新版本仍會以更新的形式提示；在問題修正前略過即可。",
+          "CONFIRM_TITLE": "安裝 {version}？",
+          "DESCRIPTION": "如果更新後出現問題，可以回到較早的版本。最新版本仍會以更新的形式提示；在問題修正前略過即可。",
+          "DOWNLOAD_BUTTON": "下載",
+          "INSTALL_BUTTON": "安裝",
+          "LABEL": "安裝較早的版本",
+          "LOADING": "正在尋找較早的版本…",
+          "LOAD_FAILED": "無法列出較早的版本：{error}",
+          "LOCAL_BUILD": "從原始碼建置的副本無法切換版本。",
+          "NONE": "沒有可安裝的較早版本。"
+        },
         "ENABLE_APP_BADGE_DESCRIPTION": "在應用程式圖示上用角標顯示可更新的插件數量。",
         "ENABLE_APP_BADGE_LABEL": "啟用數字角標通知",
         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "啟用各種系統通知彈窗，如自動更新插件通知。",

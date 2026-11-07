@@ -616,6 +616,18 @@
         "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "La riabilitazione di IPv6 richiede il riavvio dell'applicazione.",
         "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Forzare la rete solo IPv4 richiede il riavvio dell'applicazione.",
         "DISABLE_IPV6_LABEL": "Forza IPv4 (disabilita IPv6)",
+        "EARLIER_VERSION": {
+          "CONFIRM_MESSAGE": "WowUpNight scarica quella versione, ne verifica la firma, sostituisce questa e si riavvia. Addon e impostazioni restano come sono.\n\nIn seguito la versione più recente continuerà a essere proposta come aggiornamento; saltala finché il problema non è risolto.",
+          "CONFIRM_TITLE": "Installare {version}?",
+          "DESCRIPTION": "Se un aggiornamento crea problemi, torna a una versione precedente. La versione più recente continuerà a essere proposta come aggiornamento; saltala finché il problema non è risolto.",
+          "DOWNLOAD_BUTTON": "Scarica",
+          "INSTALL_BUTTON": "Installa",
+          "LABEL": "Installa una versione precedente",
+          "LOADING": "Ricerca delle versioni precedenti…",
+          "LOAD_FAILED": "Impossibile elencare le versioni precedenti: {error}",
+          "LOCAL_BUILD": "Una copia compilata dal codice sorgente non può cambiare versione.",
+          "NONE": "Nessuna versione precedente può essere installata."
+        },
         "ENABLE_APP_BADGE_DESCRIPTION": "Mostra un indicatore di notifica sull'icona dell'applicazione con il numero di addons con un aggiornamento disponibile.",
         "ENABLE_APP_BADGE_LABEL": "Abilita indicatore di notifica",
         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Abilita i vari popup di notifica del sistema, come gli addons aggiornati automaticamente.",

@@ -616,6 +616,18 @@
         "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "IPv6를 다시 활성화하려면 재시작이 필요합니다.",
         "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "IPv4 전용 네트워킹을 강제하려면 재시작이 필요합니다.",
         "DISABLE_IPV6_LABEL": "IPv4 강제 사용 (IPv6 비활성화)",
+        "EARLIER_VERSION": {
+          "CONFIRM_MESSAGE": "WowUpNight가 해당 버전을 다운로드하고 서명을 확인한 뒤 현재 버전을 교체하고 다시 시작합니다. 애드온과 설정은 그대로 유지됩니다.\n\n이후에도 최신 버전은 업데이트로 표시되니 문제가 해결될 때까지 건너뛰세요.",
+          "CONFIRM_TITLE": "{version}을(를) 설치할까요?",
+          "DESCRIPTION": "업데이트 후 문제가 생기면 이전 버전으로 돌아가세요. 최신 버전은 계속 업데이트로 표시되니 문제가 해결될 때까지 건너뛰세요.",
+          "DOWNLOAD_BUTTON": "다운로드",
+          "INSTALL_BUTTON": "설치",
+          "LABEL": "이전 버전 설치",
+          "LOADING": "이전 버전을 찾는 중…",
+          "LOAD_FAILED": "이전 버전 목록을 불러오지 못했습니다: {error}",
+          "LOCAL_BUILD": "소스에서 빌드한 사본은 버전을 바꿀 수 없습니다.",
+          "NONE": "설치할 수 있는 이전 버전이 없습니다."
+        },
         "ENABLE_APP_BADGE_DESCRIPTION": "업데이트 가능한 애드온 수를 앱 아이콘에 배지로 표시합니다.",
         "ENABLE_APP_BADGE_LABEL": "Enable app badge notification",
         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "애드온 자동업데이트 등과 같은 다양한 시스템 알림 팝업 활성화 여부",

@@ -616,6 +616,18 @@
         "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "Ponowne włączenie IPv6 wymaga ponownego uruchomienia aplikacji.",
         "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Wymuszenie korzystania wyłącznie z IPv4 wymaga ponownego uruchomienia aplikacji.",
         "DISABLE_IPV6_LABEL": "Wymuś IPv4 (wyłącz IPv6)",
+        "EARLIER_VERSION": {
+          "CONFIRM_MESSAGE": "WowUpNight pobierze tę wersję, sprawdzi jej podpis, zastąpi obecną i uruchomi się ponownie. Addony i ustawienia pozostaną bez zmian.\n\nPotem najnowsza wersja nadal będzie proponowana jako aktualizacja; pomijaj ją, dopóki problem nie zostanie naprawiony.",
+          "CONFIRM_TITLE": "Zainstalować {version}?",
+          "DESCRIPTION": "Jeśli aktualizacja sprawia problemy, wróć do wcześniejszej wersji. Najnowsza wersja nadal będzie proponowana jako aktualizacja; pomijaj ją, dopóki problem nie zostanie naprawiony.",
+          "DOWNLOAD_BUTTON": "Pobierz",
+          "INSTALL_BUTTON": "Zainstaluj",
+          "LABEL": "Zainstaluj wcześniejszą wersję",
+          "LOADING": "Wyszukiwanie wcześniejszych wersji…",
+          "LOAD_FAILED": "Nie udało się pobrać listy wcześniejszych wersji: {error}",
+          "LOCAL_BUILD": "Kopia zbudowana ze źródeł nie może zmienić wersji.",
+          "NONE": "Nie można zainstalować żadnej wcześniejszej wersji."
+        },
         "ENABLE_APP_BADGE_DESCRIPTION": "Pokaż plakietkę na ikonie aplikacji z liczbą dodatków z dostępnymi aktualizacjami.",
         "ENABLE_APP_BADGE_LABEL": "Włącz powiadamianie o odznakach aplikacji",
         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Włącz różne wyskakujące okienka powiadomień, np. o automatycznie aktualizowanych addonach.",

@@ -271,6 +271,8 @@ pub fn run() {
             window::set_login_item_settings,
             updater::app_check_update,
             updater::app_install_update,
+            updater::app_list_earlier_versions,
+            updater::app_install_version,
             ad_view::ad_view_set_bounds,
             ad_view::ad_view_reload,
             host::open_external_url,

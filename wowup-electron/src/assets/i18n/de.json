@@ -616,6 +616,18 @@
         "DISABLE_IPV6_DISABLE_CONFIRMATION_DESCRIPTION": "Beim erneuten Aktivieren von IPv6 benötigt die Anwendung einen Neustart.",
         "DISABLE_IPV6_ENABLE_CONFIRMATION_DESCRIPTION": "Bei der Beschränkung auf IPv4 benötigt die Anwendung einen Neustart.",
         "DISABLE_IPV6_LABEL": "IPv4 erzwingen (IPv6 deaktivieren)",
+        "EARLIER_VERSION": {
+          "CONFIRM_MESSAGE": "WowUpNight lädt diese Version herunter, prüft ihre Signatur, ersetzt die aktuelle und startet neu. Deine Addons und Einstellungen bleiben, wie sie sind.\n\nDie neueste Version wird danach weiter als Update angeboten; überspringe sie, bis das Problem behoben ist.",
+          "CONFIRM_TITLE": "{version} installieren?",
+          "DESCRIPTION": "Wenn ein Update Probleme macht, kehre zu einer früheren Version zurück. Die neueste Version wird weiter als Update angeboten; überspringe sie, bis das Problem behoben ist.",
+          "DOWNLOAD_BUTTON": "Herunterladen",
+          "INSTALL_BUTTON": "Installieren",
+          "LABEL": "Frühere Version installieren",
+          "LOADING": "Frühere Versionen werden gesucht…",
+          "LOAD_FAILED": "Frühere Versionen konnten nicht geladen werden: {error}",
+          "LOCAL_BUILD": "Eine aus dem Quellcode gebaute Kopie kann die Version nicht wechseln.",
+          "NONE": "Keine frühere Version kann installiert werden."
+        },
         "ENABLE_APP_BADGE_DESCRIPTION": "Zeigt auf dem App-Symbol einen Zähler, mit der Anzahl an verfügbaren Updates an.",
         "ENABLE_APP_BADGE_LABEL": "App-Badge-Benachrichtigung aktivieren",
         "ENABLE_SYSTEM_NOTIFICATIONS_DESCRIPTION": "Aktivieren/Deaktivieren verschiedener Systembenachrichtigungen",

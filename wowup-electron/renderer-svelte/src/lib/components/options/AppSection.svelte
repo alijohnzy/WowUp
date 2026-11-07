@@ -19,11 +19,16 @@
 		HORDE_LIGHT_THEME,
 		HORDE_THEME,
 		NIGHT_THEME,
-		IPC_RESTART_APP
+		IPC_RESTART_APP,
+		IPC_APP_INSTALL_VERSION,
+		IPC_APP_LIST_EARLIER_VERSIONS
 	} from '$common/constants';
 	import { WowUpReleaseChannelType } from '$common/wowup/wowup-release-channel-type';
 	import { AppConfig } from '$config/environment';
-	import { t } from '$lib/i18n.svelte';
+	import { i18n, t } from '$lib/i18n.svelte';
+	import { openExternalLink } from '$lib/services/links';
+	import { versionLabel } from '$lib/utils/app-version';
+	import { onMount } from 'svelte';
 	import { invoke, isTauri, isWin } from '$lib/ipc';
 	import type { ThemeGroup } from '$lib/models/theme';
 	import { getTelemetryEnabled, setTelemetryEnabled } from '$lib/services/analytics';
@@ -86,6 +91,70 @@
 	let enableAppBadge = $state(false);
 	let startWithSystem = $state(false);
 	let startMinimized = $state(false);
+
+	// ---- earlier versions (Tauri) -------------------------------------------------------
+	// For when an update goes wrong: installs an earlier release the way an update is
+	// installed — same signature check, same installer — then restarts. The newest version is
+	// still offered afterwards; skipping it is the user's call. See src-tauri/src/updater.rs.
+	interface EarlierVersion {
+		tag: string;
+		version: string;
+		publishedAt: string;
+		releaseUrl: string;
+	}
+	interface EarlierVersions {
+		versions: EarlierVersion[];
+		canInstall: boolean;
+		localBuild: boolean;
+	}
+	const EARLIER = 'PAGES.OPTIONS.APPLICATION.EARLIER_VERSION';
+	let earlier = $state<EarlierVersions>();
+	let earlierError = $state('');
+	let earlierTag = $state('');
+	let installingEarlier = $state(false);
+
+	onMount(() => {
+		if (!isTauri()) return;
+		invoke<EarlierVersions>(IPC_APP_LIST_EARLIER_VERSIONS).then(
+			(result) => {
+				earlier = result;
+				earlierTag = result.versions[0]?.tag ?? '';
+			},
+			(e: unknown) => (earlierError = String(e))
+		);
+	});
+
+	const earlierLabel = (v: EarlierVersion) => {
+		const date = v.publishedAt ? new Date(v.publishedAt).toLocaleDateString() : '';
+		return `v${versionLabel(v.version).text}${date ? ` · ${date}` : ''}`;
+	};
+
+	async function onInstallEarlierVersion() {
+		const chosen = earlier?.versions.find((v) => v.tag === earlierTag);
+		if (!chosen || !earlier) return;
+		// The portable zip is replaced by hand: its release page has the download.
+		if (!earlier.canInstall) return openExternalLink(chosen.releaseUrl);
+
+		const confirmed = await dialogs.confirm({
+			title: i18n.t(`${EARLIER}.CONFIRM_TITLE`, {
+				version: `v${versionLabel(chosen.version).text}`
+			}),
+			message: t(`${EARLIER}.CONFIRM_MESSAGE`),
+			positiveKey: `${EARLIER}.INSTALL_BUTTON`
+		});
+		if (!confirmed) return;
+
+		installingEarlier = true;
+		try {
+			// Progress and failures arrive as app-update-state events, shown in the footer like an
+			// update's; on success the app restarts before this returns.
+			await invoke(IPC_APP_INSTALL_VERSION, chosen.tag);
+		} catch (e) {
+			earlierError = String(e);
+		} finally {
+			installingEarlier = false;
+		}
+	}
 	let keepAddonDetailTab = $state(false);
 	let currentReleaseChannel = $state(WowUpReleaseChannelType.Stable);
 
@@ -475,6 +544,45 @@
 		</div>
 	{/if}
 
+	{#if isTauri()}
+		<div class="setting">
+			<div class="grow">
+				<div>{t(`${EARLIER}.LABEL`)}</div>
+				<small class="text-2">{t(`${EARLIER}.DESCRIPTION`)}</small>
+			</div>
+			{#if earlier?.localBuild}
+				<small class="text-2 earlier-note">{t(`${EARLIER}.LOCAL_BUILD`)}</small>
+			{:else if earlierError}
+				<small class="text-warning earlier-note">
+					{i18n.t(`${EARLIER}.LOAD_FAILED`, { error: earlierError })}
+				</small>
+			{:else if !earlier}
+				<small class="text-2 earlier-note">{t(`${EARLIER}.LOADING`)}</small>
+			{:else if earlier.versions.length === 0}
+				<small class="text-2 earlier-note">{t(`${EARLIER}.NONE`)}</small>
+			{:else}
+				<div class="field earlier">
+					<select
+						bind:value={earlierTag}
+						disabled={installingEarlier}
+						aria-label={t(`${EARLIER}.LABEL`)}
+					>
+						{#each earlier.versions as v (v.tag)}
+							<option value={v.tag}>{earlierLabel(v)}</option>
+						{/each}
+					</select>
+					<button
+						class="wu-btn wu-btn-flat"
+						disabled={installingEarlier}
+						onclick={() => void onInstallEarlierVersion()}
+					>
+						{t(earlier.canInstall ? `${EARLIER}.INSTALL_BUTTON` : `${EARLIER}.DOWNLOAD_BUTTON`)}
+					</button>
+				</div>
+			{/if}
+		</div>
+	{/if}
+
 	<div class="setting">
 		<div class="grow">
 			<div>{t('PAGES.OPTIONS.APPLICATION.TELEMETRY_LABEL')}</div>
@@ -512,6 +620,17 @@
 
 	.field {
 		min-width: 180px;
+	}
+
+	.field.earlier {
+		display: flex;
+		gap: 0.5rem;
+		align-items: center;
+	}
+
+	.earlier-note {
+		max-width: 260px;
+		text-align: right;
 	}
 
 	select {
