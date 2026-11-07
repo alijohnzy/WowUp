@@ -61,6 +61,16 @@ const UPDATER_NAME = 'WowUpUpdater.exe';
 // Registered in app/app-updater.ts with an inline literal rather than a shared constant.
 const IPC_SET_RELEASE_CHANNEL = 'set-release-channel';
 
+/**
+ * This app's own copy of the chosen language. `selected_language` is shared by every copy of
+ * the app that uses this data folder, and copies built before a language existed reset it to
+ * English when they cannot load it: a July build, started from a stale taskbar launcher, did
+ * that to a Turkish user, and every later start of this app followed it. Old copies never
+ * write this key, so the choice survives them. `selected_language` is still kept in step for
+ * the copies that only read that.
+ */
+const OWN_LANGUAGE_KEY = 'wowupnight_selected_language';
+
 class WowUp {
 	readonly updaterName = UPDATER_NAME;
 	// Getters, not fields. This singleton is constructed when the module is first imported,
@@ -171,11 +181,18 @@ class WowUp {
 	setUseSymlinkMode = (v: boolean): Promise<void> =>
 		this.#setPref(USE_SYMLINK_MODE_PREFERENCE_KEY, v);
 
+	/** This app's own copy of the language first; see OWN_LANGUAGE_KEY. */
 	async getCurrentLanguage(): Promise<string> {
-		return (await preferenceStorage.getAsync(SELECTED_LANGUAGE_PREFERENCE_KEY)) || '';
+		return (
+			(await preferenceStorage.getAsync(OWN_LANGUAGE_KEY)) ||
+			(await preferenceStorage.getAsync(SELECTED_LANGUAGE_PREFERENCE_KEY)) ||
+			''
+		);
 	}
-	setCurrentLanguage = (v: string): Promise<void> =>
-		this.#setPref(SELECTED_LANGUAGE_PREFERENCE_KEY, v);
+	setCurrentLanguage = async (v: string): Promise<void> => {
+		await preferenceStorage.setAsync(OWN_LANGUAGE_KEY, v);
+		await this.#setPref(SELECTED_LANGUAGE_PREFERENCE_KEY, v);
+	};
 
 	getStartWithSystem = (): Promise<boolean> => this.#getBoolPref(START_WITH_SYSTEM_PREFERENCE_KEY);
 	async setStartWithSystem(v: boolean): Promise<void> {

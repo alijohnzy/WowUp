@@ -60,6 +60,30 @@ describe('initializeLanguage', () => {
 		expect(stored.get(SELECTED_LANGUAGE_PREFERENCE_KEY)).toBe('tr');
 	});
 
+	it('keeps the language when an old copy resets the shared preference to English', async () => {
+		// What a July build did: it could not load Turkish and saved English over it.
+		stored.set('wowupnight_selected_language', 'tr');
+		stored.set(SELECTED_LANGUAGE_PREFERENCE_KEY, 'en');
+		load.mockResolvedValue(undefined);
+
+		await wowup.initializeLanguage();
+
+		expect(load).toHaveBeenCalledWith('tr');
+		expect(load).not.toHaveBeenCalledWith('en');
+		// and the shared preference is put back for the copies that read only that
+		expect(stored.get(SELECTED_LANGUAGE_PREFERENCE_KEY)).toBe('tr');
+	});
+
+	it('takes over a language saved before this app kept its own copy', async () => {
+		stored.set(SELECTED_LANGUAGE_PREFERENCE_KEY, 'tr');
+		load.mockResolvedValue(undefined);
+
+		await wowup.initializeLanguage();
+
+		expect(load).toHaveBeenCalledWith('tr');
+		expect(stored.get('wowupnight_selected_language')).toBe('tr');
+	});
+
 	it('on a first run, saves English when the system language is not shipped', async () => {
 		load.mockImplementation((locale: string) =>
 			locale === 'en' ? Promise.resolve() : Promise.reject(new Error('Unknown locale'))
