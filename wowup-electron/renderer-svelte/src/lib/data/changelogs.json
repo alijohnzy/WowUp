@@ -1,6 +1,6 @@
 [
 	{
-		"Version": "2.25.4 #next",
+		"Version": "2.25.4 #38",
 		"Night": true,
 		"html": "\n    <h4>Fixes</h4>\n    <ul>\n    <li>Mac: clicking WowUpNight in the Dock brings its window back after it was closed to the menu bar, so the menu bar icon is no longer the only way back (on a MacBook the notch can hide it)</li>\n    <li>Mac: no longer treated as a game, so going full screen no longer turns on Game Mode and its menu bar icon</li>\n    </ul>\n    "
 	},
