@@ -16,7 +16,7 @@ use std::time::Instant;
 
 use serde::Serialize;
 use tauri::utils::config::BundleType;
-use tauri::{AppHandle, Emitter, Manager, State};
+use tauri::{AppHandle, Emitter, State};
 use tauri_plugin_updater::{Update, UpdaterExt};
 
 /// `IPC_APP_UPDATE_STATE` (src/common/constants.ts).
@@ -278,9 +278,10 @@ pub async fn app_install_update(
     match result {
         Ok(()) => {
             log::info!("app-install-update: installed, restarting");
-            // Otherwise close-to-tray would swallow the restart's close and only hide.
-            app.state::<crate::window::Quitting>().set();
-            app.restart();
+            // Not Tauri's restart: from the AppImage it would hand the old mount's environment
+            // to the new launcher, which then fails to start (see src/host.rs).
+            crate::host::relaunch(&app);
+            Ok(())
         }
         Err(e) => {
             // A cancelled pkexec prompt for a .deb lands here too.

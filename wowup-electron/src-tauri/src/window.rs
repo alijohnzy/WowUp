@@ -90,8 +90,8 @@ pub fn leave_full_screen(app: AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 pub fn restart_app(app: AppHandle) {
-    app.state::<Quitting>().set();
-    app.restart()
+    // See src/host.rs: Tauri's restart fails from the AppImage on newer hosts.
+    crate::host::relaunch(&app)
 }
 
 #[tauri::command]

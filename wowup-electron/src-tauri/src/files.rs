@@ -418,6 +418,13 @@ pub fn get_home_dir() -> Result<String, String> {
 #[tauri::command]
 pub async fn show_directory(app: tauri::AppHandle, file_path: String) -> Result<String, String> {
     use tauri_plugin_opener::OpenerExt;
+    // The opener plugin starts xdg-open with the AppImage's environment, under which the
+    // host's shell cannot start (src/host.rs).
+    if crate::host::in_appimage() {
+        return Ok(crate::host::open_detached(&file_path)
+            .err()
+            .unwrap_or_default());
+    }
     match app.opener().open_path(&file_path, None::<&str>) {
         Ok(()) => Ok(String::new()),
         // shell.openPath resolves to an error *string* rather than rejecting.

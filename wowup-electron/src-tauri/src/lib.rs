@@ -9,6 +9,7 @@ pub mod addons;
 pub mod constants;
 pub mod files;
 pub mod fingerprint;
+pub mod host;
 pub mod import;
 pub mod install;
 pub mod scanner;
@@ -256,6 +257,7 @@ pub fn run() {
             updater::app_install_update,
             ad_view::ad_view_set_bounds,
             ad_view::ad_view_reload,
+            host::open_external_url,
             get_locale,
             update_app_badge,
             is_default_protocol_client,

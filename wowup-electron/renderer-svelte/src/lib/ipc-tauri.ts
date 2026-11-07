@@ -14,7 +14,6 @@
 import { invoke as tauriInvoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { platform as osPlatform } from '@tauri-apps/plugin-os';
-import { openUrl, openPath as tauriOpenPath } from '@tauri-apps/plugin-opener';
 
 import {
 	IPC_ADDONS_GET_ALL,
@@ -52,6 +51,7 @@ import {
 	IPC_LIST_FILES_CHANNEL,
 	IPC_MAXIMIZE_WINDOW,
 	IPC_MINIMIZE_WINDOW,
+	IPC_OPEN_EXTERNAL_URL,
 	IPC_PATH_EXISTS_CHANNEL,
 	IPC_QUIT_APP,
 	IPC_READDIR,
@@ -191,7 +191,8 @@ export const CHANNEL_PARAMS: Readonly<Record<string, readonly string[]>> = {
 	// The Wago ad as a native view over the nav rail (src-tauri/src/ad_view.rs). Tauri-only:
 	// Electron's equivalent is the wago-ads controller.
 	[IPC_AD_VIEW_SET_BOUNDS]: ['bounds'],
-	[IPC_AD_VIEW_RELOAD]: []
+	[IPC_AD_VIEW_RELOAD]: [],
+	[IPC_OPEN_EXTERNAL_URL]: ['url']
 };
 
 /** `warcraft-get-executable-name` -> `warcraft_get_executable_name`. */
@@ -282,17 +283,14 @@ export function on(
 	};
 }
 
-export const openExternal = (url: string): Promise<void> => openUrl(url);
+// Both go through the app's own commands rather than @tauri-apps/plugin-opener: the plugin
+// starts xdg-open with the AppImage's environment, under which the host's shell cannot run
+// (src-tauri/src/host.rs).
+export const openExternal = (url: string): Promise<void> => invoke(IPC_OPEN_EXTERNAL_URL, url);
 
-export const openPath = async (path: string): Promise<string> => {
-	// Electron's shell.openPath resolves to an error string, or '' on success.
-	try {
-		await tauriOpenPath(path);
-		return '';
-	} catch (e) {
-		return e instanceof Error ? e.message : String(e);
-	}
-};
+// Electron's shell.openPath resolves to an error string, or '' on success; show-directory
+// already answers that way.
+export const openPath = (path: string): Promise<string> => invoke(IPC_SHOW_DIRECTORY, path);
 
 /**
  * Tauri reports `macos`/`windows`; the renderer's isMac()/isWin() compare against Node's
