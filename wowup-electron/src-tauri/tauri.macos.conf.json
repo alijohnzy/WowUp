@@ -20,6 +20,10 @@
     ]
   },
   "bundle": {
+    "targets": [
+      "app",
+      "dmg"
+    ],
     "macOS": {
       "signingIdentity": "-",
       "minimumSystemVersion": "11.0"
