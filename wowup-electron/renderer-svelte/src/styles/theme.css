@@ -427,10 +427,9 @@
 	color: var(--warn-color);
 }
 
-/* WowUpNight. Dark only: near-black surfaces with a midnight-purple cast, and accents built
- * from the logo's #1E1C47. Unlike the other themes it tints the app root, because their
- * panels are translucent over the gray page and the art behind it; here the art still shows,
- * faintly, through a navy wash. */
+/* WowUpNight. Dark only: near-black navy surfaces, blue accents, and a navy wash over the
+ * background art. Unlike the other themes it tints the app root, because their panels are
+ * translucent over the gray page and the art behind it; here the art still shows, faintly. */
 .night-theme {
 	--overlay-subtle: rgb(255 255 255 / 5%);
 	--overlay-hover: rgb(255 255 255 / 7%);
@@ -439,31 +438,31 @@
 	--overlay-border: rgb(255 255 255 / 14%);
 
 	color-scheme: dark;
-	background-color: rgb(12 11 26 / 82%);
-	--background-primary: #5b55c9;
-	--background-primary-2: #3a3690;
-	--background-primary-3: #1e1c47;
-	--background-secondary-1: rgba(40, 38, 70, 0.88);
-	--background-secondary-2: rgba(29, 27, 54, 0.92);
-	--background-secondary-2-fill: rgba(29, 27, 54, 1);
-	--background-secondary-3: rgba(21, 20, 40, 0.88);
-	--background-secondary-4: rgba(15, 14, 29, 0.88);
-	--background-secondary-5: rgba(9, 9, 19, 0.88);
-	--control-color: #8b7dff;
+	background-color: rgb(8 12 28 / 82%);
+	--background-primary: #4c64d6;
+	--background-primary-2: #33479e;
+	--background-primary-3: #1b2550;
+	--background-secondary-1: rgba(34, 44, 74, 0.88);
+	--background-secondary-2: rgba(24, 32, 58, 0.92);
+	--background-secondary-2-fill: rgba(24, 32, 58, 1);
+	--background-secondary-3: rgba(17, 24, 44, 0.88);
+	--background-secondary-4: rgba(12, 17, 33, 0.88);
+	--background-secondary-5: rgba(7, 10, 22, 0.88);
+	--control-color: #6f8cff;
 	--epic-color: #a335ee;
 	--rare-color: #3b8eea;
-	--scrollbar-track-color: #141329;
-	--text-1: #f4f3ff;
-	--text-2: #d9d7f0;
-	--text-3: #c3c0e0;
-	--text-4: #a9a6cc;
+	--scrollbar-track-color: #101830;
+	--text-1: #f3f6ff;
+	--text-2: #d6dcf0;
+	--text-3: #bfc8e2;
+	--text-4: #a6b0cf;
 	--warn-color: #ff5c5c;
-	--tab-text: #f4f3ff;
-	--tab-disabled: #f4f3ff;
-	--tab-inactive: #a9a6cc;
-	--divider-color: #3b3866;
+	--tab-text: #f3f6ff;
+	--tab-disabled: #f3f6ff;
+	--tab-inactive: #a6b0cf;
+	--divider-color: #2f3d66;
 	--grid-border: rgba(255, 255, 255, 0.1);
-	--footer-hover: #2b2950;
+	--footer-hover: #22305a;
 
 	--title-logo: url('/assets/images/wowup-night-white-1.png');
 	--theme-logo: url('/assets/images/wowup-night-white-1.png');
