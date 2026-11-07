@@ -363,14 +363,20 @@ pub fn run() {
             // the single-instance handler above never sees it. With the window closed to the
             // tray, or started hidden, the tray icon was then the only way back — and on a
             // MacBook with a notch, the menu bar often hides it.
+            //
+            // Decided by our own window, not by the event's `has_visible_windows`: build 38
+            // trusted that, and a window started hidden still never came back. AppKit counts
+            // every window the app owns, and the menu bar icon is one — so with the tray up
+            // the answer is presumably always yes.
             #[cfg(target_os = "macos")]
-            if let tauri::RunEvent::Reopen {
-                has_visible_windows: false,
-                ..
-            } = _event
-            {
-                log::info!("reopened from the Dock: bringing the window back");
-                tray::restore_window(_app);
+            if let tauri::RunEvent::Reopen { .. } = _event {
+                let hidden = _app.get_webview_window("main").is_some_and(|w| {
+                    !w.is_visible().unwrap_or(true) || w.is_minimized().unwrap_or(false)
+                });
+                log::info!("reopened from the Dock; window hidden={hidden}");
+                if hidden {
+                    tray::restore_window(_app);
+                }
             }
         });
 }
