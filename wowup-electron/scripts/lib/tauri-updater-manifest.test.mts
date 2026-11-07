@@ -64,6 +64,13 @@ describe("buildUpdaterManifest", () => {
     assert.throws(() => buildUpdaterManifest(opts({ assets })), /linux-x86_64-deb/);
   });
 
+  it("refuses a feed missing a platform installs depend on", () => {
+    const linuxOnly = ASSETS.filter((a) => !a.name.endsWith(".exe"));
+    const require = ["linux-x86_64-appimage", "linux-x86_64-deb", "windows-x86_64-nsis"];
+    assert.throws(() => buildUpdaterManifest(opts({ assets: linuxOnly, require })), /windows-x86_64-nsis/);
+    assert.doesNotThrow(() => buildUpdaterManifest(opts({ require })));
+  });
+
   it("refuses a release with nothing to update to", () => {
     const assets = [{ name: "WowUp-CF-Tauri-2.25.4.18-portable.zip", signature: "" }];
     assert.throws(() => buildUpdaterManifest(opts({ assets })), /No updatable assets/);

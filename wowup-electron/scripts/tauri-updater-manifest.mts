@@ -19,6 +19,8 @@ const { values } = parseArgs({
     version: { type: "string" },
     notes: { type: "string" },
     out: { type: "string" },
+    // Comma-separated platform keys that must be in the feed, e.g. windows-x86_64-nsis.
+    require: { type: "string" },
   },
 });
 
@@ -52,6 +54,12 @@ const manifest = buildUpdaterManifest({
   version: values.version!,
   notes: values.notes,
   pubDate: new Date().toISOString(),
+  require: values.require
+    ? values.require
+        .split(",")
+        .map((k) => k.trim())
+        .filter(Boolean)
+    : [],
 });
 
 writeFileSync(values.out!, JSON.stringify(manifest, null, 2) + "\n");

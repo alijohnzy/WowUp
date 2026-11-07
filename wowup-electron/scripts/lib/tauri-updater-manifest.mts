@@ -24,6 +24,12 @@ export interface ManifestOptions {
   notes?: string;
   /** RFC 3339. */
   pubDate: string;
+  /**
+   * Platform keys that must be present. The feed has one version, so publishing it without
+   * an entry some installs read (a Windows build that failed) leaves those installs with an
+   * error on every check.
+   */
+  require?: string[];
 }
 
 export interface PlatformEntry {
@@ -83,6 +89,11 @@ export function buildUpdaterManifest(opts: ManifestOptions): UpdaterManifest {
 
   if (Object.keys(platforms).length === 0) {
     throw new Error("No updatable assets (AppImage, deb, NSIS installer) were given");
+  }
+
+  const missing = (opts.require ?? []).filter((key) => !platforms[key]);
+  if (missing.length) {
+    throw new Error(`Missing required platforms: ${missing.join(", ")}`);
   }
 
   return {

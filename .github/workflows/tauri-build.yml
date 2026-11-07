@@ -500,7 +500,8 @@ jobs:
 
           node wowup-electron/scripts/tauri-updater-manifest.mts \
             --dir dist --repo "${GITHUB_REPOSITORY}" --tag "$tag" \
-            --version "${version}+${GITHUB_RUN_NUMBER}" --out latest.json
+            --version "${version}+${GITHUB_RUN_NUMBER}" --out latest.json \
+            --require linux-x86_64-appimage,linux-x86_64-deb,windows-x86_64-nsis
 
           feed=tauri-updater
           if ! gh release view "$feed" >/dev/null 2>&1; then
