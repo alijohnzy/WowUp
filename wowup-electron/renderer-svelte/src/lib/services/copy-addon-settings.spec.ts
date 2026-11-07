@@ -1,41 +1,18 @@
-// The steps around copying an addon's settings between flavors: nothing is backed up or
-// written until the user confirms, the backup comes before any copy, a failed backup stops
-// the copy, and names from providers or the user are escaped in the HTML dialog message.
+// Backing up before copying settings between flavors: the backup always comes first, and a
+// failed backup means nothing is written. Scanning uses the folders of the addon on both sides.
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Addon, WowInstallation } from 'wowup-lib-core';
 
 const calls: string[] = [];
-const alert = vi.fn();
-const confirm = vi.fn();
 const createBackup = vi.fn();
-let sourceFiles: Record<string, string[]> = {};
+const copy = vi.fn();
+const listFiles = vi.fn();
 
-vi.mock('$lib/i18n.svelte', () => ({
-	t: (key: string) => key,
-	i18n: { t: (key: string, args?: Record<string, unknown>) => `${key} ${JSON.stringify(args)}` }
-}));
-vi.mock('$lib/state/dialogs.svelte', () => ({
-	dialogs: {
-		alert: (d: unknown) => {
-			calls.push('alert');
-			return alert(d);
-		},
-		confirm: (d: unknown) => {
-			calls.push('confirm');
-			return confirm(d);
-		}
-	}
-}));
-vi.mock('$lib/state/snackbar.svelte', () => ({
-	snackbar: {
-		show: () => 'progress',
-		showSuccess: () => calls.push('success'),
-		dismiss: () => {}
-	}
-}));
 vi.mock('$lib/state/addon-flavors.svelte', () => ({
-	addonFlavors: { findIn: () => undefined }
+	addonFlavors: {
+		findIn: () => ({ installedFolderList: ['ElvUI', 'ElvUI_Libraries'] })
+	}
 }));
 vi.mock('$lib/services/wtf', () => ({
 	wtf: {
@@ -47,74 +24,61 @@ vi.mock('$lib/services/wtf', () => ({
 	}
 }));
 vi.mock('$lib/services/files', () => ({
-	listDirectories: async (dir: string) => {
-		if (dir.endsWith('/WTF/Account')) return ['ACC1'];
-		return [];
-	},
-	listFiles: async (dir: string) => sourceFiles[dir] ?? [],
+	listDirectories: async (dir: string) => (dir.endsWith('/WTF/Account') ? ['ACC1'] : []),
+	listFiles: (dir: string, filter: string) => listFiles(dir, filter),
 	createDirectory: async () => true,
-	copy: async (from: string, to: string) => calls.push(`copy ${from} -> ${to}`)
+	copy: (from: string, to: string) => {
+		calls.push(`copy ${from} -> ${to}`);
+		return copy(from, to);
+	}
 }));
 
-import { copyAddonSettings } from './copy-addon-settings';
+import { backupAndCopy, CopySettingsError, scanBoth } from './copy-addon-settings';
 
-const SOURCE = { id: 'classic', displayName: 'Classic <Era>' } as WowInstallation;
+const SOURCE = { id: 'classic', displayName: 'Classic' } as WowInstallation;
 const TARGET = { id: 'retail', displayName: 'Retail' } as WowInstallation;
-const ADDON = { name: 'Elv"UI', installedFolderList: ['ElvUI'] } as Addon;
+const PLAN = { files: [{ from: '/classic/x.lua', to: '/retail/x.lua', replaces: true }] };
 
 beforeEach(() => {
 	calls.length = 0;
-	alert.mockReset().mockResolvedValue(true);
-	confirm.mockReset();
 	createBackup.mockReset().mockResolvedValue(undefined);
-	sourceFiles = { '/classic/WTF/Account/ACC1/SavedVariables': ['ElvUI.lua'] };
+	copy.mockReset().mockResolvedValue('');
+	listFiles.mockReset().mockResolvedValue([]);
 });
 
-describe('copyAddonSettings', () => {
-	it('backs up the target, then copies, once the user confirms', async () => {
-		confirm.mockResolvedValue(true);
-
-		expect(await copyAddonSettings(ADDON, SOURCE, TARGET)).toBe(true);
-		expect(calls).toEqual([
-			'confirm',
-			'backup retail',
-			'copy /classic/WTF/Account/ACC1/SavedVariables/ElvUI.lua -> /retail/WTF/Account/ACC1/SavedVariables/ElvUI.lua',
-			'success'
-		]);
+describe('backupAndCopy', () => {
+	it('backs up the target before copying', async () => {
+		await backupAndCopy(TARGET, PLAN);
+		expect(calls).toEqual(['backup retail', 'copy /classic/x.lua -> /retail/x.lua']);
 	});
 
-	it('changes nothing when the user cancels', async () => {
-		confirm.mockResolvedValue(false);
-
-		expect(await copyAddonSettings(ADDON, SOURCE, TARGET)).toBe(false);
-		expect(calls).toEqual(['confirm']);
-	});
-
-	it('says so, and asks nothing, when the source has no settings for the addon', async () => {
-		sourceFiles = {};
-
-		expect(await copyAddonSettings(ADDON, SOURCE, TARGET)).toBe(false);
-		expect(calls).toEqual(['alert']);
-	});
-
-	it('copies nothing when the backup fails', async () => {
-		confirm.mockResolvedValue(true);
+	it('copies nothing when the backup fails, and says which step failed', async () => {
 		createBackup.mockRejectedValue(new Error('disk full'));
 
-		expect(await copyAddonSettings(ADDON, SOURCE, TARGET)).toBe(false);
-		expect(calls).toEqual(['confirm', 'backup retail', 'alert']);
-		expect(alert.mock.calls[0][0].message).toContain('BACKUP_FAILED');
+		const error = await backupAndCopy(TARGET, PLAN).catch((e: unknown) => e);
+
+		expect(error).toBeInstanceOf(CopySettingsError);
+		expect((error as CopySettingsError).stage).toBe('backup');
+		expect(calls).toEqual(['backup retail']);
 	});
 
-	it('escapes names in the HTML message but not in the plain-text title', async () => {
-		confirm.mockResolvedValue(false);
+	it('reports a failed copy as such', async () => {
+		copy.mockRejectedValue(new Error('read-only'));
+		const error = await backupAndCopy(TARGET, PLAN).catch((e: unknown) => e);
+		expect((error as CopySettingsError).stage).toBe('copy');
+	});
+});
 
-		await copyAddonSettings(ADDON, SOURCE, TARGET);
+describe('scanBoth', () => {
+	it('looks for the folders the addon has here and in the source flavor', async () => {
+		listFiles.mockImplementation(async (dir: string) =>
+			dir.startsWith('/classic') ? ['ElvUI.lua', 'ElvUI_Libraries.lua', 'Other.lua'] : []
+		);
+		const addon = { name: 'ElvUI', installedFolderList: ['ElvUI', 'ElvUI_Options'] } as Addon;
 
-		const { title, message } = confirm.mock.calls[0][0];
-		expect(title).toContain('Classic <Era>');
-		expect(message).toContain('Classic &lt;Era&gt;');
-		expect(message).toContain('Elv&quot;UI');
-		expect(message).not.toContain('<Era>');
+		const { source, target } = await scanBoth(addon, SOURCE, TARGET);
+
+		expect(source.accounts[0].files).toEqual(['ElvUI.lua', 'ElvUI_Libraries.lua']);
+		expect(target.accounts[0].files).toEqual([]);
 	});
 });

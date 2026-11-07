@@ -68,7 +68,7 @@
 	import { wowup } from '$lib/state/wowup.svelte';
 	import { warcraftInstallations } from '$lib/state/warcraft-installation.svelte';
 	import { addonFlavors } from '$lib/state/addon-flavors.svelte';
-	import { copyAddonSettings } from '$lib/services/copy-addon-settings';
+	import CopyAddonSettingsDialog from '$lib/components/addons/CopyAddonSettingsDialog.svelte';
 
 	// ---- state ----------------------------------------------------------------------
 
@@ -95,6 +95,8 @@
 	let pageActionsMenu = $state<{ x: number; y: number } | undefined>(undefined);
 	let showManageDialog = $state(false);
 	let showBackupDialog = $state(false);
+	/** The "Copy settings from" screen, while open. */
+	let copySettings = $state<{ addon: Addon; source: WowInstallation; target: WowInstallation }>();
 	let updateAllMenu = $state<{ x: number; y: number } | undefined>(undefined);
 	let channelSubmenuFor = $state<AddonViewModel[] | undefined>(undefined);
 
@@ -683,12 +685,11 @@
 		}
 	}
 
-	async function onCopySettingsFrom(item: AddonViewModel, source: WowInstallation) {
+	function onCopySettingsFrom(item: AddonViewModel, source: WowInstallation) {
 		closeMenus();
 		const addon = item.addon;
 		const target = warcraftInstallations.getWowInstallation(addon?.installationId);
-		if (!addon || !target) return;
-		await copyAddonSettings(addon, source, target);
+		if (addon && target) copySettings = { addon, source, target };
 	}
 
 	async function onSelectedProviderChange(item: AddonViewModel, providerName: string) {
@@ -1047,6 +1048,10 @@
 	<WtfBackup onclose={() => (showBackupDialog = false)} />
 {/if}
 
+{#if copySettings}
+	<CopyAddonSettingsDialog {...copySettings} onclose={() => (copySettings = undefined)} />
+{/if}
+
 {#if columnMenu}
 	<ContextMenu x={columnMenu.x} y={columnMenu.y} onclose={closeMenus}>
 		<div class="menu-header">{t('PAGES.MY_ADDONS.COLUMNS_CONTEXT_MENU.TITLE')}</div>
@@ -1165,7 +1170,7 @@
 				{t('PAGES.MY_ADDONS.ADDON_CONTEXT_MENU.COPY_SETTINGS_FROM')}
 			</div>
 			{#each settingsSources as source (source.id)}
-				<button class="menu-item indent" onclick={() => void onCopySettingsFrom(single, source)}>
+				<button class="menu-item indent" onclick={() => onCopySettingsFrom(single, source)}>
 					{source.displayName}
 				</button>
 			{/each}

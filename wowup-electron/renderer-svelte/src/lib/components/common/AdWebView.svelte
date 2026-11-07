@@ -16,6 +16,7 @@
 	import { AppConfig } from '$config/environment';
 	import { invoke, on, isTauri } from '$lib/ipc';
 	import { dialogs } from '$lib/state/dialogs.svelte';
+	import { openModals } from '$lib/state/open-modals.svelte';
 	import { session } from '$lib/state/session.svelte';
 	import { zoom } from '$lib/state/zoom.svelte';
 	import { confirmLinkNavigation } from '$lib/services/links';
@@ -61,7 +62,7 @@
 	// where it is. The view draws above the page, so it is hidden while a dialog is open —
 	// hidden, not unloaded: the page renews the Wago key on its own timer.
 	let slot: HTMLElement | undefined;
-	let coveredByDialog = $derived(dialogs.stack.length > 0);
+	let coveredByDialog = $derived(dialogs.stack.length > 0 || openModals.count > 0);
 
 	function reportSlot(visible = !coveredByDialog): void {
 		const r = slot?.getBoundingClientRect();

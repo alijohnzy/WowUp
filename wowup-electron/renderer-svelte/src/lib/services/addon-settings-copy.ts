@@ -3,18 +3,41 @@
 // WoW saves an addon's settings as Lua files named after the addon's folder:
 //   WTF/Account/<ACCOUNT>/SavedVariables/<Folder>.lua                         account-wide
 //   WTF/Account/<ACCOUNT>/<Realm>/<Character>/SavedVariables/<Folder>.lua     per character
-// Each flavor has its own WTF folder. Copying means taking those files from the source flavor
-// and putting them in the same place in the target.
+// Each flavor has its own WTF folder, and its own characters: a Classic character rarely
+// exists in Retail under the same realm and name. So copying is a matching job — for each
+// account and character in the target, which account or character of the source (if any)
+// should its settings come from. This module finds what exists on both sides, suggests the
+// obvious matches, and turns the user's choices into a list of files to copy.
 //
-// Only places that already exist in the target are written: an account (or a character) the
-// player has never logged in with in the target flavor has no folder there, and inventing one
-// would leave settings nobody can use. Those accounts are reported so the dialog can say so.
-// `.lua.bak` files are left alone; WoW writes its own when it next saves.
+// Only places that already exist in the target are offered: an account or character the
+// player never logged in with in the target flavor has no folder there. `.lua.bak` files are
+// left alone; WoW writes its own when it next saves.
 
 import * as path from '$lib/utils/path';
 
 const ACCOUNT_FOLDER = 'Account';
 const SAVED_VARIABLES = 'SavedVariables';
+
+/** An account or a character: somewhere WoW keeps a SavedVariables folder. */
+export interface SettingsScope {
+	/** Unique within one WTF folder: "ACCOUNT" or "ACCOUNT/Realm/Character". */
+	key: string;
+	account: string;
+	realm?: string;
+	character?: string;
+	/** The folder that holds this scope's SavedVariables folder. */
+	dir: string;
+	/** The addon's settings files found here, named as on disk. Empty if it has none yet. */
+	files: string[];
+}
+
+export interface SettingsInventory {
+	accounts: SettingsScope[];
+	characters: SettingsScope[];
+}
+
+/** Target scope key → the source scope key whose settings it gets. Absent: keep its own. */
+export type SettingsChoices = Record<string, string>;
 
 export interface SettingsFile {
 	from: string;
@@ -25,11 +48,9 @@ export interface SettingsFile {
 
 export interface SettingsCopyPlan {
 	files: SettingsFile[];
-	/** Accounts with settings in the source that the target has never been used with. */
-	skippedAccounts: string[];
 }
 
-/** The file reads the plan needs. Both return [] for a folder that does not exist. */
+/** The file reads a scan needs. Both return [] for a folder that does not exist. */
 export interface WtfReader {
 	listDirectories(dir: string): Promise<string[]>;
 	listFiles(dir: string, filter: string): Promise<string[]>;
@@ -40,113 +61,127 @@ export interface WtfWriter {
 	copy(from: string, to: string): Promise<unknown>;
 }
 
-/** Folder names in `dir`, with SavedVariables (a sibling of realms and accounts) left out. */
+const same = (a: string | undefined, b: string | undefined) =>
+	(a ?? '').toLowerCase() === (b ?? '').toLowerCase();
+
+/** Folder names in `dir`, without the SavedVariables folder that sits beside realms. */
 async function subfolders(fs: WtfReader, dir: string): Promise<string[]> {
 	return (await fs.listDirectories(dir)).filter((d) => d !== SAVED_VARIABLES);
 }
 
-/**
- * Pairs names present in both lists. Exact matches first, then ignoring case: WoW writes these
- * names itself, but a Windows install copied to Linux can differ only in case.
- */
-function pairNames(source: string[], target: string[]): [string, string][] {
-	const exact = new Set(target);
-	const lower = new Map(target.map((t) => [t.toLowerCase(), t]));
-	return source.flatMap((s): [string, string][] => {
-		if (exact.has(s)) return [[s, s]];
-		const t = lower.get(s.toLowerCase());
-		return t ? [[s, t]] : [];
-	});
-}
-
-async function luaFiles(fs: WtfReader, dir: string): Promise<Map<string, string>> {
-	const files = await fs.listFiles(dir, '*.lua');
-	return new Map(files.map((f) => [f.toLowerCase(), f]));
-}
-
-async function planSavedVariables(
-	fs: WtfReader,
-	folders: string[],
-	sourceDir: string,
-	targetDir: string
-): Promise<SettingsFile[]> {
-	const sourceFiles = await luaFiles(fs, path.join(sourceDir, SAVED_VARIABLES));
-	if (sourceFiles.size === 0) return [];
-	const targetFiles = await luaFiles(fs, path.join(targetDir, SAVED_VARIABLES));
-
-	return folders.flatMap((folder): SettingsFile[] => {
-		const wanted = `${folder}.lua`.toLowerCase();
-		const name = sourceFiles.get(wanted);
-		if (!name) return [];
-		const existing = targetFiles.get(wanted);
-		return [
-			{
-				from: path.join(sourceDir, SAVED_VARIABLES, name),
-				to: path.join(targetDir, SAVED_VARIABLES, existing ?? name),
-				replaces: existing !== undefined
-			}
-		];
-	});
+/** The addon's settings files in `dir`/SavedVariables, matched to `folders` ignoring case. */
+async function settingsFiles(fs: WtfReader, folders: Set<string>, dir: string): Promise<string[]> {
+	const files = await fs.listFiles(path.join(dir, SAVED_VARIABLES), '*.lua');
+	return files.filter((f) => folders.has(f.toLowerCase().replace(/\.lua$/, '')));
 }
 
 /**
- * Works out which settings files to copy for an addon made of `folders`, from the WTF folder
- * `sourceWtf` to `targetWtf`. Reads only; nothing is written.
+ * Every account and character in the WTF folder `wtfPath`, each with the settings files it
+ * has for an addon made of `folders`. Reads only.
  */
-export async function planSettingsCopy(
+export async function scanSettings(
 	fs: WtfReader,
 	folders: string[],
-	sourceWtf: string,
-	targetWtf: string
-): Promise<SettingsCopyPlan> {
-	const uniqueFolders = [...new Map(folders.map((f) => [f.toLowerCase(), f])).values()];
-	const sourceAccounts = path.join(sourceWtf, ACCOUNT_FOLDER);
-	const targetAccounts = path.join(targetWtf, ACCOUNT_FOLDER);
+	wtfPath: string
+): Promise<SettingsInventory> {
+	const wanted = new Set(folders.map((f) => f.toLowerCase()));
+	const accountsDir = path.join(wtfPath, ACCOUNT_FOLDER);
+	const accounts: SettingsScope[] = [];
+	const characters: SettingsScope[] = [];
 
-	const files: SettingsFile[] = [];
-	const skippedAccounts: string[] = [];
-	const targetAccountNames = await subfolders(fs, targetAccounts);
+	for (const account of await subfolders(fs, accountsDir)) {
+		const accountDir = path.join(accountsDir, account);
+		accounts.push({
+			key: account,
+			account,
+			dir: accountDir,
+			files: await settingsFiles(fs, wanted, accountDir)
+		});
 
-	for (const account of await subfolders(fs, sourceAccounts)) {
-		const sourceAccount = path.join(sourceAccounts, account);
-		const [pair] = pairNames([account], targetAccountNames);
-		if (!pair) {
-			// Only worth mentioning if this account has settings for the addon to lose out on.
-			const accountFiles = await planSavedVariables(
-				fs,
-				uniqueFolders,
-				sourceAccount,
-				sourceAccount
+		for (const realm of await subfolders(fs, accountDir)) {
+			const realmDir = path.join(accountDir, realm);
+			const found = await Promise.all(
+				(await fs.listDirectories(realmDir)).map(async (character) => {
+					const dir = path.join(realmDir, character);
+					return {
+						key: `${account}/${realm}/${character}`,
+						account,
+						realm,
+						character,
+						dir,
+						files: await settingsFiles(fs, wanted, dir)
+					};
+				})
 			);
-			if (accountFiles.length > 0) skippedAccounts.push(account);
-			continue;
-		}
-		const targetAccount = path.join(targetAccounts, pair[1]);
-		files.push(...(await planSavedVariables(fs, uniqueFolders, sourceAccount, targetAccount)));
-
-		const realms = pairNames(
-			await subfolders(fs, sourceAccount),
-			await subfolders(fs, targetAccount)
-		);
-		for (const [sourceRealm, targetRealm] of realms) {
-			const characters = pairNames(
-				await fs.listDirectories(path.join(sourceAccount, sourceRealm)),
-				await fs.listDirectories(path.join(targetAccount, targetRealm))
-			);
-			for (const [sourceChar, targetChar] of characters) {
-				files.push(
-					...(await planSavedVariables(
-						fs,
-						uniqueFolders,
-						path.join(sourceAccount, sourceRealm, sourceChar),
-						path.join(targetAccount, targetRealm, targetChar)
-					))
-				);
-			}
+			characters.push(...found);
 		}
 	}
 
-	return { files, skippedAccounts };
+	const byName = (a: SettingsScope, b: SettingsScope) =>
+		(a.realm ?? '').localeCompare(b.realm ?? '') ||
+		(a.character ?? '').localeCompare(b.character ?? '') ||
+		a.account.localeCompare(b.account);
+	characters.sort(byName);
+	return { accounts, characters };
+}
+
+/** The scopes that have settings to copy. */
+export const withSettings = (scopes: SettingsScope[]) => scopes.filter((s) => s.files.length > 0);
+
+/**
+ * The obvious matches: an account to the source account of the same name, a character to the
+ * source character of the same realm and name. When each side has exactly one account, those
+ * two are matched whatever their names. Everything else keeps its own settings.
+ */
+export function suggestChoices(
+	source: SettingsInventory,
+	target: SettingsInventory
+): SettingsChoices {
+	const choices: SettingsChoices = {};
+	const sourceAccounts = withSettings(source.accounts);
+
+	for (const t of target.accounts) {
+		const match =
+			sourceAccounts.find((s) => same(s.account, t.account)) ??
+			(sourceAccounts.length === 1 && target.accounts.length === 1 ? sourceAccounts[0] : undefined);
+		if (match) choices[t.key] = match.key;
+	}
+
+	const sourceCharacters = withSettings(source.characters);
+	for (const t of target.characters) {
+		const matches = sourceCharacters.filter(
+			(s) => same(s.realm, t.realm) && same(s.character, t.character)
+		);
+		const match = matches.find((s) => same(s.account, t.account)) ?? matches[0];
+		if (match) choices[t.key] = match.key;
+	}
+	return choices;
+}
+
+/**
+ * The files to copy for `choices`. A choice only pairs like with like — account with account,
+ * character with character — and only a source that has settings.
+ */
+export function planCopy(
+	source: SettingsInventory,
+	target: SettingsInventory,
+	choices: SettingsChoices
+): SettingsCopyPlan {
+	const sources = new Map([...source.accounts, ...source.characters].map((s) => [s.key, s]));
+
+	const files = [...target.accounts, ...target.characters].flatMap((t): SettingsFile[] => {
+		const s = sources.get(choices[t.key]);
+		if (!s || !s.character !== !t.character) return [];
+		return s.files.map((name) => {
+			const existing = t.files.find((f) => same(f, name));
+			return {
+				from: path.join(s.dir, SAVED_VARIABLES, name),
+				to: path.join(t.dir, SAVED_VARIABLES, existing ?? name),
+				replaces: existing !== undefined
+			};
+		});
+	});
+	return { files };
 }
 
 /** Copies the planned files, creating a SavedVariables folder where the target lacks one. */

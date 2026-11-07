@@ -1,16 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { applySettingsCopy, planSettingsCopy, type WtfReader } from './addon-settings-copy';
+import {
+	applySettingsCopy,
+	planCopy,
+	scanSettings,
+	suggestChoices,
+	withSettings,
+	type WtfReader
+} from './addon-settings-copy';
 
 /** A fake file system: every path listed is a file, and its parent folders exist. */
-function fakeFs(paths: string[]): WtfReader & { copies: string[][]; dirs: string[] } {
-	const files = new Set(paths);
+function fakeFs(paths: string[]): WtfReader {
 	const children = (dir: string) =>
-		[...files]
-			.filter((p) => p.startsWith(dir + '/'))
-			.map((p) => p.slice(dir.length + 1).split('/'));
+		paths.filter((p) => p.startsWith(dir + '/')).map((p) => p.slice(dir.length + 1).split('/'));
 	return {
-		copies: [],
-		dirs: [],
 		listDirectories: async (dir) => [
 			...new Set(
 				children(dir)
@@ -29,18 +31,99 @@ function fakeFs(paths: string[]): WtfReader & { copies: string[][]; dirs: string
 
 const SRC = '/wow/_classic_/WTF';
 const DST = '/wow/_retail_/WTF';
+const DBM = ['DBM-Core', 'DBM-StatusBarTimers'];
 
-describe('planSettingsCopy', () => {
-	it('copies account-wide settings for each of the addon’s folders', async () => {
-		const fs = fakeFs([
-			`${SRC}/Account/ACC1/SavedVariables/DBM-Core.lua`,
-			`${SRC}/Account/ACC1/SavedVariables/DBM-Core.lua.bak`,
-			`${SRC}/Account/ACC1/SavedVariables/DBM-StatusBarTimers.lua`,
-			`${SRC}/Account/ACC1/SavedVariables/Details.lua`,
-			`${DST}/Account/ACC1/SavedVariables/DBM-Core.lua`
+const classic = fakeFs([
+	`${SRC}/Account/ACC1/SavedVariables/DBM-Core.lua`,
+	`${SRC}/Account/ACC1/SavedVariables/DBM-Core.lua.bak`,
+	`${SRC}/Account/ACC1/SavedVariables/Details.lua`,
+	`${SRC}/Account/ACC1/Faerlina/Bob/SavedVariables/DBM-StatusBarTimers.lua`,
+	`${SRC}/Account/ACC1/Faerlina/Ann/SavedVariables/Details.lua`,
+	`${SRC}/Account/ACC1/Whitemane/Cid/SavedVariables/dbm-core.lua`
+]);
+const retail = fakeFs([
+	`${DST}/Account/ACC1/SavedVariables/DBM-Core.lua`,
+	`${DST}/Account/ACC1/Faerlina/Bob/SavedVariables/Other.lua`,
+	`${DST}/Account/ACC1/Area 52/Zed/SavedVariables/DBM-Core.lua`
+]);
+
+describe('scanSettings', () => {
+	it('lists every account and character with the addon’s files, ignoring case and .bak', async () => {
+		const inv = await scanSettings(classic, DBM, SRC);
+
+		expect(inv.accounts).toEqual([
+			{
+				key: 'ACC1',
+				account: 'ACC1',
+				dir: `${SRC}/Account/ACC1`,
+				files: ['DBM-Core.lua']
+			}
 		]);
+		expect(inv.characters.map((c) => [c.key, c.files])).toEqual([
+			['ACC1/Faerlina/Ann', []],
+			['ACC1/Faerlina/Bob', ['DBM-StatusBarTimers.lua']],
+			['ACC1/Whitemane/Cid', ['dbm-core.lua']]
+		]);
+		expect(withSettings(inv.characters).map((c) => c.character)).toEqual(['Bob', 'Cid']);
+	});
 
-		const plan = await planSettingsCopy(fs, ['DBM-Core', 'DBM-StatusBarTimers'], SRC, DST);
+	it('finds nothing in a WTF folder that does not exist', async () => {
+		expect(await scanSettings(fakeFs([]), DBM, SRC)).toEqual({ accounts: [], characters: [] });
+	});
+});
+
+describe('suggestChoices', () => {
+	it('matches accounts by name and characters by realm and name, case-insensitively', async () => {
+		const source = await scanSettings(classic, DBM, SRC);
+		const target = await scanSettings(
+			fakeFs([
+				`${DST}/Account/acc1/SavedVariables/x.lua`,
+				`${DST}/Account/acc1/faerlina/BOB/SavedVariables/x.lua`,
+				`${DST}/Account/acc1/Faerlina/Ann/SavedVariables/x.lua`
+			]),
+			DBM,
+			DST
+		);
+
+		// Ann has no settings for the addon in the source, so she keeps her own.
+		expect(suggestChoices(source, target)).toEqual({
+			acc1: 'ACC1',
+			'acc1/faerlina/BOB': 'ACC1/Faerlina/Bob'
+		});
+	});
+
+	it('pairs the only account on each side even when the names differ', async () => {
+		const source = await scanSettings(classic, DBM, SRC);
+		const target = await scanSettings(
+			fakeFs([`${DST}/Account/OTHER/SavedVariables/x.lua`]),
+			DBM,
+			DST
+		);
+		expect(suggestChoices(source, target)).toEqual({ OTHER: 'ACC1' });
+	});
+
+	it('suggests nothing for an account when it is ambiguous', async () => {
+		const source = await scanSettings(classic, DBM, SRC);
+		const target = await scanSettings(
+			fakeFs([`${DST}/Account/A/SavedVariables/x.lua`, `${DST}/Account/B/SavedVariables/x.lua`]),
+			DBM,
+			DST
+		);
+		expect(suggestChoices(source, target)).toEqual({});
+	});
+});
+
+describe('planCopy', () => {
+	it('copies what each target was matched to, keeping the target’s file names', async () => {
+		const source = await scanSettings(classic, DBM, SRC);
+		const target = await scanSettings(retail, DBM, DST);
+
+		const plan = planCopy(source, target, {
+			ACC1: 'ACC1',
+			// one source character to several targets
+			'ACC1/Faerlina/Bob': 'ACC1/Whitemane/Cid',
+			'ACC1/Area 52/Zed': 'ACC1/Whitemane/Cid'
+		});
 
 		expect(plan.files).toEqual([
 			{
@@ -49,70 +132,37 @@ describe('planSettingsCopy', () => {
 				replaces: true
 			},
 			{
-				from: `${SRC}/Account/ACC1/SavedVariables/DBM-StatusBarTimers.lua`,
-				to: `${DST}/Account/ACC1/SavedVariables/DBM-StatusBarTimers.lua`,
+				from: `${SRC}/Account/ACC1/Whitemane/Cid/SavedVariables/dbm-core.lua`,
+				to: `${DST}/Account/ACC1/Area 52/Zed/SavedVariables/DBM-Core.lua`,
+				replaces: true
+			},
+			{
+				from: `${SRC}/Account/ACC1/Whitemane/Cid/SavedVariables/dbm-core.lua`,
+				to: `${DST}/Account/ACC1/Faerlina/Bob/SavedVariables/dbm-core.lua`,
 				replaces: false
 			}
 		]);
-		expect(plan.skippedAccounts).toEqual([]);
 	});
 
-	it('copies per-character settings only for characters that exist in both', async () => {
-		const fs = fakeFs([
-			`${SRC}/Account/ACC1/SavedVariables/Other.lua`,
-			`${SRC}/Account/ACC1/Faerlina/Bob/SavedVariables/Questie.lua`,
-			`${SRC}/Account/ACC1/Faerlina/Ann/SavedVariables/Questie.lua`,
-			`${DST}/Account/ACC1/SavedVariables/Other.lua`,
-			`${DST}/Account/ACC1/Faerlina/Bob/layout-local.txt`
-		]);
+	it('ignores choices that pair an account with a character, or name nothing real', async () => {
+		const source = await scanSettings(classic, DBM, SRC);
+		const target = await scanSettings(retail, DBM, DST);
 
-		const plan = await planSettingsCopy(fs, ['Questie'], SRC, DST);
-
-		expect(plan.files.map((f) => f.to)).toEqual([
-			`${DST}/Account/ACC1/Faerlina/Bob/SavedVariables/Questie.lua`
-		]);
-	});
-
-	it('skips, and reports, an account never used in the target', async () => {
-		const fs = fakeFs([
-			`${SRC}/Account/ACC1/SavedVariables/ElvUI.lua`,
-			`${SRC}/Account/ACC2/SavedVariables/ElvUI.lua`,
-			`${SRC}/Account/ACC3/SavedVariables/Other.lua`,
-			`${DST}/Account/ACC1/SavedVariables/Other.lua`
-		]);
-
-		const plan = await planSettingsCopy(fs, ['ElvUI'], SRC, DST);
-
-		expect(plan.files.map((f) => f.to)).toEqual([`${DST}/Account/ACC1/SavedVariables/ElvUI.lua`]);
-		expect(plan.skippedAccounts).toEqual(['ACC2']);
-	});
-
-	it('matches names that differ only in case, and keeps the target’s spelling', async () => {
-		const fs = fakeFs([
-			`${SRC}/Account/acc1/SavedVariables/elvui.lua`,
-			`${DST}/Account/ACC1/SavedVariables/ElvUI.lua`
-		]);
-
-		const plan = await planSettingsCopy(fs, ['ElvUI', 'elvui'], SRC, DST);
-
-		expect(plan.files).toEqual([
-			{
-				from: `${SRC}/Account/acc1/SavedVariables/elvui.lua`,
-				to: `${DST}/Account/ACC1/SavedVariables/ElvUI.lua`,
-				replaces: true
-			}
-		]);
-	});
-
-	it('plans nothing when the source has no settings for the addon', async () => {
-		const fs = fakeFs([
-			`${SRC}/Account/ACC1/SavedVariables/Other.lua`,
-			`${DST}/Account/ACC1/SavedVariables/Other.lua`
-		]);
-		expect(await planSettingsCopy(fs, ['ElvUI'], SRC, DST)).toEqual({
-			files: [],
-			skippedAccounts: []
+		const plan = planCopy(source, target, {
+			ACC1: 'ACC1/Faerlina/Bob',
+			'ACC1/Faerlina/Bob': 'ACC1',
+			'ACC1/Area 52/Zed': 'nobody'
 		});
+
+		expect(plan.files).toEqual([]);
+	});
+
+	it('copies nothing from a source with no settings for the addon', async () => {
+		const source = await scanSettings(classic, DBM, SRC);
+		const target = await scanSettings(retail, DBM, DST);
+		expect(planCopy(source, target, { 'ACC1/Faerlina/Bob': 'ACC1/Faerlina/Ann' }).files).toEqual(
+			[]
+		);
 	});
 });
 
@@ -128,8 +178,7 @@ describe('applySettingsCopy', () => {
 				files: [
 					{ from: '/a/SavedVariables/X.lua', to: '/b/SavedVariables/X.lua', replaces: false },
 					{ from: '/a/SavedVariables/Y.lua', to: '/b/SavedVariables/Y.lua', replaces: true }
-				],
-				skippedAccounts: []
+				]
 			}
 		);
 		expect(calls).toEqual([

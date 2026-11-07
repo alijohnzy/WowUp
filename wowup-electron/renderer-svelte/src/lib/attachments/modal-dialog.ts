@@ -17,6 +17,9 @@
 // compares the click against getBoundingClientRect() — the backdrop is a pseudo-element, so a
 // click on it targets the dialog itself and cannot be detected by event.target alone.
 
+import { untrack } from 'svelte';
+import { openModals } from '$lib/state/open-modals.svelte';
+
 /**
  * The `closedby` values, per spec.
  *
@@ -42,5 +45,20 @@ export function modalDialog(disableClose = false) {
 	return (node: HTMLDialogElement) => {
 		(node as DialogElement).closedBy = disableClose ? 'none' : 'any';
 		node.showModal();
+
+		// Counted until the dialog closes or leaves the page, whichever comes first. Untracked:
+		// the attachment must not re-run (and call showModal again) when the count changes.
+		let open = true;
+		untrack(() => openModals.count++);
+		const release = () => {
+			if (!open) return;
+			open = false;
+			untrack(() => openModals.count--);
+		};
+		node.addEventListener('close', release);
+		return () => {
+			node.removeEventListener('close', release);
+			release();
+		};
 	};
 }
