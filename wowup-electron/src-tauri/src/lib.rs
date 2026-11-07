@@ -130,8 +130,34 @@ fn get_app_version(app: tauri::AppHandle) -> String {
 
 use tauri::Manager;
 
+const WEBKIT_DMABUF_VAR: &str = "WEBKIT_DISABLE_DMABUF_RENDERER";
+
+/// Whether to turn off WebKitGTK's DMABUF renderer before WebKit starts.
+///
+/// Inside the AppImage the renderer left the page blank — the window showed only its #444444
+/// background — while the page kept running behind it (its logs carried on, and a resize did
+/// not bring it back). Measured on KDE Wayland/XWayland with AMD graphics: the AppImage came
+/// up blank 3 times out of 3 after a restore from the tray, and 0 out of 3 with this set. The
+/// same binary run outside the AppImage was fine, so .deb installs keep the GPU path. A value
+/// the user set themselves is left alone.
+fn should_disable_dmabuf(
+    appimage: Option<&std::ffi::OsStr>,
+    existing: Option<&std::ffi::OsStr>,
+) -> bool {
+    appimage.is_some_and(|a| !a.is_empty()) && existing.is_none()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Before GTK and WebKit initialise, and before any other thread exists to race set_var.
+    #[cfg(target_os = "linux")]
+    if should_disable_dmabuf(
+        std::env::var_os("APPIMAGE").as_deref(),
+        std::env::var_os(WEBKIT_DMABUF_VAR).as_deref(),
+    ) {
+        std::env::set_var(WEBKIT_DMABUF_VAR, "1");
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_opener::init())
@@ -262,6 +288,10 @@ pub fn run() {
         })
         .setup(|app| {
             log::info!("WowUp Tauri starting");
+            #[cfg(target_os = "linux")]
+            if let Some(v) = std::env::var_os(WEBKIT_DMABUF_VAR) {
+                log::info!("{WEBKIT_DMABUF_VAR}={}", v.to_string_lossy());
+            }
             // Before any store is touched: the Tauri build has its own data directory, so
             // without this a machine with an existing Electron install starts with no WoW
             // clients and no addons.
@@ -307,4 +337,21 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod dmabuf_tests {
+    use super::should_disable_dmabuf;
+    use std::ffi::OsStr;
+
+    #[test]
+    fn only_appimages_turn_the_dmabuf_renderer_off() {
+        let appimage = Some(OsStr::new("/home/u/Applications/WowUp-CF-Tauri.AppImage"));
+        assert!(should_disable_dmabuf(appimage, None));
+        // A .deb install or the raw binary keeps the GPU path.
+        assert!(!should_disable_dmabuf(None, None));
+        assert!(!should_disable_dmabuf(Some(OsStr::new("")), None));
+        // Whatever the user set wins, including asking for the renderer back.
+        assert!(!should_disable_dmabuf(appimage, Some(OsStr::new("0"))));
+    }
 }
