@@ -72,7 +72,9 @@
 			<ul class="change-log-list">
 				{#each changeLogs as cl (cl.Version)}
 					<li class="changelog bg-secondary-4 border-primary">
-						<div class="version selectable">{cl.Version}</div>
+						<div class="version selectable">
+							{cl.Version}{#if cl.Night}<span class="night">Night</span>{/if}
+						</div>
 						{#if cl.Description}
 							<pre class="description selectable">{cl.Description}</pre>
 						{/if}
@@ -133,6 +135,15 @@
 		margin-bottom: 0.75rem;
 		border-radius: 4px;
 		border-left: 3px solid var(--control-color);
+	}
+
+	/* Marks WowUpNight's own builds, set like the "Night" in the app name (AppName.svelte). */
+	.changelog .version .night {
+		margin-left: 0.35em;
+		font-size: 0.68em;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		opacity: 0.85;
 	}
 
 	.changelog .version {

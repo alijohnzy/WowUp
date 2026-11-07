@@ -4,12 +4,18 @@
 // concatenated with assets/changelog.json. There is no behaviour to inject — it is data.
 // Extracted to changelogs.json; the Angular tree's assets/changelog.json is still the
 // shared source for the older entries.
+//
+// Two kinds of entry, newest first: WowUpNight's own builds ("2.25.4 #28", Night: true), and
+// upstream WowUp releases as WowUp wrote them (src/app/services/wowup/patch-notes.service.ts).
 
 import inlineChangeLogs from './changelogs.json';
 import changeLogJson from '../../../../src/assets/changelog.json';
 
 export interface ChangeLog {
+	/** A WowUp version, or for this fork's own builds the version and build: "2.25.4 #28". */
 	Version: string;
+	/** A WowUpNight build rather than an upstream WowUp release. */
+	Night?: boolean;
 	Description?: string;
 	changes?: string[];
 	html?: string;

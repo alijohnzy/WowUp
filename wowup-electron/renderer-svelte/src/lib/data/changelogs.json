@@ -1,5 +1,102 @@
 [
 	{
+		"Version": "2.25.4 #28",
+		"Night": true,
+		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>Right-click the update button in the footer to go back to an earlier version</li>\n    <li>The tray menu shows \"Update WowUpNight\" while an update is waiting</li>\n    </ul>\n    <h4>Changes</h4>\n    <ul>\n    <li>Turkish: the Get Addons tab is now \"Eklenti Ara\"</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.4 #27",
+		"Night": true,
+		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>Install an earlier version from Options &gt; Application if an update goes wrong</li>\n    <li>The footer shows the build number, for example v2.25.4 #27</li>\n    </ul>\n    <h4>Changes</h4>\n    <ul>\n    <li>The Linux AppImage is 14 MB instead of 154 MB: like the .deb, it uses the WebKitGTK already on your system, and says what to install if it is missing</li>\n    </ul>\n    <h4>Fixes</h4>\n    <ul>\n    <li>Fix the language switching back to English after an older copy of the app was started</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.4 #26",
+		"Night": true,
+		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>Get Addons shows which of your other WoW versions already have an addon</li>\n    <li>My Addons marks addons that are also installed in another WoW version</li>\n    <li>Copy an addon's settings from another WoW version: right-click it in My Addons &gt; Copy settings from, then choose which account and character each one comes from. Your interface settings are backed up first</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.4 #25",
+		"Night": true,
+		"html": "\n    <h4>Changes</h4>\n    <ul>\n    <li>The Night theme is darker, with a touch of indigo</li>\n    </ul>\n    <h4>Fixes</h4>\n    <ul>\n    <li>Fix long author lists spilling into the rows below them</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.4 #24",
+		"Night": true,
+		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>The app is now WowUpNight, with a midnight logo</li>\n    <li>New Night theme in Options &gt; Application</li>\n    <li>Starting WowUpNight while it is already running brings the open window forward</li>\n    </ul>\n    <h4>Fixes</h4>\n    <ul>\n    <li>Fix the language resetting to English after an update</li>\n    <li>Fix the footer update check giving no answer when there is nothing new</li>\n    <li>Fix Report a Bug leaving out the log when one log line is very long</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.4 #23",
+		"Night": true,
+		"html": "\n    <h4>Fixes</h4>\n    <ul>\n    <li>Fix folders and links opened from the AppImage failing to open</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.4 #22",
+		"Night": true,
+		"html": "\n    <h4>Fixes</h4>\n    <ul>\n    <li>Fix the AppImage showing only a gray window on newer Linux systems</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.4 #19",
+		"Night": true,
+		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>Show the Wago ad panel, which supports addon authors</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.4 #18",
+		"Night": true,
+		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>WowUpNight updates itself from its GitHub releases, and asks before downloading</li>\n    <li>Report a Bug on the Debug page opens a GitHub issue with your version and recent log filled in</li>\n    </ul>\n    <h4>Changes</h4>\n    <ul>\n    <li>GitHub links point at the WowUpNight repository</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.4 #17",
+		"Night": true,
+		"html": "\n    <h4>Fixes</h4>\n    <ul>\n    <li>Fix the WTF explorer's folder tree</li>\n    <li>Translate the WTF explorer's buttons and messages</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.4 #16",
+		"Night": true,
+		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>Turkish translation</li>\n    </ul>\n    <h4>Fixes</h4>\n    <ul>\n    <li>Translate text that was still in English in every language</li>\n    <li>Pick the right language for system locales such as tr-TR</li>\n    <li>Fix the \"…and N more\" count in the Update All tooltip</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.4 #15",
+		"Night": true,
+		"html": "\n    <h4>Fixes</h4>\n    <ul>\n    <li>Fix downloading addons hosted on GitHub</li>\n    <li>Stop writing sign-in tokens to the log file</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.4 #13",
+		"Night": true,
+		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>First build of WowUp on Tauri: a much smaller app that uses the web engine your system already has</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.4",
+		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>WowUp now reads the game version installed through Battle.net and holds back addon updates that need a newer version of World of Warcraft than yours, which matters when a patch reaches your region later</li>\n    <li>Updating such an addon by hand shows a warning first, where you can update anyway, skip it, or ignore the warning until your next game patch</li>\n    <li>Automatic updates skip those addons and show a notification, and My Addons marks them with a warning icon</li>\n    </ul>\n    <h4>Changes</h4>\n    <ul>\n    <li>The Game Version column now shows the newest version for your game flavor instead of a long list</li>\n    </ul>\n    <h4>Fixes</h4>\n    <ul>\n    <li>Fix My Addons sometimes listing every addon more than once, for example after an update</li>\n    <li>Fix the Hide, Hide Others and Minimize shortcuts (Cmd+H, Cmd+Alt+H, Cmd+M) doing nothing on macOS</li>\n    <li>Fix the submenus of the addon right-click menu in My Addons opening near the top of the menu instead of next to the item</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.3",
+		"html": "\n    <h4>Changes</h4>\n    <ul>\n    <li>Options > About now also shows the version of the installed WowUp shell, which can be older than the app itself after an in-app update</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.2",
+		"html": "\n    <h4>Changes</h4>\n    <ul>\n    <li>Installing an addon now shows the progress of its required dependencies, and only says installed once they are all done</li>\n    <li>My Addons and Get Addons can be opened while addons are installing</li>\n    </ul>\n    <h4>Fixes</h4>\n    <ul>\n    <li>Fix WowUp looking frozen while installing an addon with dependencies that weren't in the search results</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.1",
+		"html": "\n    <h4>Changes</h4>\n    <ul>\n    <li>Patch notes no longer pop up after WowUp updates. You can still read them under Options > About</li>\n    </ul>\n    <h4>Fixes</h4>\n    <ul>\n    <li>Fix updating or reinstalling an addon not installing addons its newer versions require</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.0",
+		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>Most WowUp updates now download in the background as a small update and finish with a quick restart, instead of a full reinstall</li>\n    </ul>\n    <h4>Changes</h4>\n    <ul>\n    <li>When an update is ready, WowUp asks you to restart now or later. If you choose later, WowUp asks again after 6 hours and the restart can't be put off</li>\n    <li>WowUp now checks that its files haven't been changed or damaged every time it starts</li>\n    </ul>\n    <h4>Fixes</h4>\n    <ul>\n    <li>Fix World of Warcraft installations not being found automatically on recent Windows 11 builds</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.24.1",
+		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>Add World of Warcraft: Forever support</li>\n    </ul>\n    <h4>Fixes</h4>\n    <ul>\n    <li>Fix WowUp freezing on startup and ignoring clicks when an ad blocker or ad-blocking DNS is in use (Wago version)</li>\n    <li>Use the correct quotation marks in German and Norwegian translations</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.24.0",
+		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>Prep for World of Warcraft: Forever</li>\n    <li>Add a \"Force IPv4 (disable IPv6)\" setting for networks where IPv6 connectivity is broken</li>\n    </ul>\n    <h4>Changes</h4>\n    <ul>\n    <li>Update the app background artwork to World of Warcraft: Forever</li>\n    <li>Show the World of Warcraft: Forever logo on Classic Beta installations</li>\n    </ul>\n    <h4>Fixes</h4>\n    <ul>\n    <li>Fix GitHub addon updates failing to install when no personal access token is configured (@DarthWixon)</li>\n    <li>Show a clearer error when an addon install or update fails due to a network problem, and wait longer between retries</li>\n    <li>Fix ads reappearing after being disabled and overhanging the window edge</li>\n    <li>Add missing translations across supported languages</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.23.1",
+		"html": "\n    <h4>Fixes</h4>\n    <ul>\n    <li>Fix the Windows cert</li>\n    </ul>\n    "
+	},
+	{
 		"Version": "2.23.0",
 		"html": "\n    <h4>Fixes</h4>\n    <ul>\n    <li>Add support for CurseForge download authentication</li>\n    <li>Various bug fixes and improvements</li>\n    </ul>\n    "
 	},
