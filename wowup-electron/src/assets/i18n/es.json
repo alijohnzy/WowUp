@@ -526,6 +526,11 @@
         "VIEW_GITHUB": "Eche un vistazo al código en GitHub",
         "VIEW_GUIDE": "Descubra de lo que es capaz WowUp con nuestra guía"
       },
+      "PROVIDER_FILTER": {
+        "ACTIVE_TOOLTIP": "Algunos proveedores están ocultos. Haz clic para elegir cuáles mostrar.",
+        "SHOW_ALL": "Mostrar todos",
+        "TITLE": "Mostrar proveedores"
+      },
       "REQUIRED_DEPENDENCY_MISSING_TOOLTIP": "Dependencia requerida no encontrada",
       "RESCAN_FOLDERS_BUTTON": "Reescanear carpetas",
       "RESCAN_FOLDERS_BUTTON_TOOLTIP": "Vuelve a buscar addons instalados en la carpeta del juego",

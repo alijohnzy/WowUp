@@ -526,6 +526,11 @@
         "VIEW_GITHUB": "GitHub에서 코드 확인",
         "VIEW_GUIDE": "WowUp 가이드 문서 보기"
       },
+      "PROVIDER_FILTER": {
+        "ACTIVE_TOOLTIP": "일부 제공자가 숨겨져 있습니다. 클릭하여 표시할 제공자를 선택하세요.",
+        "SHOW_ALL": "모두 보기",
+        "TITLE": "제공자 보기"
+      },
       "REQUIRED_DEPENDENCY_MISSING_TOOLTIP": "필수 종속성 누락",
       "RESCAN_FOLDERS_BUTTON": "디렉토리 재탐색",
       "RESCAN_FOLDERS_BUTTON_TOOLTIP": "설치된 애드온 목록 확인을 위해 클라이언트 디렉토리를 탐색합니다",

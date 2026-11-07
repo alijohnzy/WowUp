@@ -9,6 +9,11 @@
 
 	export interface ContextHeaderParams extends IHeaderParams {
 		onHeaderContext: (event: MouseEvent) => void;
+		/** True while a filter hides some rows by this column: shows a filter icon, which
+		 *  opens the same menu as a right-click. */
+		filtered?: () => boolean;
+		/** The icon's tooltip. */
+		filteredTitle?: string;
 	}
 
 	interface Props {
@@ -49,6 +54,12 @@
 		event.preventDefault();
 		params.onHeaderContext(event);
 	}
+
+	function onFilterClick(event: MouseEvent) {
+		// Not a sort.
+		event.stopPropagation();
+		params.onHeaderContext(event);
+	}
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -56,6 +67,16 @@
 <div class="ag-cell-label-container" onclick={onSortRequested} oncontextmenu={onContextMenu}>
 	<div class="ag-header-cell-label">
 		<span class="ag-header-cell-text">{params.displayName}</span>
+		{#if params.filtered?.()}
+			<button
+				class="filter-icon"
+				title={params.filteredTitle}
+				aria-label={params.filteredTitle}
+				onclick={onFilterClick}
+			>
+				<Icon name="fas:filter" />
+			</button>
+		{/if}
 		{#if sorted === 'asc'}
 			<span class="ag-header-icon ag-header-label-icon"><Icon name="fas:arrow-up" /></span>
 		{:else if sorted === 'desc'}
@@ -77,5 +98,20 @@
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;
+	}
+
+	.filter-icon {
+		display: inline-flex;
+		padding: 0.15rem;
+		border: 0;
+		border-radius: 3px;
+		background: none;
+		color: var(--background-primary);
+		font-size: 0.8em;
+		cursor: pointer;
+	}
+
+	.filter-icon:hover {
+		background: var(--overlay-hover);
 	}
 </style>

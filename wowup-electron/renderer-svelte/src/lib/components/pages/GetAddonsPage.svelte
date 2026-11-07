@@ -39,6 +39,8 @@
 	import TableContextHeaderCell from '$lib/components/grid/TableContextHeaderCell.svelte';
 	import { wrapTextCell } from '$lib/components/grid/wrap-text-cell';
 	import ClientSelector from '$lib/components/common/ClientSelector.svelte';
+	import ContextMenu from '$lib/components/common/ContextMenu.svelte';
+	import ProviderFilterMenu from '$lib/components/grid/ProviderFilterMenu.svelte';
 	import Icon from '$lib/components/common/Icon.svelte';
 	import ProgressSpinner from '$lib/components/common/ProgressSpinner.svelte';
 	import InstallFromUrlDialog from '$lib/components/addons/InstallFromUrlDialog.svelte';
@@ -56,6 +58,7 @@
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { snackbar } from '$lib/state/snackbar.svelte';
+	import { getAddonsProviderFilter as providerFilter } from '$lib/state/provider-filter.svelte';
 	import { wowup } from '$lib/state/wowup.svelte';
 
 	interface CategoryItem {
@@ -110,6 +113,11 @@
 		},
 		{ name: 'status', display: 'PAGES.GET_ADDONS.TABLE.STATUS_COLUMN_HEADER', visible: true }
 	]);
+
+	// Right-click a header to hide providers (state/provider-filter.svelte.ts).
+	void providerFilter.load();
+	const providerOf = (row: GetAddonListItem) => row.providerName;
+	let shownRows = $derived(providerFilter.apply(rowData, providerOf));
 
 	const categories: CategoryItem[] = buildCategories();
 	let selectedCategory = $state<CategoryItem>(categories[0]);
@@ -234,7 +242,12 @@
 					sortable: true,
 					headerName: t('PAGES.GET_ADDONS.TABLE.PROVIDER_COLUMN_HEADER'),
 					comparator: (_a, _b, na, nb) => compareElement(na, nb, 'providerName'),
-					...base
+					...base,
+					headerComponentParams: {
+						onHeaderContext,
+						filtered: () => providerFilter.active,
+						filteredTitle: t('PAGES.MY_ADDONS.PROVIDER_FILTER.ACTIVE_TOOLTIP')
+					}
 				},
 				{
 					field: 'status',
@@ -451,8 +464,8 @@
 	// footer entirely when there are no rows.
 	$effect(() => {
 		session.setContextText(
-			rowData.length > 0
-				? i18n.t('PAGES.MY_ADDONS.PAGE_CONTEXT_FOOTER.SEARCH_RESULTS', { count: rowData.length })
+			shownRows.length > 0
+				? i18n.t('PAGES.MY_ADDONS.PAGE_CONTEXT_FOOTER.SEARCH_RESULTS', { count: shownRows.length })
 				: ''
 		);
 		return () => session.setContextText('');
@@ -538,7 +551,7 @@
 		{#if !loadedOnce}
 			<div class="spinner-container"><ProgressSpinner /></div>
 		{:else}
-			<AgGrid options={gridOptions} {rowData} onGridReady={(api) => (gridApi = api)} />
+			<AgGrid options={gridOptions} rowData={shownRows} onGridReady={(api) => (gridApi = api)} />
 		{/if}
 
 		{#if busyOverGrid.current}
@@ -580,18 +593,15 @@
 
 {#if showColumnMenuAt}
 	<!-- Replaces the MatMenu column picker. -->
-	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="menu-backdrop" onclick={() => (showColumnMenuAt = undefined)}></div>
-	<div
-		class="column-menu bg-secondary-4"
-		style:left="{showColumnMenuAt.x}px"
-		style:top="{showColumnMenuAt.y}px"
+	<ContextMenu
+		x={showColumnMenuAt.x}
+		y={showColumnMenuAt.y}
+		onclose={() => (showColumnMenuAt = undefined)}
 	>
-		<div class="column-menu-header">{t('PAGES.MY_ADDONS.COLUMNS_CONTEXT_MENU.TITLE')}</div>
-		<div class="divider"></div>
+		<div class="menu-header">{t('PAGES.MY_ADDONS.COLUMNS_CONTEXT_MENU.TITLE')}</div>
+		<div class="menu-divider"></div>
 		{#each columnStates.filter((c) => c.allowToggle) as column (column.name)}
-			<label class="column-menu-item">
+			<label class="menu-item column-option">
 				<input
 					type="checkbox"
 					checked={column.visible}
@@ -600,7 +610,8 @@
 				{t(column.display)}
 			</label>
 		{/each}
-	</div>
+		<ProviderFilterMenu filter={providerFilter} rows={rowData} {providerOf} />
+	</ContextMenu>
 {/if}
 
 {#if showInstallFromUrl}
@@ -697,8 +708,7 @@
 		animation: wu-fade-in var(--motion) ease-out;
 	}
 
-	.drawer-backdrop,
-	.menu-backdrop {
+	.drawer-backdrop {
 		position: fixed;
 		inset: 0;
 		background: rgb(0 0 0 / 40%);
@@ -742,32 +752,6 @@
 	.category-item.selected {
 		background: var(--overlay-selected);
 		font-weight: 600;
-	}
-
-	.column-menu {
-		position: fixed;
-		z-index: 11;
-		min-width: 200px;
-		padding: 0.4rem;
-		border-radius: 4px;
-		box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
-	}
-
-	.column-menu-header {
-		padding: 0.3rem 0.5rem;
-		font-weight: 600;
-	}
-
-	.column-menu-item {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.35rem 0.5rem;
-		cursor: pointer;
-	}
-
-	.column-menu-item:hover {
-		background: var(--overlay-hover);
 	}
 
 	.divider {

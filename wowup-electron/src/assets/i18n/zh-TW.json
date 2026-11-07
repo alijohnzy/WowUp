@@ -526,6 +526,11 @@
         "VIEW_GITHUB": "在 GitHub 上檢視原始碼",
         "VIEW_GUIDE": "訪問指南，探索 WowUp 的功能"
       },
+      "PROVIDER_FILTER": {
+        "ACTIVE_TOOLTIP": "部分安裝源已隱藏。點擊以選擇要顯示哪些。",
+        "SHOW_ALL": "顯示全部",
+        "TITLE": "顯示安裝源"
+      },
       "REQUIRED_DEPENDENCY_MISSING_TOOLTIP": "缺失必要的依賴項",
       "RESCAN_FOLDERS_BUTTON": "重新掃描",
       "RESCAN_FOLDERS_BUTTON_TOOLTIP": "掃描客戶端資料夾中已安裝的插件",

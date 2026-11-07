@@ -526,6 +526,11 @@
         "VIEW_GITHUB": "Controlla il codice su GitHub",
         "VIEW_GUIDE": "Controlla la nostra guida per vedere cosa può fare Wowup"
       },
+      "PROVIDER_FILTER": {
+        "ACTIVE_TOOLTIP": "Alcuni provider sono nascosti. Clicca per scegliere quali mostrare.",
+        "SHOW_ALL": "Mostra tutti",
+        "TITLE": "Mostra Provider"
+      },
       "REQUIRED_DEPENDENCY_MISSING_TOOLTIP": "Dipendenze richieste mancanti",
       "RESCAN_FOLDERS_BUTTON": "Riscansiona Cartelle",
       "RESCAN_FOLDERS_BUTTON_TOOLTIP": "Scansiona la cartella client per gli addons installati",

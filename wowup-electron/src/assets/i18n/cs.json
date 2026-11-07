@@ -526,6 +526,11 @@
         "VIEW_GITHUB": "Koukněte na kód na GitHubu",
         "VIEW_GUIDE": "Koukněte na našeho průvodce funkcemi WowUp"
       },
+      "PROVIDER_FILTER": {
+        "ACTIVE_TOOLTIP": "Někteří poskytovatelé jsou skryti. Klikněte a vyberte, které zobrazit.",
+        "SHOW_ALL": "Zobrazit vše",
+        "TITLE": "Zobraz poskytovatele"
+      },
       "REQUIRED_DEPENDENCY_MISSING_TOOLTIP": "Požadovaná závislost chybí",
       "RESCAN_FOLDERS_BUTTON": "Prohledat složky",
       "RESCAN_FOLDERS_BUTTON_TOOLTIP": "Prohledá složku WoW clienta pro nalezení aktuálně instalovaných addonů",

@@ -526,6 +526,11 @@
         "VIEW_GITHUB": "Check out the code on GitHub",
         "VIEW_GUIDE": "Check out our guide to see what WowUp can do"
       },
+      "PROVIDER_FILTER": {
+        "ACTIVE_TOOLTIP": "Some providers are hidden. Click to choose which to show.",
+        "SHOW_ALL": "Show All",
+        "TITLE": "Show Providers"
+      },
       "REQUIRED_DEPENDENCY_MISSING_TOOLTIP": "Required dependency missing",
       "RESCAN_FOLDERS_BUTTON": "Re-Scan Folders",
       "RESCAN_FOLDERS_BUTTON_TOOLTIP": "Scan your client folder for installed addons",

@@ -48,6 +48,7 @@
 	import DateTooltipCell from '$lib/components/grid/DateTooltipCell.svelte';
 	import GameVersionCell from '$lib/components/grid/GameVersionCell.svelte';
 	import TableContextHeaderCell from '$lib/components/grid/TableContextHeaderCell.svelte';
+	import ProviderFilterMenu from '$lib/components/grid/ProviderFilterMenu.svelte';
 	import { wrapTextCell } from '$lib/components/grid/wrap-text-cell';
 	import ClientSelector from '$lib/components/common/ClientSelector.svelte';
 	import ContextMenu from '$lib/components/common/ContextMenu.svelte';
@@ -68,6 +69,7 @@
 	import { BUSY_INDICATOR_DELAY_MS, delayed } from '$lib/utils/delayed.svelte';
 	import { theme } from '$lib/state/theme.svelte';
 	import { snackbar } from '$lib/state/snackbar.svelte';
+	import { myAddonsProviderFilter as providerFilter } from '$lib/state/provider-filter.svelte';
 	import { wowup } from '$lib/state/wowup.svelte';
 	import { warcraftInstallations } from '$lib/state/warcraft-installation.svelte';
 	import { addonFlavors } from '$lib/state/addon-flavors.svelte';
@@ -159,11 +161,18 @@
 		stringIncludes(item.addon?.latestVersion, filter) ||
 		stringIncludes(item.addon?.author, filter);
 
-	let rowData = $derived(
+	let textFilteredRows = $derived(
 		filterInput ? baseRowData.filter((item) => filterListItem(item, filterInput)) : baseRowData
 	);
 
-	let hasData = $derived(rowData.length > 0);
+	// Right-click a header to hide providers (state/provider-filter.svelte.ts).
+	void providerFilter.load();
+	const providerOf = (item: AddonViewModel) => item.providerName;
+	let rowData = $derived(providerFilter.apply(textFilteredRows, providerOf));
+
+	// Counted before the provider filter: with every row's provider hidden the grid stays up,
+	// empty — its header is where the filter is undone.
+	let hasData = $derived(textFilteredRows.length > 0);
 
 	// The grid now stays up while the page is busy, so an update run happens in front of the
 	// table it is updating rather than behind a blank page. The full-page spinner is kept for
@@ -338,7 +347,12 @@
 				headerName: t('PAGES.MY_ADDONS.TABLE.PROVIDER_COLUMN_HEADER'),
 				valueFormatter: (row) => getProviderName((row.data as AddonViewModel).providerName),
 				comparator: (_a, _b, na, nb) => compareElement(na, nb, 'providerName'),
-				...base
+				...base,
+				headerComponentParams: {
+					onHeaderContext,
+					filtered: () => providerFilter.active,
+					filteredTitle: t('PAGES.MY_ADDONS.PROVIDER_FILTER.ACTIVE_TOOLTIP')
+				}
 			},
 			{
 				field: 'author',
@@ -1077,7 +1091,7 @@
 		<div class="menu-header">{t('PAGES.MY_ADDONS.COLUMNS_CONTEXT_MENU.TITLE')}</div>
 		<div class="menu-divider"></div>
 		{#each columns.filter((c) => c.allowToggle) as column (column.name)}
-			<label class="menu-item">
+			<label class="menu-item column-option">
 				<input
 					type="checkbox"
 					checked={column.visible}
@@ -1086,6 +1100,12 @@
 				{t(column.display)}
 			</label>
 		{/each}
+		<ProviderFilterMenu
+			filter={providerFilter}
+			rows={textFilteredRows}
+			{providerOf}
+			label={getProviderName}
+		/>
 	</ContextMenu>
 {/if}
 

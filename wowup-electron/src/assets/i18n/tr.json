@@ -526,6 +526,11 @@
         "VIEW_GITHUB": "Kodu GitHub'da inceleyin",
         "VIEW_GUIDE": "WowUp'ın neler yapabileceğini görmek için rehberimize göz atın"
       },
+      "PROVIDER_FILTER": {
+        "ACTIVE_TOOLTIP": "Bazı sağlayıcılar gizli. Hangilerinin gösterileceğini seçmek için tıklayın.",
+        "SHOW_ALL": "Tümünü Göster",
+        "TITLE": "Sağlayıcıları Göster"
+      },
       "REQUIRED_DEPENDENCY_MISSING_TOOLTIP": "Gerekli destek dosyaları eksik",
       "RESCAN_FOLDERS_BUTTON": "Klasörleri Tekrar Tara",
       "RESCAN_FOLDERS_BUTTON_TOOLTIP": "Yüklü eklentiler için oyun klasörünüzü tarayın",

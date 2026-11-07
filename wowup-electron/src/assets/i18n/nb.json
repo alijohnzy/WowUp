@@ -526,6 +526,11 @@
         "VIEW_GITHUB": "Sjekk ut koden på GitHub",
         "VIEW_GUIDE": "Sjekk ut vår guide for å se hva WowUp kan gjøre"
       },
+      "PROVIDER_FILTER": {
+        "ACTIVE_TOOLTIP": "Noen leverandører er skjult. Klikk for å velge hvilke som vises.",
+        "SHOW_ALL": "Vis alle",
+        "TITLE": "Vis leverandører"
+      },
       "REQUIRED_DEPENDENCY_MISSING_TOOLTIP": "Påkrevd avhengighet mangler",
       "RESCAN_FOLDERS_BUTTON": "Skann mapper på nytt",
       "RESCAN_FOLDERS_BUTTON_TOOLTIP": "Skann klientmappen din for å finne installerte utvidelser",

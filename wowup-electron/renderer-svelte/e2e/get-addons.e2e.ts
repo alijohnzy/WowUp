@@ -179,9 +179,11 @@ test('right-clicking a header opens the column picker', async ({ page }) => {
 
 	await page.locator('.ag-header-cell-text').first().click({ button: 'right' });
 
-	await expect(page.locator('.column-menu')).toBeVisible();
+	await expect(page.locator('.context-menu')).toBeVisible();
 	// Only toggleable columns are offered.
-	await expect(page.locator('.column-menu-item')).toHaveCount(3);
+	await expect(page.locator('.context-menu .column-option')).toHaveCount(3);
+	// No rows, so no providers to filter.
+	await expect(page.locator('.context-menu .provider-option')).toHaveCount(0);
 });
 
 test('Install From URL opens its dialog', async ({ page }) => {

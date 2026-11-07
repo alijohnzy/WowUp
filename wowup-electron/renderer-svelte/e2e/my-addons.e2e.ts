@@ -578,7 +578,86 @@ test('right-clicking a column header opens the column picker', async ({ page }) 
 
 	await expect(page.locator('.context-menu')).toBeVisible();
 	// 7 of the 9 columns are toggleable.
-	await expect(page.locator('.context-menu input[type="checkbox"]')).toHaveCount(7);
+	await expect(page.locator('.context-menu .column-option')).toHaveCount(7);
+});
+
+// "Show Providers", under the column picker: untick a provider to hide its addons.
+const PROVIDER_MIX = [
+	addon('DBM', 'Tandanu', { providerName: 'Wago' }),
+	addon('WeakAuras', 'InfusOnWoW', { providerName: 'Wago' }),
+	addon('Details', 'Terciob', { providerName: 'Curse' })
+];
+
+const providerOption = (page: Page, name: string) =>
+	page.locator('.context-menu .provider-option').filter({ hasText: name });
+const providerHeaderFilterIcon = (page: Page) =>
+	page.locator('.ag-header-cell[col-id="providerName"] .filter-icon');
+const storedHiddenProviders = (page: Page) =>
+	page.evaluate(() =>
+		(
+			window as never as { wowup: { rendererInvoke: (...a: unknown[]) => Promise<unknown> } }
+		).wowup.rendererInvoke('store-get-object', 'preferences', 'my_addons_hidden_providers')
+	);
+
+test('the header menu lists each provider with its addon count', async ({ page }) => {
+	await stubPreload(page, PROVIDER_MIX);
+	await openMyAddons(page);
+
+	await page.locator('.ag-header-cell-text').first().click({ button: 'right' });
+
+	await expect(page.locator('.context-menu').getByText('Show Providers')).toBeVisible();
+	await expect(page.locator('.context-menu .provider-option')).toHaveCount(2);
+	await expect(providerOption(page, 'Curse')).toContainText('1');
+	await expect(providerOption(page, 'Wago')).toContainText('2');
+	await expect(providerOption(page, 'Wago').locator('input')).toBeChecked();
+});
+
+test('unticking a provider hides its addons, and Show All brings them back', async ({ page }) => {
+	await stubPreload(page, PROVIDER_MIX);
+	await openMyAddons(page);
+	await expect(providerHeaderFilterIcon(page)).toHaveCount(0);
+
+	await page.locator('.ag-header-cell-text').first().click({ button: 'right' });
+	await providerOption(page, 'Wago').locator('input').uncheck();
+
+	await expect(page.locator('.ag-row')).toHaveCount(1);
+	await expect(page.locator('.addon-title').filter({ hasText: 'Details' })).toBeVisible();
+	expect(await storedHiddenProviders(page)).toEqual(['Wago']);
+	// The Provider header says a filter is on.
+	await expect(providerHeaderFilterIcon(page)).toBeVisible();
+
+	await page.locator('.context-menu').getByRole('button', { name: 'Show All' }).click();
+
+	await expect(page.locator('.ag-row')).toHaveCount(3);
+	await expect(providerHeaderFilterIcon(page)).toHaveCount(0);
+	expect(await storedHiddenProviders(page)).toEqual([]);
+});
+
+test('a saved provider filter applies on load, and its icon opens the menu', async ({ page }) => {
+	await stubPreload(page, PROVIDER_MIX, { my_addons_hidden_providers: ['Curse'] });
+	await openMyAddons(page);
+
+	await expect(page.locator('.ag-row')).toHaveCount(2);
+	await expect(page.locator('.addon-title').filter({ hasText: 'Details' })).toHaveCount(0);
+
+	await providerHeaderFilterIcon(page).click();
+	await expect(page.locator('.context-menu')).toBeVisible();
+	await expect(providerOption(page, 'Curse').locator('input')).not.toBeChecked();
+});
+
+test('with every provider hidden the table stays up, so the filter can be undone', async ({
+	page
+}) => {
+	await stubPreload(page, PROVIDER_MIX, { my_addons_hidden_providers: ['Curse', 'Wago'] });
+	await page.goto('/');
+	await page.locator('.tab-strip').getByRole('link', { name: 'My Addons' }).click();
+
+	await expect(providerHeaderFilterIcon(page)).toBeVisible();
+	await expect(page.locator('.ag-row')).toHaveCount(0);
+
+	await providerHeaderFilterIcon(page).click();
+	await page.locator('.context-menu').getByRole('button', { name: 'Show All' }).click();
+	await expect(page.locator('.ag-row')).toHaveCount(3);
 });
 
 test('an ignored addon gets the ignored row class', async ({ page }) => {
