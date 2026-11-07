@@ -133,7 +133,10 @@ class WowUp {
 		} catch {
 			console.warn(`Language ${langCode} not found defaulting to english`);
 			await i18n.load('en');
-			await this.setCurrentLanguage('en');
+			// English for this session only. Saving it replaced the user's choice for good: an
+			// older copy without the Turkish file reset a Turkish user to English in every copy,
+			// including the ones that have it. Only a first run, with nothing saved, keeps it.
+			if (!currentLang) await this.setCurrentLanguage('en');
 		}
 		console.log('Language setup complete');
 	}
