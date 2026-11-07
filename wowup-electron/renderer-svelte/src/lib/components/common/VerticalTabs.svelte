@@ -334,6 +334,11 @@
 		text-align: left;
 		text-decoration: none;
 		cursor: pointer;
+		/* The accent bar fades from the old tab to the new one rather than jumping
+		   (styles/motion.css). */
+		transition:
+			border-left-color var(--motion) var(--motion-ease),
+			background-color var(--motion-fast) ease;
 	}
 
 	.tab:hover:not(.disabled) {

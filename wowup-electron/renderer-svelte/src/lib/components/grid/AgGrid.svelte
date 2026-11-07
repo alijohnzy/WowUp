@@ -9,6 +9,7 @@
 	import { createGrid, type GridApi, type GridOptions } from 'ag-grid-community';
 	import 'ag-grid-community/styles/ag-grid.css';
 	import 'ag-grid-community/styles/ag-theme-material.css';
+	import { motion } from '$lib/state/motion.svelte';
 
 	interface Props<TData = unknown> {
 		options: GridOptions<TData>;
@@ -32,7 +33,7 @@
 	$effect(() => {
 		const gridApi = createGrid(
 			container,
-			untrack(() => ({ ...options, rowData: rowData ?? [] }))
+			untrack(() => ({ ...options, animateRows: motion.enabled, rowData: rowData ?? [] }))
 		);
 		api = gridApi;
 		onGridReady?.(gridApi);
@@ -52,6 +53,13 @@
 	$effect(() => {
 		const defs = options.columnDefs;
 		if (api && defs) api.setGridOption('columnDefs', defs);
+	});
+
+	// Rows slide to their new place when the order changes (an update arriving re-sorts the
+	// list) — ag-grid's own animation, so it goes off with the rest (state/motion.svelte.ts).
+	$effect(() => {
+		const animate = motion.enabled;
+		if (api) api.setGridOption('animateRows', animate);
 	});
 </script>
 

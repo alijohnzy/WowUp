@@ -602,6 +602,8 @@
         }
       },
       "APPLICATION": {
+        "ANIMATIONS_DESCRIPTION": "Anime les changements de page, les boîtes de dialogue et les menus. Désactivez-les pour une application plus réactive sur un ordinateur lent. Elles sont aussi désactivées tant que le système demande de réduire les animations.",
+        "ANIMATIONS_LABEL": "Animations",
         "APP_RELEASE_CHANNEL_CONFIRMATION_DESCRIPTION_BETA": "Switching to the Beta channel will allow you to receive experimental builds that contain bug fixes, as well as new and upcoming features. you may only go back to the current stable version by uninstalling your existing app and re-installing from wowup.io.\n\nWhile the Beta channel is functional, use at your own risk.",
         "APP_RELEASE_CHANNEL_CONFIRMATION_DESCRIPTION_STABLE": "Passer au canal Stable pour l'application vous empêchera de recevoir d'autres versions Bêta ; la prochaine mise à jour sera la prochaine version Stable.",
         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "Choix du canal de publication de l'application",

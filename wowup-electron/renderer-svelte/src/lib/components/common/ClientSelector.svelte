@@ -178,6 +178,10 @@
 		border: 1px solid var(--overlay-border);
 		box-shadow: 0 8px 24px rgb(0 0 0 / 40%);
 		z-index: 100;
+		/* Drops open from the trigger (styles/motion.css). bits-ui positions the wrapper around
+		   this element, so its transform is free to animate. */
+		transform-origin: var(--bits-floating-transform-origin, top);
+		animation: wu-drop-in var(--motion-fast) var(--motion-ease);
 	}
 
 	:global(.select-item) {

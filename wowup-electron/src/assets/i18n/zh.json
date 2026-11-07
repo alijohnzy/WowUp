@@ -602,6 +602,8 @@
         }
       },
       "APPLICATION": {
+        "ANIMATIONS_DESCRIPTION": "为页面切换、对话框和菜单添加动画。在较慢的电脑上可关闭，让应用更流畅。系统要求减少动态效果时也会关闭。",
+        "ANIMATIONS_LABEL": "动画",
         "APP_RELEASE_CHANNEL_CONFIRMATION_DESCRIPTION_BETA": "切换到 Beta 通道后，将会收到包含最新的错误修正和功能的版本。要切换回稳定版本，只能卸载 WowUp 并重新安装。\n\n尽管 Beta 通道通常能正常工作，但仍需自担风险。",
         "APP_RELEASE_CHANNEL_CONFIRMATION_DESCRIPTION_STABLE": "切换到稳定版通道后，将会停止接受 Beta 版本。切换到稳定版通道不会回退到上一个稳定版，而是在下一个稳定版发布后更新到稳定版。",
         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "设置应用程序更新通道",

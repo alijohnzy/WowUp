@@ -51,6 +51,9 @@
 	import { session } from '$lib/state/session.svelte';
 	import { accentStyle, clientColor } from '$lib/utils/client-color';
 	import { theme } from '$lib/state/theme.svelte';
+	import { motion } from '$lib/state/motion.svelte';
+	import { fade, fly } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import { snackbar } from '$lib/state/snackbar.svelte';
 	import { wowup } from '$lib/state/wowup.svelte';
 
@@ -530,8 +533,15 @@
 			<!-- Replaces <mat-drawer mode="over" position="end">. -->
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
-			<div class="drawer-backdrop" onclick={() => (showCategories = false)}></div>
-			<aside class="drawer bg-secondary-2">
+			<div
+				class="drawer-backdrop"
+				transition:fade={{ duration: motion.ms(180) }}
+				onclick={() => (showCategories = false)}
+			></div>
+			<aside
+				class="drawer bg-secondary-2"
+				transition:fly={{ x: 260, duration: motion.ms(220), easing: cubicOut, opacity: 1 }}
+			>
 				<h3>{t('PAGES.GET_ADDONS.ADDON_CATEGORIES_MENU_TITLE')}</h3>
 				<div class="divider"></div>
 				<ul>

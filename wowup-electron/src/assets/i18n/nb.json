@@ -602,6 +602,8 @@
         }
       },
       "APPLICATION": {
+        "ANIMATIONS_DESCRIPTION": "Animerer sidebytter, dialoger og menyer. Slå av for en kvikkere app på en treg datamaskin. De er også av så lenge systemet ber om redusert bevegelse.",
+        "ANIMATIONS_LABEL": "Animasjoner",
         "APP_RELEASE_CHANNEL_CONFIRMATION_DESCRIPTION_BETA": "Ved å bytte til betakanalen kan du motta eksperimentelle bygg som inneholder feilrettinger, samt nye og kommende funksjoner. Du kan bare gå tilbake til den nåværende stabile versjonen ved å avinstallere den eksisterende appen din og installere på nytt fra wowup.io.\n\nSå lenge betakanalen er funksjonell, bruk den på egen risiko.",
         "APP_RELEASE_CHANNEL_CONFIRMATION_DESCRIPTION_STABLE": "Hvis du bytter til applikasjonens stabile kanal, vil du ikke lenger motta beta-bygg. Den neste oppdateringen vil være den neste stabile versjonen.",
         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "Konfigurer apputgivelseskanalen",

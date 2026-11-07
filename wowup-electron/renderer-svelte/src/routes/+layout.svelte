@@ -65,6 +65,7 @@
 	import { electron } from '$lib/state/electron.svelte';
 	import { session } from '$lib/state/session.svelte';
 	import { theme } from '$lib/state/theme.svelte';
+	import { motion } from '$lib/state/motion.svelte';
 	import { startPushService } from '$lib/state/push.svelte';
 	import { warcraftInstallations } from '$lib/state/warcraft-installation.svelte';
 	import { wowup } from '$lib/state/wowup.svelte';
@@ -187,6 +188,11 @@
 	// Every shell, not just Tauri: a link inside an addon description would otherwise navigate
 	// the whole app to that page, and the app draws its own titlebar so there is no way back.
 	$effect(() => guardExternalLinks());
+
+	// On <html>, not .app-root: menus and the client dropdown are portalled into <body>.
+	$effect(() => {
+		document.documentElement.classList.toggle('no-motion', !motion.enabled);
+	});
 
 	// The tray counts the selected client plus those set to update from the tray, so switching
 	// clients or flipping that setting changes it even though nothing about the addons did.
@@ -401,6 +407,7 @@
 		await wowup.init().catch((e: unknown) => console.error('wowup init failed', e));
 		// Before first paint: the theme class decides every colour on the shell.
 		await theme.init().catch((e: unknown) => console.error('theme init failed', e));
+		await motion.init().catch((e: unknown) => console.error('motion init failed', e));
 		await addonProviders
 			.loadProviders()
 			.catch((e: unknown) => console.error('provider load failed', e));
@@ -534,6 +541,14 @@
 		min-height: 0;
 		display: flex;
 		flex-direction: column;
+	}
+
+	/* A page rises in as it replaces the last one (styles/motion.css). Every navigation inserts
+	   the new page's root here, so this needs no keyed block — which could mount the old page
+	   once more while the route changed, and My Addons reloads on mount. A page's dialogs can
+	   sit at this level too; they have their own animation. */
+	.content > :global(:not(dialog)) {
+		animation: wu-rise-in var(--motion) var(--motion-ease);
 	}
 
 	.boot-error {

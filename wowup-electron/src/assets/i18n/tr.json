@@ -602,6 +602,8 @@
         }
       },
       "APPLICATION": {
+        "ANIMATIONS_DESCRIPTION": "Sayfa geçişlerini, pencereleri ve menüleri canlandırır. Yavaş bir bilgisayarda daha akıcı bir uygulama için kapatın. Sisteminiz hareketin azaltılmasını istediği sürece de kapalıdır.",
+        "ANIMATIONS_LABEL": "Animasyonlar",
         "APP_RELEASE_CHANNEL_CONFIRMATION_DESCRIPTION_BETA": "Beta kanalına geçmek, hata düzeltmelerinin yanı sıra yeni ve yaklaşan özellikleri içeren deneysel yapılar almanıza olanak tanır. Mevcut stabil sürüme geri dönmek için yalnızca mevcut uygulamayı kaldırıp wowup.io adresinden yeniden yükleyerek dönebilirsiniz.\n\nBeta kanalı işlevsel olsa da kendi sorumluluğunuzda kullanın.",
         "APP_RELEASE_CHANNEL_CONFIRMATION_DESCRIPTION_STABLE": "Uygulama için Stabil kanala geçmek, daha fazla Beta yapısı almanızı engelleyecektir, bir sonraki güncelleme bir sonraki Stabil sürüm olacaktır.",
         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "Uygulama yayın kanalını ayarlama",

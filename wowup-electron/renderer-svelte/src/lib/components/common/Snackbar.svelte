@@ -5,6 +5,7 @@
 
 	import { snackbar } from '$lib/state/snackbar.svelte';
 	import { fly } from 'svelte/transition';
+	import { motion } from '$lib/state/motion.svelte';
 </script>
 
 <div class="snackbar-host" role="status" aria-live="polite">
@@ -13,7 +14,7 @@
 			<!-- svelte transitions replace @angular/animations here -->
 			<div
 				class="snackbar {snackbar.current.classes.join(' ')}"
-				transition:fly={{ y: 24, duration: 150 }}
+				transition:fly={{ y: 24, duration: motion.ms(150) }}
 			>
 				{snackbar.current.message}
 			</div>

@@ -39,6 +39,7 @@
 	import { dialogs } from '$lib/state/dialogs.svelte';
 	import { electron } from '$lib/state/electron.svelte';
 	import { theme } from '$lib/state/theme.svelte';
+	import { motion } from '$lib/state/motion.svelte';
 	import { wowup } from '$lib/state/wowup.svelte';
 	import { ZOOM_SCALE, zoom } from '$lib/state/zoom.svelte';
 
@@ -357,6 +358,17 @@
 		<Toggle
 			checked={theme.clientColorButtons}
 			onCheckedChange={(on) => void theme.setClientColorButtons(on).catch(console.error)}
+		/>
+	</div>
+
+	<div class="setting">
+		<div class="grow">
+			<div>{t('PAGES.OPTIONS.APPLICATION.ANIMATIONS_LABEL')}</div>
+			<small class="text-2">{t('PAGES.OPTIONS.APPLICATION.ANIMATIONS_DESCRIPTION')}</small>
+		</div>
+		<Toggle
+			checked={motion.setting}
+			onCheckedChange={(on) => void motion.set(on).catch(console.error)}
 		/>
 	</div>
 

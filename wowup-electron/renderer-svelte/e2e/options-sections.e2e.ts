@@ -255,6 +255,38 @@ test('buttons can take the client color instead of the theme', async ({ page }) 
 	await expect(button).toHaveCSS('color', 'rgb(20, 20, 28)');
 });
 
+// Pages, sections, dialogs and menus animate in (styles/motion.css). Turning Animations off,
+// or the OS asking for reduced motion, makes all of them instant.
+test('animations can be turned off', async ({ page }) => {
+	await stubPreload(page);
+	await openOptionsTab(page, 'Application');
+	const html = page.locator('html');
+	const section = page.locator('.tab-panel > *').first();
+
+	await expect(html).not.toHaveClass(/no-motion/);
+	await expect(section).toHaveCSS('animation-name', 'wu-fade-in');
+	await expect(section).not.toHaveCSS('animation-duration', '0s');
+
+	await page.locator('.setting', { hasText: 'Animations' }).getByRole('switch').click();
+	await expect.poll(async () => (await store(page))['animations_enabled']).toBe(false);
+	await expect(html).toHaveClass(/no-motion/);
+
+	await page.getByRole('link', { name: 'My Addons' }).click();
+	await expect(page.locator('.content > *').first()).toHaveCSS('animation-duration', '0s');
+	// ag-grid's own row animation: it marks its body with one class or the other.
+	await expect(page.locator('.ag-row-no-animation').first()).toBeAttached();
+	await expect(page.locator('.ag-row-animation')).toHaveCount(0);
+});
+
+test('animations are off while the OS asks for reduced motion', async ({ page }) => {
+	await page.emulateMedia({ reducedMotion: 'reduce' });
+	await stubPreload(page);
+	await openOptionsTab(page, 'Application');
+
+	await expect(page.locator('html')).toHaveClass(/no-motion/);
+	await expect(page.locator('.tab-panel > *').first()).toHaveCSS('animation-duration', '0s');
+});
+
 test('a client card enters edit mode and reveals save / cancel', async ({ page }) => {
 	await stubPreload(page);
 	await openOptionsTab(page, 'Clients');

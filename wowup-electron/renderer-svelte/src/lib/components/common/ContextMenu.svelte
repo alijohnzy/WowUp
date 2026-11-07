@@ -83,6 +83,9 @@
 		padding: 0.35rem;
 		border-radius: 4px;
 		box-shadow: 0 8px 28px rgb(0 0 0 / 45%);
+		/* Grows from the click (styles/motion.css). */
+		transform-origin: top left;
+		animation: wu-pop-in var(--motion-fast) var(--motion-ease);
 	}
 
 	:global(.context-menu .menu-item) {

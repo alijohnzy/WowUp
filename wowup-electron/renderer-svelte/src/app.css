@@ -21,6 +21,7 @@
 @import './styles/markdown.css';
 @import './styles/theme.css';
 @import './styles/controls.css';
+@import './styles/motion.css';
 
 /* Expose the theme's custom properties as Tailwind tokens, so `bg-secondary-4` (ours) and
  * `text-control` (Tailwind's, generated from here) both track the active theme. The values are

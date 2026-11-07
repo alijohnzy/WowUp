@@ -602,6 +602,8 @@
         }
       },
       "APPLICATION": {
+        "ANIMATIONS_DESCRIPTION": "Animiert Seitenwechsel, Dialoge und Menüs. Auf einem langsamen Rechner ausschalten, damit die App flotter reagiert. Sie sind auch aus, solange das System reduzierte Bewegung verlangt.",
+        "ANIMATIONS_LABEL": "Animationen",
         "APP_RELEASE_CHANNEL_CONFIRMATION_DESCRIPTION_BETA": "Wenn du zum Beta-Kanal wechseln, erhälst du experimentelle Builds, die Fehlerbehebungen sowie neue und kommende Funktionen enthalten. Du kannst nur zur aktuellen stabilen Version zurückkehren, indem du deine vorhandene Anwendung deinstallierst und von wowup.io neu installierst.\n\nSolange der Beta-Kanal funktionsfähig ist, verwende ihn auf eigene Gefahr.",
         "APP_RELEASE_CHANNEL_CONFIRMATION_DESCRIPTION_STABLE": "Wenn du zum Stabilen-Kanal der Anwendung wechselst, erhältst du keine weiteren Beta-Builds. Das nächste Update wird die nächste Stabile-Version sein.",
         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "Einstellen des App-Release-Kanals",

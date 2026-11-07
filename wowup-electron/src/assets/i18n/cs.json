@@ -602,6 +602,8 @@
         }
       },
       "APPLICATION": {
+        "ANIMATIONS_DESCRIPTION": "Animuje přechody mezi stránkami, dialogy a nabídky. Na pomalém počítači je vypněte pro svižnější aplikaci. Vypnuté jsou také, dokud systém žádá omezení pohybu.",
+        "ANIMATIONS_LABEL": "Animace",
         "APP_RELEASE_CHANNEL_CONFIRMATION_DESCRIPTION_BETA": "Switching to the Beta channel will allow you to receive experimental builds that contain bug fixes, as well as new and upcoming features. you may only go back to the current stable version by uninstalling your existing app and re-installing from wowup.io.\n\nWhile the Beta channel is functional, use at your own risk.",
         "APP_RELEASE_CHANNEL_CONFIRMATION_DESCRIPTION_STABLE": "Přepnutím aplikace na stabilní kanál přestanete dostávat další beta verze, příští aktualizací bude až další stabilní vydání.",
         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "Nastavuji kanál vydání aplikace",

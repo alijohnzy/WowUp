@@ -602,6 +602,8 @@
         }
       },
       "APPLICATION": {
+        "ANIMATIONS_DESCRIPTION": "Animuje zmiany stron, okna dialogowe i menu. Wyłącz, aby aplikacja działała szybciej na wolnym komputerze. Są też wyłączone, dopóki system prosi o ograniczenie ruchu.",
+        "ANIMATIONS_LABEL": "Animacje",
         "APP_RELEASE_CHANNEL_CONFIRMATION_DESCRIPTION_BETA": "Przełączenie na kanał Beta pozwoli Ci otrzymywać eksperymentalne wersje, które zawierają poprawki błędów, jak również nowe i nadchodzące funkcje. Możesz powrócić do aktualnej stabilnej wersji tylko poprzez odinstalowanie istniejącej aplikacji i ponowną instalację z wowup.io.\n\nChociaż kanał Beta jest funkcjonalny, korzystasz z niego na własne ryzyko.",
         "APP_RELEASE_CHANNEL_CONFIRMATION_DESCRIPTION_STABLE": "Przełączenie się na kanał Stabilny uniemożliwi Ci otrzymywanie kolejnych wersji Beta, następna aktualizacja będzie następną wersją Stabilną.",
         "APP_RELEASE_CHANNEL_CONFIRMATION_LABEL": "Ustawianie kanału wydania aplikacji",

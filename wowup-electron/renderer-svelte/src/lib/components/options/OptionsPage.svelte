@@ -168,5 +168,7 @@
 	:global(.tab-panel > *) {
 		box-sizing: border-box;
 		height: 100%;
+		/* Each section is created when its tab is picked, so it fades in (styles/motion.css). */
+		animation: wu-fade-in var(--motion) var(--motion-ease);
 	}
 </style>
