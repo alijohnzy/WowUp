@@ -73,6 +73,8 @@ export interface SystemTrayConfig {
   checkUpdateLabel: string;
   /** Already formatted with the count, e.g. "Update All (4)". Tauri only. */
   updateAllLabel?: string;
+  /** "Update WowUpNight"; the tray adds the version while an update is available. Tauri only. */
+  appUpdateLabel?: string;
 }
 
 export type PushAction = "addon-update";

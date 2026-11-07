@@ -103,7 +103,8 @@
     "SYSTEM_TRAY": {
       "CHECK_UPDATE": "Zjistit aktualizace...",
       "QUIT_ACTION": "Konec",
-      "SHOW_ACTION": "Ukázat"
+      "SHOW_ACTION": "Ukázat",
+      "UPDATE_APP": "Aktualizovat WowUpNight"
     },
     "THEME": {
       "ALLIANCE": "Aliance",

@@ -103,7 +103,8 @@
     "SYSTEM_TRAY": {
       "CHECK_UPDATE": "Проверить наличие обновлений",
       "QUIT_ACTION": "Выход",
-      "SHOW_ACTION": "Показать"
+      "SHOW_ACTION": "Показать",
+      "UPDATE_APP": "Обновить WowUpNight"
     },
     "THEME": {
       "ALLIANCE": "Альянс",

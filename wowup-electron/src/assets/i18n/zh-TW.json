@@ -103,7 +103,8 @@
     "SYSTEM_TRAY": {
       "CHECK_UPDATE": "檢查更新...",
       "QUIT_ACTION": "退出",
-      "SHOW_ACTION": "顯示"
+      "SHOW_ACTION": "顯示",
+      "UPDATE_APP": "更新 WowUpNight"
     },
     "THEME": {
       "ALLIANCE": "聯盟",

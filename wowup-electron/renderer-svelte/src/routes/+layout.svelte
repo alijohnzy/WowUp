@@ -14,7 +14,8 @@
 		IPC_MENU_ZOOM_RESET_CHANNEL,
 		IPC_POWER_MONITOR_RESUME,
 		IPC_POWER_MONITOR_UNLOCK,
-		IPC_TRAY_UPDATE_ALL
+		IPC_TRAY_UPDATE_ALL,
+		IPC_TRAY_APP_UPDATE
 	} from '$common/constants';
 	import { goto } from '$app/navigation';
 	import { href, ROUTES } from '$lib/routes';
@@ -69,6 +70,7 @@
 	import { wowup } from '$lib/state/wowup.svelte';
 	import { wowUpAccount } from '$lib/state/wowup-account.svelte';
 	import { wowUpAddon } from '$lib/services/wowup-addon';
+	import { installAvailableUpdate } from '$lib/services/app-update';
 	import { zoom, ZoomDirection } from '$lib/state/zoom.svelte';
 
 	let { children } = $props();
@@ -215,7 +217,10 @@
 			// a run the user started from outside the window.
 			on(IPC_TRAY_UPDATE_ALL, () => {
 				void goto(href(ROUTES.myAddons)).then(() => session.requestUpdateAll());
-			})
+			}),
+			// The tray's "Update WowUpNight": the window is already back up (src-tauri/src/tray.rs),
+			// so progress, or the portable zip's download dialog, is on screen.
+			on(IPC_TRAY_APP_UPDATE, () => void installAvailableUpdate())
 		];
 		return () => offs.forEach((off) => off());
 	});

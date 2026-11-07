@@ -16,6 +16,10 @@ use tauri::{AppHandle, Emitter, Manager, State, Wry};
 /// in-app button does; the work cannot happen here because it is all renderer-side.
 const IPC_TRAY_UPDATE_ALL: &str = "tray-update-all";
 
+/// Emitted when the tray's "Update WowUpNight" is chosen; the renderer installs the update the
+/// last check found (src/lib/services/app-update.ts), as the footer button does.
+const IPC_TRAY_APP_UPDATE: &str = "tray-app-update";
+
 /// Mirrors `SystemTrayConfig` (src/common/wowup/models.ts:55).
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -30,6 +34,21 @@ pub struct SystemTrayConfig {
     /// translation and the number formatting, as it does for every other label here.
     #[serde(default)]
     pub update_all_label: String,
+    /// "Update WowUpNight"; the version is added while an update is available.
+    #[serde(default)]
+    pub app_update_label: String,
+}
+
+/// What the menu is built from besides the labels. Kept so the menu can be rebuilt when one
+/// part changes — an app update turning up — without the renderer resending the rest.
+#[derive(Debug, Default, Clone, PartialEq)]
+struct MenuInputs {
+    count: u32,
+    addons: Vec<String>,
+    /// "Update All (4)", formatted by the renderer.
+    update_all_label: String,
+    /// The available app update, as shown: "v2.25.4 #28".
+    app_update: Option<String>,
 }
 
 /// Holds the tray so it is not dropped — a `TrayIcon` unregisters itself when freed, which
@@ -47,6 +66,7 @@ pub struct TrayState {
     /// The translated labels, kept so the menu can be rebuilt when the addon list changes
     /// without asking the renderer to send them again.
     config: Mutex<Option<SystemTrayConfig>>,
+    menu_inputs: Mutex<MenuInputs>,
 }
 
 pub(crate) fn restore_window(app: &AppHandle) {
@@ -82,9 +102,10 @@ fn tray_icon() -> Result<Image<'static>, String> {
 fn build_menu(
     app: &AppHandle,
     config: &SystemTrayConfig,
-    count: u32,
-    addons: &[String],
+    inputs: &MenuInputs,
 ) -> Result<tauri::menu::Menu<Wry>, String> {
+    let count = inputs.count;
+    let addons = &inputs.addons;
     let name = app.package_info().name.clone();
 
     let title = MenuItemBuilder::with_id("title", &name)
@@ -96,7 +117,10 @@ fn build_menu(
         .map_err(|e| e.to_string())?;
     let update_all = MenuItemBuilder::with_id(
         "update-all",
-        nonempty(&config.update_all_label, "Update All"),
+        nonempty(
+            &inputs.update_all_label,
+            nonempty(&config.update_all_label, "Update All"),
+        ),
     )
     // Nothing to update means nothing to click.
     .enabled(count > 0)
@@ -106,10 +130,20 @@ fn build_menu(
         .build(app)
         .map_err(|e| e.to_string())?;
 
-    let mut builder = MenuBuilder::new(app)
-        .items(&[&title, &show])
-        .separator()
-        .items(&[&update_all]);
+    let mut builder = MenuBuilder::new(app).items(&[&title, &show]);
+    // Only while an update is waiting: nothing to click otherwise.
+    let app_update = match &inputs.app_update {
+        Some(version) => Some(
+            MenuItemBuilder::with_id("app-update", app_update_label(config, version))
+                .build(app)
+                .map_err(|e| e.to_string())?,
+        ),
+        None => None,
+    };
+    if let Some(item) = &app_update {
+        builder = builder.item(item);
+    }
+    let mut builder = builder.separator().items(&[&update_all]);
 
     // Disabled, and indented so they read as a list belonging to the item above rather than
     // as more things to click.
@@ -140,7 +174,17 @@ pub fn create_tray_menu(
     config: SystemTrayConfig,
 ) -> Result<bool, String> {
     let name = app.package_info().name.clone();
-    let menu = build_menu(&app, &config, 0, &[])?;
+    // A language change rebuilds the tray; an update already found stays on the menu.
+    let inputs = MenuInputs {
+        app_update: state
+            .menu_inputs
+            .lock()
+            .map_err(|e| e.to_string())?
+            .app_update
+            .clone(),
+        ..MenuInputs::default()
+    };
+    let menu = build_menu(&app, &config, &inputs)?;
 
     let icon = tray_icon()?;
 
@@ -153,6 +197,14 @@ pub fn create_tray_menu(
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id().as_ref() {
             "show" => restore_window(app),
+            "app-update" => {
+                // Brought up first: the download's progress, or the portable zip's download
+                // dialog, appears in the window.
+                restore_window(app);
+                if let Err(e) = app.emit(IPC_TRAY_APP_UPDATE, ()) {
+                    log::error!("could not forward the tray app update: {e}");
+                }
+            }
             "update-all" => {
                 // Deliberately does not restore the window. The point of running it from the
                 // tray is not having to look at the app; the renderer works the same hidden,
@@ -184,11 +236,56 @@ pub fn create_tray_menu(
     // Replacing the previous one: the renderer calls this again when the language changes.
     *state.tray.lock().map_err(|e| e.to_string())? = Some(tray);
     *state.config.lock().map_err(|e| e.to_string())? = Some(config);
+    *state.menu_inputs.lock().map_err(|e| e.to_string())? = inputs;
     // The new icon carries no badge, whatever the old one showed.
     *state.shown.lock().map_err(|e| e.to_string())? = None;
 
     log::info!("tray created");
     Ok(true)
+}
+
+/// Puts "Update WowUpNight (v2.25.4 #28)" on the tray menu while `version` is available, and
+/// takes it off with `None`. Called by the update check (src/updater.rs).
+///
+/// Done on the main thread. The check runs on a background thread, and building menu items
+/// waits for the main thread — which may itself be in `set_tray_update_count` (a synchronous
+/// command, so main-thread) waiting for the tray lock. Doing all tray work on the main thread
+/// rules that out.
+pub fn set_app_update(app: &AppHandle, version: Option<String>) {
+    let handle = app.clone();
+    let scheduled = app.run_on_main_thread(move || {
+        if let Err(e) = rebuild_with_app_update(&handle, version) {
+            log::error!("could not show the app update on the tray: {e}");
+        }
+    });
+    if let Err(e) = scheduled {
+        log::error!("could not show the app update on the tray: {e}");
+    }
+}
+
+/// Locks in the order `set_tray_update_count` takes them: config, tray, menu inputs.
+fn rebuild_with_app_update(app: &AppHandle, version: Option<String>) -> Result<(), String> {
+    let state = app.state::<TrayState>();
+    let config = state.config.lock().map_err(|e| e.to_string())?.clone();
+    let tray = state.tray.lock().map_err(|e| e.to_string())?;
+    let mut inputs = state.menu_inputs.lock().map_err(|e| e.to_string())?;
+    if inputs.app_update == version {
+        return Ok(());
+    }
+    inputs.app_update = version;
+    if let (Some(tray), Some(config)) = (tray.as_ref(), config) {
+        tray.set_menu(Some(build_menu(app, &config, &inputs)?))
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+/// "Update WowUpNight (v2.25.4 #28)".
+fn app_update_label(config: &SystemTrayConfig, version: &str) -> String {
+    format!(
+        "{} ({version})",
+        nonempty(&config.app_update_label, "Update WowUpNight")
+    )
 }
 
 fn nonempty<'a>(value: &'a str, fallback: &'a str) -> &'a str {
@@ -389,6 +486,26 @@ mod tests {
                 assert!(glyph(ch).is_some(), "no bitmap for {ch:?}");
             }
         }
+    }
+
+    #[test]
+    fn the_app_update_item_names_the_version() {
+        let cfg: SystemTrayConfig = serde_json::from_str(
+            r#"{"showLabel":"Göster","quitLabel":"Çıkış Yap","appUpdateLabel":"WowUpNight'ı güncelle"}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            app_update_label(&cfg, "v2.25.4 #28"),
+            "WowUpNight'ı güncelle (v2.25.4 #28)"
+        );
+
+        // An older renderer sends no label: English rather than a bare version.
+        let old: SystemTrayConfig =
+            serde_json::from_str(r#"{"showLabel":"Show","quitLabel":"Quit"}"#).unwrap();
+        assert_eq!(
+            app_update_label(&old, "v2.25.4 #28"),
+            "Update WowUpNight (v2.25.4 #28)"
+        );
     }
 
     #[test]
@@ -628,10 +745,12 @@ pub fn set_tray_update_count(
     if let Some(tray) = tray_state.tray.lock().map_err(|e| e.to_string())?.as_ref() {
         // Rebuilt rather than relabelled: the pending addons are menu items, so the menu
         // changes shape as the list does.
+        let mut inputs = tray_state.menu_inputs.lock().map_err(|e| e.to_string())?;
+        inputs.count = count;
+        inputs.addons = addons.clone();
+        inputs.update_all_label = label.clone();
         if let Some(config) = config {
-            let mut config = config;
-            config.update_all_label = nonempty(&label, "Update All").to_string();
-            let menu = build_menu(&app, &config, count, &addons)?;
+            let menu = build_menu(&app, &config, &inputs)?;
             tray.set_menu(Some(menu)).map_err(|e| e.to_string())?;
         }
 

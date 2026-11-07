@@ -103,7 +103,8 @@
     "SYSTEM_TRAY": {
       "CHECK_UPDATE": "Buscar Atualizações...",
       "QUIT_ACTION": "Sair",
-      "SHOW_ACTION": "Mostrar"
+      "SHOW_ACTION": "Mostrar",
+      "UPDATE_APP": "Atualizar o WowUpNight"
     },
     "THEME": {
       "ALLIANCE": "Aliança",

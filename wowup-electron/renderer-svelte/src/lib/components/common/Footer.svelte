@@ -10,9 +10,17 @@
 	import { i18n, t } from '$lib/i18n.svelte';
 	import { versionLabel } from '$lib/utils/app-version';
 	import { isTauri } from '$lib/ipc';
-	import { openExternalLink } from '$lib/services/links';
 	import Icon from './Icon.svelte';
-	import { dialogs } from '$lib/state/dialogs.svelte';
+	import ContextMenu from './ContextMenu.svelte';
+	import { installAvailableUpdate } from '$lib/services/app-update';
+	import {
+		EARLIER_VERSION_KEY,
+		earlierVersionLabel,
+		installEarlierVersion,
+		listEarlierVersions,
+		type EarlierVersion,
+		type EarlierVersions
+	} from '$lib/services/earlier-versions';
 	import { electron } from '$lib/state/electron.svelte';
 	import { session } from '$lib/state/session.svelte';
 	import { snackbar } from '$lib/state/snackbar.svelte';
@@ -27,19 +35,7 @@
 	// where Electron, which downloads straight away, only showed it as a passing state.
 	let availableVersion = $derived(electron.appUpdate?.version ?? '');
 
-	async function onUpdateAvailable(): Promise<void> {
-		const evt = electron.appUpdate;
-		if (evt?.manual) {
-			// The portable zip cannot replace itself; send the user to the release instead.
-			const ok = await dialogs.confirm({
-				title: t('APP.WOWUP_UPDATE.PORTABLE_DOWNLOAD_TITLE'),
-				message: t('APP.WOWUP_UPDATE.PORTABLE_DOWNLOAD_MESSAGE')
-			});
-			if (ok && evt.releaseUrl) await openExternalLink(evt.releaseUrl);
-			return;
-		}
-		wowup.installUpdate();
-	}
+	const onUpdateAvailable = installAvailableUpdate;
 
 	// A check the user asked for gets an answer. The hourly ones stay quiet, but a click that
 	// finds nothing left the footer exactly as it was, so the button looked dead.
@@ -67,6 +63,31 @@
 
 	let version = $derived(versionLabel(session.appVersion ?? '', session.buildCommit));
 
+	// Right-click on the update button: earlier versions to go back to (services/earlier-versions.ts).
+	let versionsMenu = $state<{ x: number; y: number }>();
+	let earlier = $state<EarlierVersions>();
+	let earlierError = $state('');
+
+	function onUpdateSlotContextMenu(event: MouseEvent) {
+		if (!isTauri()) return;
+		event.preventDefault();
+		versionsMenu = { x: event.clientX, y: event.clientY };
+		earlierError = '';
+		listEarlierVersions().then(
+			(result) => (earlier = result),
+			(e: unknown) => (earlierError = String(e))
+		);
+	}
+
+	async function onPickEarlierVersion(v: EarlierVersion) {
+		versionsMenu = undefined;
+		try {
+			await installEarlierVersion(v, earlier?.canInstall ?? false);
+		} catch (e) {
+			console.error('install earlier version failed', e);
+		}
+	}
+
 	$effect(() => {
 		if (session.appVersion === undefined) {
 			session.loadAppVersion().catch((e: unknown) => console.error('app version failed', e));
@@ -87,7 +108,8 @@
 		{AppConfig.curseforge.enabled ? 'CF' : ''}
 	</p>
 
-	<div class="update-slot">
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div class="update-slot" oncontextmenu={onUpdateSlotContextMenu}>
 		{#if updateState === AppUpdateState.CheckingForUpdate}
 			<p>{t('APP.WOWUP_UPDATE.CHECKING_FOR_UPDATE')}</p>
 		{:else if updateState === AppUpdateState.UpdateAvailable && isTauri()}
@@ -128,7 +150,47 @@
 	</div>
 </footer>
 
+{#if versionsMenu}
+	<ContextMenu x={versionsMenu.x} y={versionsMenu.y} onclose={() => (versionsMenu = undefined)}>
+		<button
+			class="menu-item"
+			onclick={() => {
+				versionsMenu = undefined;
+				onCheckForUpdate();
+			}}
+		>
+			{t('APP.SYSTEM_TRAY.CHECK_UPDATE')}
+		</button>
+		<div class="menu-divider"></div>
+		<div class="menu-header">{t(`${EARLIER_VERSION_KEY}.LABEL`)}</div>
+		{#if earlier?.localBuild}
+			<p class="menu-note text-2">{t(`${EARLIER_VERSION_KEY}.LOCAL_BUILD`)}</p>
+		{:else if earlierError}
+			<p class="menu-note text-warning">
+				{i18n.t(`${EARLIER_VERSION_KEY}.LOAD_FAILED`, { error: earlierError })}
+			</p>
+		{:else if !earlier}
+			<p class="menu-note text-2">{t(`${EARLIER_VERSION_KEY}.LOADING`)}</p>
+		{:else if earlier.versions.length === 0}
+			<p class="menu-note text-2">{t(`${EARLIER_VERSION_KEY}.NONE`)}</p>
+		{:else}
+			{#each earlier.versions as v (v.tag)}
+				<button class="menu-item" onclick={() => void onPickEarlierVersion(v)}>
+					{earlierVersionLabel(v)}
+				</button>
+			{/each}
+		{/if}
+	</ContextMenu>
+{/if}
+
 <style>
+	.menu-note {
+		max-width: 260px;
+		margin: 0;
+		padding: 0.35rem 0.75rem;
+		font-size: 0.8rem;
+	}
+
 	footer {
 		display: flex;
 		align-items: center;

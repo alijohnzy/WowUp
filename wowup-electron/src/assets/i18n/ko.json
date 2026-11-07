@@ -103,7 +103,8 @@
     "SYSTEM_TRAY": {
       "CHECK_UPDATE": "업데이트 확인",
       "QUIT_ACTION": "종료",
-      "SHOW_ACTION": "창 열기"
+      "SHOW_ACTION": "창 열기",
+      "UPDATE_APP": "WowUpNight 업데이트"
     },
     "THEME": {
       "ALLIANCE": "얼라이언스",

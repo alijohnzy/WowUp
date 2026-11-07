@@ -103,7 +103,8 @@
     "SYSTEM_TRAY": {
       "CHECK_UPDATE": "Auf Updates prüfen...",
       "QUIT_ACTION": "Beenden",
-      "SHOW_ACTION": "Öffnen"
+      "SHOW_ACTION": "Öffnen",
+      "UPDATE_APP": "WowUpNight aktualisieren"
     },
     "THEME": {
       "ALLIANCE": "Allianz",

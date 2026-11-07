@@ -2,7 +2,7 @@
 // leave the footer exactly as it was, so the button looked like it did nothing.
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { flushSync, mount, unmount } from 'svelte';
+import { flushSync, mount, tick, unmount } from 'svelte';
 
 const show = vi.fn();
 const checkForAppUpdate = vi.fn();
@@ -25,6 +25,18 @@ vi.mock('$lib/state/session.svelte', () => ({
 }));
 vi.mock('$lib/state/dialogs.svelte', () => ({ dialogs: { confirm: vi.fn() } }));
 vi.mock('$lib/services/links', () => ({ openExternalLink: vi.fn() }));
+const installEarlierVersion = vi.fn();
+const EARLIER = [
+	{ tag: 'tauri-v2.25.4-26', version: '2.25.4+26', publishedAt: '', releaseUrl: 'u26' },
+	{ tag: 'tauri-v2.25.4-25', version: '2.25.4+25', publishedAt: '', releaseUrl: 'u25' }
+];
+vi.mock('$lib/services/earlier-versions', () => ({
+	EARLIER_VERSION_KEY: 'EV',
+	listEarlierVersions: () =>
+		Promise.resolve({ versions: EARLIER, canInstall: true, localBuild: false }),
+	earlierVersionLabel: (v: { version: string }) => `v${v.version}`,
+	installEarlierVersion: (...a: unknown[]) => installEarlierVersion(...a)
+}));
 
 import { AppUpdateState } from '$common/wowup/models';
 import { electron } from '$lib/state/electron.svelte';
@@ -84,5 +96,39 @@ describe('Footer update check', () => {
 		electron.appUpdate = { state: AppUpdateState.UpdateNotAvailable };
 		flushSync();
 		expect(show).not.toHaveBeenCalled();
+	});
+});
+
+describe('Footer earlier versions', () => {
+	async function openMenu(target: HTMLElement) {
+		target
+			.querySelector('.update-slot')!
+			.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
+		await tick();
+		await tick();
+		flushSync();
+	}
+
+	it('lists the earlier versions on a right-click of the update button', async () => {
+		const target = render();
+		await openMenu(target);
+
+		const items = [...document.querySelectorAll('.context-menu .menu-item')].map((b) =>
+			b.textContent?.trim()
+		);
+		expect(items).toEqual(['APP.SYSTEM_TRAY.CHECK_UPDATE', 'v2.25.4+26', 'v2.25.4+25']);
+	});
+
+	it('installs the one picked, and closes the menu', async () => {
+		const target = render();
+		await openMenu(target);
+
+		[...document.querySelectorAll<HTMLButtonElement>('.context-menu .menu-item')]
+			.find((b) => b.textContent?.includes('2.25.4+25'))!
+			.click();
+		flushSync();
+
+		expect(installEarlierVersion).toHaveBeenCalledWith(EARLIER[1], true);
+		expect(document.querySelector('.context-menu')).toBeNull();
 	});
 });

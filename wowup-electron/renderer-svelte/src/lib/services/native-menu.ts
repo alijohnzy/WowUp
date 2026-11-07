@@ -71,7 +71,8 @@ export async function createSystemTray(): Promise<void> {
 		quitLabel: t('APP.SYSTEM_TRAY.QUIT_ACTION'),
 		checkUpdateLabel: t('APP.SYSTEM_TRAY.CHECK_UPDATE'),
 		showLabel: t('APP.SYSTEM_TRAY.SHOW_ACTION'),
-		updateAllLabel: updateAllLabel(0)
+		updateAllLabel: updateAllLabel(0),
+		appUpdateLabel: t('APP.SYSTEM_TRAY.UPDATE_APP')
 	};
 
 	try {

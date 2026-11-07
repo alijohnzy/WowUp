@@ -103,7 +103,8 @@
     "SYSTEM_TRAY": {
       "CHECK_UPDATE": "Güncellemeleri Denetle...",
       "QUIT_ACTION": "Çıkış Yap",
-      "SHOW_ACTION": "Göster"
+      "SHOW_ACTION": "Göster",
+      "UPDATE_APP": "WowUpNight'ı güncelle"
     },
     "THEME": {
       "ALLIANCE": "Alliance",

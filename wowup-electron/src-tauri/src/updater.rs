@@ -212,10 +212,12 @@ pub async fn app_check_update(
                     ..AppUpdateEvent::state(AppUpdateState::UpdateAvailable)
                 },
             );
+            crate::tray::set_app_update(&app, Some(display_version(&update.version)));
             *pending.0.lock().map_err(|e| e.to_string())? = Some(update);
         }
         Ok(None) => {
             log::info!("app-check-update: up to date");
+            crate::tray::set_app_update(&app, None);
             emit(
                 &app,
                 AppUpdateEvent::state(AppUpdateState::UpdateNotAvailable),
@@ -477,6 +479,14 @@ pub async fn app_install_version(app: AppHandle, tag: String) -> Result<(), Stri
     Ok(())
 }
 
+/// A version as the footer shows it: `2.25.4+28` → `v2.25.4 #28`.
+pub fn display_version(version: &str) -> String {
+    match version.split_once('+') {
+        Some((base, build)) => format!("v{base} #{build}"),
+        None => format!("v{version}"),
+    }
+}
+
 /// Download progress in the renderer's shape. `None` while the server has not said how big
 /// the file is, since a percentage of an unknown total would only mislead.
 pub fn progress(
@@ -514,6 +524,12 @@ mod tests {
                 })
                 .collect(),
         }
+    }
+
+    #[test]
+    fn versions_are_shown_as_the_footer_shows_them() {
+        assert_eq!(display_version("2.25.4+28"), "v2.25.4 #28");
+        assert_eq!(display_version("2.25.4"), "v2.25.4");
     }
 
     #[test]
