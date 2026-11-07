@@ -20,6 +20,7 @@
     ]
   },
   "bundle": {
+    "category": "Utility",
     "targets": [
       "app",
       "dmg"
