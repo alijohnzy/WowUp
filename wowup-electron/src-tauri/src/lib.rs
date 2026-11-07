@@ -355,8 +355,24 @@ pub fn run() {
             }
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|_app, _event| {
+            // macOS: clicking the Dock icon, or opening the app again from Applications or
+            // Spotlight, reaches the running copy as Reopen rather than as a second launch, so
+            // the single-instance handler above never sees it. With the window closed to the
+            // tray, or started hidden, the tray icon was then the only way back — and on a
+            // MacBook with a notch, the menu bar often hides it.
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Reopen {
+                has_visible_windows: false,
+                ..
+            } = _event
+            {
+                log::info!("reopened from the Dock: bringing the window back");
+                tray::restore_window(_app);
+            }
+        });
 }
 
 #[cfg(test)]
