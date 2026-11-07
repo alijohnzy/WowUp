@@ -118,6 +118,10 @@ export const IPC_SYSTEM_PREFERENCES_GET_USER_DEFAULT = "system-preferences-get-u
 export const IPC_SHOW_OPEN_DIALOG = "show-open-dialog";
 export const IPC_APP_UPDATE_STATE = "app-update-state";
 export const IPC_APP_INSTALL_UPDATE = "app-install-update";
+// Tauri only: the Wago ad as a native view over the nav rail (src-tauri/src/ad_view.rs).
+export const IPC_AD_VIEW_SET_BOUNDS = "ad-view-set-bounds";
+export const IPC_AD_VIEW_RELOAD = "ad-view-reload";
+export const IPC_AD_VIEW_LINK = "ad-view-link";
 export const IPC_APP_CHECK_UPDATE = "app-check-update";
 export const IPC_BUNDLE_UPDATE_READY = "bundle-update-ready";
 export const IPC_BUNDLE_UPDATE_GET = "bundle-update-get";

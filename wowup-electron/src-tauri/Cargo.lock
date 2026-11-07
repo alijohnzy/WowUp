@@ -5937,6 +5937,7 @@ name = "wowup"
 version = "2.25.4"
 dependencies = [
  "globset",
+ "gtk",
  "log",
  "md5",
  "nanoid",
@@ -5958,6 +5959,7 @@ dependencies = [
  "tauri-plugin-os",
  "tauri-plugin-store",
  "tauri-plugin-updater",
+ "tauri-runtime-wry",
  "tokio",
  "url",
  "zip 2.4.2",

@@ -4,7 +4,7 @@
 //! slice at a time; see `migration/tauri-scope.md` for the phase order. Only the Warcraft
 //! slice is live so far — every other IPC channel is still served by the Electron build.
 
-pub mod ad;
+pub mod ad_view;
 pub mod addons;
 pub mod constants;
 pub mod files;
@@ -147,13 +147,6 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec![window::HIDDEN_FLAG]),
         ))
-        // The ad frame is an <iframe> on its own origin; this serves it. See src/ad.rs for
-        // why it is proxied rather than framed directly, and why that origin matters.
-        .register_asynchronous_uri_scheme_protocol(ad::AD_SCHEME, |_ctx, request, responder| {
-            tauri::async_runtime::spawn(async move {
-                responder.respond(ad::serve(request).await);
-            });
-        })
         .plugin(
             tauri_plugin_log::Builder::new()
                 .clear_targets()
@@ -235,6 +228,8 @@ pub fn run() {
             window::set_login_item_settings,
             updater::app_check_update,
             updater::app_install_update,
+            ad_view::ad_view_set_bounds,
+            ad_view::ad_view_reload,
             get_locale,
             update_app_badge,
             is_default_protocol_client,
@@ -287,6 +282,13 @@ pub fn run() {
                     }
                 }
                 window::forward_window_events(&main);
+
+                // The ad view goes on an overlay over the page; it has to be set up before
+                // the window is first shown. See src/ad_view.rs.
+                #[cfg(target_os = "linux")]
+                if let Err(e) = ad_view::install_overlay(&main) {
+                    log::error!("could not set up the ad overlay: {e}");
+                }
 
                 // The window is configured `visible: false` so that a hidden start never
                 // flashes one up. That makes showing it this app's job on every other

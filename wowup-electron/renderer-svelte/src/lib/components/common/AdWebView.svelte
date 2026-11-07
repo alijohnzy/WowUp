@@ -12,14 +12,15 @@
 	// `this.webviewContainer.nativeElement.innerHTML = 0` in ngOnDestroy — assigning the number
 	// 0 to innerHTML, which stringifies to "0" and left a stray text node behind.
 
+	import { IPC_AD_VIEW_LINK, IPC_AD_VIEW_RELOAD, IPC_AD_VIEW_SET_BOUNDS } from '$common/constants';
 	import { AppConfig } from '$config/environment';
-	import { on, isTauri } from '$lib/ipc';
-	import { adFrameSrc, onAdFrameToken } from '$lib/services/ad-frame-proxy';
+	import { invoke, on, isTauri } from '$lib/ipc';
+	import { dialogs } from '$lib/state/dialogs.svelte';
 	import { session } from '$lib/state/session.svelte';
+	import { zoom } from '$lib/state/zoom.svelte';
 	import { confirmLinkNavigation } from '$lib/services/links';
 	import { getAssetFilePath } from '$lib/services/files';
 	import { onUiMessage } from '$lib/services/ui-message';
-	import { t } from '$lib/i18n.svelte';
 	import type { AdPageOptions } from 'wowup-lib-core';
 
 	const IPC_WEBVIEW_NEW_WINDOW = 'webview-new-window';
@@ -51,14 +52,64 @@
 
 	let tag: WebviewTag | undefined;
 	let ready = $state(false);
-	let reloadNonce = $state(0);
 
-	// Only meaningful under Tauri; `#key` on it forces a fresh document on reload.
-	let frameSrc = $derived(adFrameSrc(options, reloadNonce));
+	// ---- Tauri: a native webview over this slot ------------------------------------------
+	//
+	// Wago's page only fills an ad at its real URL, which an <iframe> cannot show (it sends
+	// X-Frame-Options: SAMEORIGIN), so under Tauri the ad is a webview of its own laid over
+	// this element (src-tauri/src/ad_view.rs). This element only holds the space and reports
+	// where it is. The view draws above the page, so it is hidden while a dialog is open —
+	// hidden, not unloaded: the page renews the Wago key on its own timer.
+	let slot: HTMLElement | undefined;
+	let coveredByDialog = $derived(dialogs.stack.length > 0);
 
-	// The frame is cross-origin by design, so postMessage is the only way the token can come
-	// back — the same key `assets/preload/wago.js` sends over IPC in the Electron build.
-	$effect(() => (isTauri() ? onAdFrameToken(() => (ready = true)) : undefined));
+	function reportSlot(visible = !coveredByDialog): void {
+		const r = slot?.getBoundingClientRect();
+		// Rust wants logical pixels; the page's CSS pixels are scaled by the webview zoom.
+		const z = zoom.factor;
+		const bounds = r
+			? { x: r.left * z, y: r.top * z, width: r.width * z, height: r.height * z, visible }
+			: { x: 0, y: 0, width: 0, height: 0, visible: false };
+		invoke(IPC_AD_VIEW_SET_BOUNDS, bounds).catch((e: unknown) =>
+			console.error('[ad] set bounds failed', e)
+		);
+	}
+
+	function nativeAdSlot(el: HTMLElement) {
+		slot = el;
+		let frame = 0;
+		const schedule = () => {
+			cancelAnimationFrame(frame);
+			frame = requestAnimationFrame(() => reportSlot());
+		};
+		// The slot's own size, and anything that moves it: the window, or the layout around it.
+		const observer = new ResizeObserver(schedule);
+		observer.observe(el);
+		observer.observe(document.documentElement);
+		window.addEventListener('resize', schedule);
+		schedule();
+
+		return () => {
+			cancelAnimationFrame(frame);
+			observer.disconnect();
+			window.removeEventListener('resize', schedule);
+			slot = undefined;
+			reportSlot(false);
+		};
+	}
+
+	$effect(() => {
+		// Re-place when a dialog opens or closes, or the zoom changes.
+		void coveredByDialog;
+		void zoom.factor;
+		if (isTauri() && slot) reportSlot();
+	});
+
+	$effect(() =>
+		isTauri()
+			? on(IPC_AD_VIEW_LINK, (_evt, url: never) => void confirmLinkNavigation(url as string))
+			: undefined
+	);
 
 	function onWebviewReady() {
 		ready = true;
@@ -109,10 +160,9 @@
 	}
 
 	function adWebview(container: HTMLElement) {
-		// Under Tauri the frame is an <iframe> in the template below, not something built
-		// here — see $lib/services/ad-frame-proxy and src-tauri/src/ad.rs. The CurseForge
-		// branch needs <owadview>, which only @overwolf/ow-electron supplies, so the tauri
-		// flavour enables Wago to have an ad at all (environment.prod.tauri.ts).
+		// Under Tauri the ad is the native view above, not something built here. The
+		// CurseForge branch needs <owadview>, which only @overwolf/ow-electron supplies, so the
+		// tauri flavour enables Wago to have an ad at all (environment.prod.tauri.ts).
 		if (isTauri()) return;
 
 		let placeholder: HTMLElement | undefined;
@@ -136,11 +186,10 @@
 	// A provider can ask for a fresh ad after re-authenticating.
 	$effect(() =>
 		onUiMessage((msg) => {
-			if (msg.action !== 'ad-frame-reload' || !ready) return;
+			if (msg.action !== 'ad-frame-reload') return;
 			if (isTauri()) {
-				// Re-assigning src is the iframe's reloadIgnoringCache: the proxy refetches.
-				reloadNonce += 1;
-			} else {
+				invoke(IPC_AD_VIEW_RELOAD).catch((e: unknown) => console.error('[ad] reload failed', e));
+			} else if (ready) {
 				tag?.reloadIgnoringCache();
 			}
 		})
@@ -161,20 +210,8 @@
 </script>
 
 <div class="webview-container" {@attach adWebview}>
-	{#if isTauri() && frameSrc}
-		{#key frameSrc}
-			<!-- A document node, unlike a child webview or a borderless window: it clips and
-			     z-orders with the app, so dialogs draw over it instead of under it. -->
-			<!-- scrolling="no" because the page is a 300x250 creative followed by Wago's own
-			     description, and the slot is only as tall as the creative. Without it the
-			     leftover text gives the frame a scrollbar inside the nav rail. -->
-			<iframe
-				src={frameSrc}
-				title={t('ADS.AD_EXPLAINER_BUTTON')}
-				referrerpolicy="no-referrer"
-				scrolling="no"
-			></iframe>
-		{/key}
+	{#if isTauri()}
+		<div class="native-ad-slot" {@attach nativeAdSlot}></div>
 	{/if}
 </div>
 
@@ -188,11 +225,9 @@
 		inset: 0;
 	}
 
-	iframe {
-		/* display: block stops the inline baseline gap under the frame. */
-		display: block;
+	.native-ad-slot {
+		/* The native view is laid over exactly this box, so it must have the slot's size. */
 		width: 100%;
 		height: 100%;
-		border: 0;
 	}
 </style>

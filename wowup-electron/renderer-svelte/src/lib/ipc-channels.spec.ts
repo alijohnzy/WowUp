@@ -38,7 +38,6 @@ const ALLOWED_WITHOUT_CONSTANT = new Set([
 	'rename-file',
 	'set-release-channel',
 	'show-item-in-folder',
-	'wago-token-received',
 	'webview-new-window',
 	'zip-file',
 	'zip-list-files',

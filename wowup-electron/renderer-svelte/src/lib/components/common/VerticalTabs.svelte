@@ -208,7 +208,7 @@
 			     literal in Wago's page, they rotate it, and the page's own five-minute reload
 			     is what fetches the next one. Collapsing the empty slot here stopped the
 			     reloads, and roughly an hour later every Wago call answered 401 and the
-			     provider disappeared. See the SHIM docs in src-tauri/src/ad.rs. -->
+			     provider disappeared. See src-tauri/src/ad_view.rs. -->
 			<div class="ad">
 				{#if adParams}
 					{#key adParams.pageUrl}

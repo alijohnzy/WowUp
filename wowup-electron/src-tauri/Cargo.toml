@@ -35,7 +35,7 @@ sha2 = "0.10"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "charset", "http2"] }
 zip = { version = "2", default-features = false, features = ["deflate", "bzip2"] }
 nanoid = "0.4"
-# Parsing the ad URL and the sentinel the token comes back on (src/ad.rs).
+# Checking where the ad view navigates (src/ad_view.rs).
 url = "2"
 
 # Plugin set. Deliberately minimal — each phase adds its own.
@@ -51,6 +51,12 @@ tauri-plugin-autostart = "2.5.1"
 # ~2.12: 2.13+ require tauri 2.12, which would drag wry/tao and the CLI version check along.
 tauri-plugin-updater = "~2.12"
 semver = "1"
+# The Wago ad view (src/ad_view.rs) is a raw wry webview: the version Tauri itself runs.
+tauri-runtime-wry = "2"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+# Laying the ad view over the page (src/ad_view.rs install_overlay); Tauri's own gtk.
+gtk = "0.18"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 # resolveProducts on mac reads .app bundles; no extra crates needed yet.
