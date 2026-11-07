@@ -4,6 +4,7 @@
 #
 #   Windows  NSIS installer + portable zip  (unsigned)
 #   Linux    AppImage + deb                 (unsigned)
+#   macOS    dmg, Apple Silicon             (ad-hoc signed, not notarized)
 #
 # The portable zip is the raw executable plus the `assets/` directory Tauri stages beside it,
 # which is what `resource_dir()` resolves to on Windows — so the WowUp companion addon
@@ -17,6 +18,13 @@
 # Unsigned means Windows SmartScreen will warn on first run — "Windows protected your PC",
 # More info → Run anyway. Signing needs a certificate; wire one in if these ever go to people
 # who did not build them.
+#
+# macOS gets an ad-hoc signature (bundle.macOS.signingIdentity "-" in
+# src-tauri/tauri.macos.conf.json): Apple Silicon will not run an unsigned app at all, and
+# without one a downloaded copy is reported as "damaged". It is not notarized — that needs a
+# paid Apple Developer account — so the first open is refused until the user allows it in
+# System Settings → Privacy & Security → Open Anyway. Apple Silicon only: Intel Macs would need
+# a second build (or a universal one, twice the compile).
 #
 # SECRET SETUP
 #   Settings → Secrets and variables → Actions → Repository secrets → New repository secret
@@ -52,7 +60,7 @@ on:
         description: 'Which platforms to build'
         type: choice
         default: 'windows'
-        options: ['windows', 'linux', 'all']
+        options: ['windows', 'linux', 'macos', 'all']
       publish_release:
         description: 'Publish to the Releases tab. The installers embed the CurseForge key and a release is public and permanent — read the header first.'
         type: boolean
@@ -99,6 +107,14 @@ jobs:
               wowup-electron/src-tauri/target/release/bundle/appimage/*.sig
               wowup-electron/src-tauri/target/release/bundle/deb/*.deb
               wowup-electron/src-tauri/target/release/bundle/deb/*.sig
+          # Apple Silicon. The .app.tar.gz is what the updater downloads; the dmg is for people.
+          - os: macos-15
+            label: macOS (Apple Silicon dmg)
+            key: macos
+            artifacts: |
+              wowup-electron/src-tauri/target/release/bundle/dmg/*.dmg
+              wowup-electron/src-tauri/target/release/bundle/macos/*.app.tar.gz
+              wowup-electron/src-tauri/target/release/bundle/macos/*.app.tar.gz.sig
 
     steps:
       - name: Skip platforms not requested
@@ -143,7 +159,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       # Without this every run recompiles the whole dependency tree, which is most of the
-      # build time. Keyed on the crate directory so the two platforms do not share a cache.
+      # build time. Keyed on the crate directory so the platforms do not share a cache.
       - name: Cache Rust build
         if: steps.gate.outputs.run == 'true'
         uses: Swatinem/rust-cache@v2
@@ -362,6 +378,23 @@ jobs:
           bash "$GITHUB_WORKSPACE/wowup-electron/scripts/thin-appimage.sh" "$PWD/${images[0]}" "$RUNNER_TEMP/appimagetool"
           ls -l "${images[0]}"
 
+      # What the updater installs on a Mac: the .app, tarred with it at the top, as Tauri's own
+      # createUpdaterArtifacts would make it (off for the reason given below). Named like the
+      # other platforms' files, version and arch included — the feed tells architectures apart
+      # by the name.
+      - name: Pack the macOS app for the updater
+        if: steps.gate.outputs.run == 'true' && matrix.key == 'macos' && steps.build.outcome == 'success'
+        run: |
+          cd ./wowup-electron
+          version=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          cd src-tauri/target/release/bundle/macos
+          app=$(ls -d *.app | head -n 1)
+          [ -n "$app" ] || { echo "::error::No .app was bundled."; exit 1; }
+          # The bundle must carry a valid signature, or Apple Silicon refuses to start it.
+          codesign --verify --deep --strict --verbose=2 "$app"
+          tar -czf "${app%.app}_${version}_aarch64.app.tar.gz" "$app"
+          ls -la *.app.tar.gz
+
       # The updater installs nothing whose minisign signature does not match the public key in
       # tauri.conf.json. Signed here rather than with bundle.createUpdaterArtifacts, which
       # would make every local `npm run tauri:build` fail without the private key, and which
@@ -379,7 +412,8 @@ jobs:
           cd ./wowup-electron
           bundle=src-tauri/target/release/bundle
           shopt -s nullglob
-          for f in "$bundle"/nsis/*-setup.exe "$bundle"/appimage/*.AppImage "$bundle"/deb/*.deb; do
+          for f in "$bundle"/nsis/*-setup.exe "$bundle"/appimage/*.AppImage "$bundle"/deb/*.deb \
+                   "$bundle"/macos/*.app.tar.gz; do
             # Prints the signature it also writes to "$f.sig"; the file is what is used.
             npx tauri signer sign "$f" > /dev/null
             echo "signed $(basename "$f")"
@@ -409,7 +443,7 @@ jobs:
             echo '| file | size |'
             echo '|---|---:|'
             for f in "$bundle"/nsis/*.exe "$bundle"/appimage/*.AppImage "$bundle"/deb/*.deb \
-                     wowup-electron/portable/*.zip; do
+                     "$bundle"/dmg/*.dmg "$bundle"/macos/*.app.tar.gz wowup-electron/portable/*.zip; do
               [ -f "$f" ] || continue
               found=1
               echo "| \`$(basename "$f")\` | $(( $(stat -c%s "$f" 2>/dev/null || stat -f%z "$f") / 1048576 )) MB |"
@@ -479,7 +513,7 @@ jobs:
             mv "$f" "$(dirname "$f")/$(basename "$f" | tr '+' '.')"
           done
 
-          mapfile -t files < <(find dist -type f \( -name '*.exe' -o -name '*.AppImage' -o -name '*.deb' -o -name '*.zip' -o -name '*.sig' \) | sort)
+          mapfile -t files < <(find dist -type f \( -name '*.exe' -o -name '*.AppImage' -o -name '*.deb' -o -name '*.zip' -o -name '*.dmg' -o -name '*.app.tar.gz' -o -name '*.sig' \) | sort)
           if [ ${#files[@]} -eq 0 ]; then
             echo "::error::No installers were produced, so there is nothing to release."
             exit 1
@@ -502,12 +536,15 @@ jobs:
                    *.exe)      echo "| Windows (installer) | \`$(basename "$f")\` |";;
                    *.AppImage) echo "| Linux | \`$(basename "$f")\` |";;
                    *.deb)      echo "| Linux (deb) | \`$(basename "$f")\` |";;
+                   *.dmg)      echo "| macOS (Apple Silicon) | \`$(basename "$f")\` |";;
                  esac
                done)" \
             "" \
             "Unsigned, so Windows SmartScreen will warn on first run: **More info → Run anyway**." \
             "" \
             "The portable zip needs WebView2 on the machine; Windows 10 and 11 ship it. The installer bundles it." \
+            "" \
+            "macOS: Apple Silicon only, and not notarized. Open the dmg and drag WowUpNight to Applications. The first time it opens, macOS refuses it; go to **System Settings → Privacy & Security** and click **Open Anyway**. The \`.app.tar.gz\` is for the in-app updater." \
             "" \
             "The Linux AppImage and .deb use the WebKitGTK 4.1 already on the system rather than bundling a browser engine. If it is missing: \`sudo pacman -S webkit2gtk-4.1\` (Arch, Manjaro), \`sudo apt install libwebkit2gtk-4.1-0\` (Debian, Ubuntu), \`sudo dnf install webkit2gtk4.1\` (Fedora)." \
             "" \
@@ -549,7 +586,7 @@ jobs:
           node wowup-electron/scripts/tauri-updater-manifest.mts \
             --dir dist --repo "${GITHUB_REPOSITORY}" --tag "$tag" \
             --version "${version}+${GITHUB_RUN_NUMBER}" --out latest.json \
-            --require linux-x86_64-appimage,linux-x86_64-deb,windows-x86_64-nsis
+            --require linux-x86_64-appimage,linux-x86_64-deb,windows-x86_64-nsis,darwin-aarch64-app
 
           # The same manifest on this build's own release, so a later build can install this
           # one again: Options → "Install an earlier version" points the updater at it.

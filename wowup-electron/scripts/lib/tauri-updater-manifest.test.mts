@@ -50,6 +50,22 @@ describe("buildUpdaterManifest", () => {
     assert.equal(m.pub_date, "2026-11-07T00:00:00Z");
   });
 
+  it("offers the macOS app archive to Apple Silicon Macs, and not the dmg", () => {
+    const assets = [
+      ...ASSETS,
+      { name: "WowUpNight_2.25.4.18_aarch64.app.tar.gz", signature: "sig-mac" },
+      { name: "WowUpNight_2.25.4.18_aarch64.dmg", signature: "" },
+    ];
+    const m = buildUpdaterManifest(opts({ assets, require: ["darwin-aarch64-app"] }));
+    assert.equal(m.platforms["darwin-aarch64-app"].signature, "sig-mac");
+    assert.equal(m.platforms["darwin-aarch64"], m.platforms["darwin-aarch64-app"]);
+    assert.match(m.platforms["darwin-aarch64-app"].url, /_aarch64\.app\.tar\.gz$/);
+    assert.equal(
+      Object.values(m.platforms).some((p) => p.url.endsWith(".dmg")),
+      false,
+    );
+  });
+
   it("refuses a version without a CI build number, which clients could not order", () => {
     assert.throws(() => buildUpdaterManifest(opts({ version: "2.25.4" })), /build number/);
   });

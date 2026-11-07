@@ -26,6 +26,14 @@
 	--rail-top-inset: calc(1em + 50px);
 }
 
+/* macOS draws its window buttons over the top-left corner (src-tauri/tauri.macos.conf.json),
+ * where the logo sits, so there the logo moves down to clear them (VerticalTabs) and the inset
+ * grows by the same amount. .darwin is the platform class on .app-root. */
+.darwin {
+	--mac-window-buttons-clearance: 14px;
+	--rail-top-inset: calc(1em + 50px + var(--mac-window-buttons-clearance));
+}
+
 /* ---- theme variants ------------------------------------------------------------------ */
 
 .default-theme {

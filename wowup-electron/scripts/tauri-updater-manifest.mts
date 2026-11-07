@@ -38,7 +38,7 @@ function walk(dir: string): string[] {
   });
 }
 
-const UPDATABLE = /\.(AppImage|deb)$|-setup\.exe$/;
+const UPDATABLE = /\.(AppImage|deb)$|-setup\.exe$|\.app\.tar\.gz$/;
 const assets = walk(values.dir!)
   .filter((p) => UPDATABLE.test(p))
   .map((p) => {

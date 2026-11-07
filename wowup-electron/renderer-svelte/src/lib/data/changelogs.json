@@ -1,5 +1,10 @@
 [
 	{
+		"Version": "2.25.4 #next",
+		"Night": true,
+		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>A Mac version, for Apple Silicon (M1 and newer). Apple has not notarized it, so the first time it opens, allow it in System Settings &gt; Privacy &amp; Security &gt; Open Anyway</li>\n    </ul>\n    "
+	},
+	{
 		"Version": "2.25.4 #34",
 		"Night": true,
 		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>Right-click a column header on My Addons or Get Addons to show only the providers you want, such as just Wago or everything but CurseForge. A filter icon on the Provider column shows while some are hidden</li>\n    </ul>\n    "

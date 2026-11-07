@@ -11,10 +11,12 @@
 	// resize loop natively — so it feels the same as a normal window rather than a JS
 	// approximation.
 	//
-	// Rendered only under Tauri: under Electron the real frame is still there, and covering
-	// its edges with these would take resizing away.
+	// Rendered only under Tauri on Windows and Linux: under Electron the real frame is still
+	// there, and covering its edges with these would take resizing away. The same goes for
+	// macOS, where the window keeps its native frame (src-tauri/tauri.macos.conf.json) — and
+	// where the window manager hand-off these rely on is not supported anyway.
 
-	import { isTauri } from '$lib/ipc';
+	import { isMac, isTauri } from '$lib/ipc';
 
 	// 4px of grab area, doubled at the corners. Matching roughly what GTK and Windows use —
 	// wider swallows clicks on whatever is at the window edge, narrower is hard to hit.
@@ -82,7 +84,7 @@
 	}
 </script>
 
-{#if isTauri()}
+{#if isTauri() && !isMac()}
 	{#each ZONES as zone (zone.dir)}
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div

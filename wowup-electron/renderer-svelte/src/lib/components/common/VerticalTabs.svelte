@@ -318,6 +318,11 @@
 		width: 50px;
 	}
 
+	/* Below macOS's window buttons, which sit over this corner (styles/theme.css). */
+	.tab-strip.mac .rail-logo {
+		top: calc(1em + var(--mac-window-buttons-clearance, 0px));
+	}
+
 	.tab {
 		display: flex;
 		align-items: center;

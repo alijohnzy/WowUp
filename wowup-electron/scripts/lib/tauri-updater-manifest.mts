@@ -50,9 +50,14 @@ const FORMATS: Array<{ pattern: RegExp; os: string; keys: (arch: string) => stri
   { pattern: /\.AppImage$/, os: "linux", keys: (a) => [`linux-${a}-appimage`, `linux-${a}`] },
   { pattern: /\.deb$/, os: "linux", keys: (a) => [`linux-${a}-deb`] },
   { pattern: /-setup\.exe$/, os: "windows", keys: (a) => [`windows-${a}-nsis`, `windows-${a}`] },
+  // The tarred .app the workflow packs on macOS; the dmg is for people and is not an update.
+  { pattern: /\.app\.tar\.gz$/, os: "darwin", keys: (a) => [`darwin-${a}-app`, `darwin-${a}`] },
 ];
 
-/** The bundler names files `_amd64` (Linux) and `_x64` (Windows); the updater says `x86_64`. */
+/**
+ * The bundler names files `_amd64` (Linux) and `_x64` (Windows), and the workflow names the
+ * macOS archive `_aarch64`; the updater says `x86_64` and `aarch64`.
+ */
 function archOf(name: string): string {
   if (/[_-](amd64|x64|x86_64)[_.-]/.test(name)) return "x86_64";
   if (/[_-](arm64|aarch64)[_.-]/.test(name)) return "aarch64";
@@ -88,7 +93,7 @@ export function buildUpdaterManifest(opts: ManifestOptions): UpdaterManifest {
   }
 
   if (Object.keys(platforms).length === 0) {
-    throw new Error("No updatable assets (AppImage, deb, NSIS installer) were given");
+    throw new Error("No updatable assets (AppImage, deb, NSIS installer, macOS app) were given");
   }
 
   const missing = (opts.require ?? []).filter((key) => !platforms[key]);

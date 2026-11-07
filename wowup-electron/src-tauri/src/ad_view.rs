@@ -22,10 +22,14 @@
 //!
 //! # Platforms
 //!
-//! Windows: a child webview positioned with `set_bounds`. Linux: Tauri 2.11 puts child webviews
-//! in the window's vertical box, which stacks them under the page instead of over it
-//! (tauri-apps/tauri#10420), so `install_overlay` wraps that box in a `gtk::Overlay` at startup,
-//! and the ad lives in a holder on the overlay layer. Elsewhere there is no ad view.
+//! Windows and macOS: a child webview positioned with `set_bounds`. (Not yet seen running on
+//! macOS: added with the first Mac build, by analogy with Windows — wry implements
+//! `build_as_child` on both, and Tauri's own multi-webview windows rely on it there. The
+//! storage directory is ignored on macOS, so the ad shares the app's cookies.) Linux: Tauri
+//! 2.11 puts child webviews in the window's vertical box, which stacks them under the page
+//! instead of over it (tauri-apps/tauri#10420), so `install_overlay` wraps that box in a
+//! `gtk::Overlay` at startup, and the ad lives in a holder on the overlay layer. Elsewhere there
+//! is no ad view.
 
 use serde::Deserialize;
 use tauri::{AppHandle, Emitter, Manager};
@@ -122,7 +126,7 @@ pub fn stays_in_view(url: &str) -> bool {
         .is_some_and(|u| u.scheme() == "https" && u.host_str() == Some(WAGO_HOST))
 }
 
-#[cfg(any(target_os = "linux", windows))]
+#[cfg(any(target_os = "linux", windows, target_os = "macos"))]
 mod native {
     use super::*;
     use std::cell::RefCell;
@@ -225,7 +229,7 @@ mod native {
             builder.build_gtk(&holder).map_err(|e| e.to_string())?
         };
 
-        #[cfg(windows)]
+        #[cfg(any(windows, target_os = "macos"))]
         let webview = {
             let window = app.get_webview_window("main").ok_or("no main window")?;
             builder
@@ -241,7 +245,7 @@ mod native {
         })
     }
 
-    #[cfg(windows)]
+    #[cfg(any(windows, target_os = "macos"))]
     fn rect(b: AdBounds) -> wry::Rect {
         wry::Rect {
             position: wry::dpi::LogicalPosition::new(b.x, b.y).into(),
@@ -280,7 +284,7 @@ mod native {
                 .map_err(|e| e.to_string())?;
         }
 
-        #[cfg(windows)]
+        #[cfg(any(windows, target_os = "macos"))]
         {
             if drawable {
                 view.webview
@@ -325,7 +329,7 @@ pub use native::install_overlay;
 /// slot's rectangle (and whether a dialog is covering it) whenever it changes.
 #[tauri::command]
 pub fn ad_view_set_bounds(app: AppHandle, bounds: AdBounds) -> Result<(), String> {
-    #[cfg(any(target_os = "linux", windows))]
+    #[cfg(any(target_os = "linux", windows, target_os = "macos"))]
     {
         let handle = app.clone();
         app.run_on_main_thread(move || {
@@ -335,7 +339,7 @@ pub fn ad_view_set_bounds(app: AppHandle, bounds: AdBounds) -> Result<(), String
         })
         .map_err(|e| e.to_string())
     }
-    #[cfg(not(any(target_os = "linux", windows)))]
+    #[cfg(not(any(target_os = "linux", windows, target_os = "macos")))]
     {
         let _ = (app, bounds);
         Ok(())
@@ -345,12 +349,12 @@ pub fn ad_view_set_bounds(app: AppHandle, bounds: AdBounds) -> Result<(), String
 /// A provider asks for a fresh ad (and key) after an authentication failure.
 #[tauri::command]
 pub fn ad_view_reload(app: AppHandle) -> Result<(), String> {
-    #[cfg(any(target_os = "linux", windows))]
+    #[cfg(any(target_os = "linux", windows, target_os = "macos"))]
     {
         app.run_on_main_thread(native::reload)
             .map_err(|e| e.to_string())
     }
-    #[cfg(not(any(target_os = "linux", windows)))]
+    #[cfg(not(any(target_os = "linux", windows, target_os = "macos")))]
     {
         let _ = app;
         Ok(())
