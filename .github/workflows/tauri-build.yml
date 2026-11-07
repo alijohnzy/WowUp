@@ -244,8 +244,9 @@ jobs:
             fs.writeFileSync(f, JSON.stringify(c, null, 2) + "\n");
             console.log(`Building version ${c.version}`);
 
-            // The changelog files the upcoming build's notes under "#next": its number is
-            // only known here, and a cancelled run uses one up.
+            // Notes for the upcoming build sit under "#next" in the changelog: its number is
+            // only known here, and a cancelled run uses one up. (No apostrophes in this
+            // script: it is one single-quoted shell argument.)
             const log = "renderer-svelte/src/lib/data/changelogs.json";
             const text = fs.readFileSync(log, "utf8");
             const stamped = text.replace(/ #next"/g, ` #${process.env.GITHUB_RUN_NUMBER}"`);
