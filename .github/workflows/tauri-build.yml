@@ -66,9 +66,9 @@ on:
         type: boolean
         default: false
       prerelease:
-        description: 'Mark the release as a pre-release.'
+        description: 'Mark the release as a pre-release (for a build only some people should try). Otherwise it becomes the Latest release.'
         type: boolean
-        default: true
+        default: false
       tag:
         description: 'Release tag. Blank generates one from the version and run number, which cannot collide with an existing tag.'
         type: string
@@ -127,7 +127,7 @@ jobs:
             echo "Not requested — skipping ${{ matrix.label }}."
           fi
 
-          # Artifact names may not contain a slash, and this branch has one (migrate/tauri).
+          # Artifact names may not contain a slash, and branch names may (migrate/tauri did).
           echo "ref=${GITHUB_REF_NAME//\//-}" >> "$GITHUB_OUTPUT"
 
       # Fails immediately rather than after a Rust compile, and says how to fix it.
@@ -551,7 +551,13 @@ jobs:
             "Built by [run ${GITHUB_RUN_NUMBER}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}).")
 
           flags=(--title "WowUpNight ${version} (build ${GITHUB_RUN_NUMBER})" --notes "$notes" --target "${GITHUB_SHA}")
-          [ "${{ inputs.prerelease }}" = "true" ] && flags+=(--prerelease)
+          # A full release is marked Latest explicitly: GitHub's own choice goes by tag order,
+          # and the feed release below must never be the one it picks.
+          if [ "${{ inputs.prerelease }}" = "true" ]; then
+            flags+=(--prerelease)
+          else
+            flags+=(--latest)
+          fi
 
           if gh release view "$tag" >/dev/null 2>&1; then
             echo "Release $tag exists — replacing its files rather than creating it again."

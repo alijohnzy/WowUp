@@ -12,7 +12,7 @@ vi.mock('$lib/services/files', () => ({
 import { buildIssueUrl, MAX_ISSUE_URL_LENGTH, readLogTail } from './bug-report';
 
 const info = {
-	repoUrl: 'https://github.com/alijohnzy/WowUp/',
+	repoUrl: 'https://github.com/alijohnzy/WowUpNight/',
 	version: '2.25.4+18',
 	platform: 'linux',
 	locale: 'tr',
@@ -24,7 +24,7 @@ const bodyOf = (url: string): string => decodeURIComponent(url.split('?body=')[1
 describe('buildIssueUrl', () => {
 	it("opens a new issue on the fork's repository", () => {
 		expect(
-			buildIssueUrl(info).startsWith('https://github.com/alijohnzy/WowUp/issues/new?body=')
+			buildIssueUrl(info).startsWith('https://github.com/alijohnzy/WowUpNight/issues/new?body=')
 		).toBe(true);
 	});
 

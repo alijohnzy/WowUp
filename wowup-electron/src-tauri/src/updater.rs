@@ -316,7 +316,11 @@ async fn install_and_relaunch(app: &AppHandle, update: Update, what: &str) {
 
 /// The repository whose releases the updater reads. Must match plugins.updater.endpoints in
 /// tauri.conf.json; a test keeps the two in step.
-pub const RELEASES_REPO: &str = "alijohnzy/WowUp";
+///
+/// Renamed from alijohnzy/WowUp at build 39. GitHub redirects the old name — web, API and
+/// release downloads — which is how copies from before then still find their updates; nothing
+/// may ever be created at alijohnzy/WowUp again, or that redirect stops.
+pub const RELEASES_REPO: &str = "alijohnzy/WowUpNight";
 
 /// A release this copy can go back to.
 #[derive(Debug, Clone, PartialEq, Serialize)]

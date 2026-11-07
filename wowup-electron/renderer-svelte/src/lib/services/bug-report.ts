@@ -8,7 +8,7 @@ import { listFiles, readFile, statFiles } from '$lib/services/files';
 import { join } from '$lib/utils/path';
 
 export interface BugReportInfo {
-	/** `owner/repo` web URL, e.g. https://github.com/alijohnzy/WowUp */
+	/** `owner/repo` web URL, e.g. https://github.com/alijohnzy/WowUpNight */
 	repoUrl: string;
 	version: string;
 	platform: string;

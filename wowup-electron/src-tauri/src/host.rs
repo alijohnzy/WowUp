@@ -197,7 +197,7 @@ mod tests {
     #[test]
     fn only_web_and_mail_links_open() {
         assert!(allowed_url(
-            "https://github.com/alijohnzy/WowUp/issues/new?body=x"
+            "https://github.com/alijohnzy/WowUpNight/issues/new?body=x"
         ));
         assert!(allowed_url("http://example.com"));
         assert!(allowed_url("mailto:someone@example.com"));

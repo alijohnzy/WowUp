@@ -15,7 +15,7 @@ const ASSETS = [
 function opts(overrides: Partial<ManifestOptions> = {}): ManifestOptions {
   return {
     assets: ASSETS,
-    repo: "alijohnzy/WowUp",
+    repo: "alijohnzy/WowUpNight",
     tag: "tauri-v2.25.4-18",
     version: "2.25.4+18",
     pubDate: "2026-11-07T00:00:00Z",
@@ -43,9 +43,9 @@ describe("buildUpdaterManifest", () => {
     const m = buildUpdaterManifest(opts());
     assert.equal(
       m.platforms["windows-x86_64-nsis"].url,
-      "https://github.com/alijohnzy/WowUp/releases/download/tauri-v2.25.4-18/WowUp-CF-Tauri_2.25.4.18_x64-setup.exe",
+      "https://github.com/alijohnzy/WowUpNight/releases/download/tauri-v2.25.4-18/WowUp-CF-Tauri_2.25.4.18_x64-setup.exe",
     );
-    assert.equal(m.releaseUrl, "https://github.com/alijohnzy/WowUp/releases/tag/tauri-v2.25.4-18");
+    assert.equal(m.releaseUrl, "https://github.com/alijohnzy/WowUpNight/releases/tag/tauri-v2.25.4-18");
     assert.equal(m.version, "2.25.4+18");
     assert.equal(m.pub_date, "2026-11-07T00:00:00Z");
   });

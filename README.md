@@ -1,189 +1,122 @@
 <p align="center">
-  <img src="https://cdn.wowup.io/site/assets/icons/android-chrome-512x512.png" width="200" />
+  <img src="wowup-electron/src-tauri/icons/128x128@2x.png" width="160" alt="WowUpNight logo" />
 </p>
 
-# WowUp Client Repository
+<h1 align="center">WowUpNight</h1>
 
-[![WowUp on Discord](https://img.shields.io/static/v1?label=Discord&message=WowUp&color=7289DA)](https://discord.gg/rk4F5aD)
-[![WowUp on Patreon](https://img.shields.io/static/v1?label=Patreon&message=WowUp&color=f96854)](https://www.patreon.com/jliddev)
+<p align="center">
+  A fork of <a href="https://wowup.io">WowUp</a>, the World of Warcraft addon manager, rebuilt as a
+  small native app for Windows, macOS and Linux.
+</p>
 
-This is the repository for our [WowUp](https://wowup.io) client with [CurseForge](https://curseforge.com) support for Windows, Mac, and Linux.
+<p align="center">
+  <a href="https://github.com/alijohnzy/WowUpNight/releases/latest"><b>Download</b></a>
+  &nbsp;·&nbsp;
+  <a href="#support-wowup-and-the-addon-authors"><b>Support WowUp</b></a>
+</p>
 
-> ### ⚠️ `migrate/svelte5` — experimental branch, not for production
->
-> This branch is **test work for the [`svelte5-migration-analyst`](https://github.com/gageracer/svelte5-migration-analyst) skill**, not a proposal to migrate WowUp. It exists to put the skill's
-> assessment through the one check an assessment cannot give itself: carry the migration out in
-> full, ship it, measure it, and score the predictions against what actually happened.
->
-> **The skill's verdict was "do not migrate", and the results below support it.** The migration
-> went ahead anyway so the verdict could be tested rather than trusted.
->
-> See [`wowup-electron/migration/`](wowup-electron/migration/) for the assessment, the phase
-> results and the full write-up.
+![WowUpNight's My Addons page](.github/assets/wowupnight.png)
 
----
+> **WowUpNight is an unofficial fork.** WowUp is the work of the
+> [WowUp team](https://github.com/WowUp/WowUp), and nearly everything you see here — the addon
+> sources, the scanning and matching, the updating, the design — is theirs. This fork is not made,
+> endorsed or supported by them, so please report WowUpNight problems
+> [here](https://github.com/alijohnzy/WowUpNight/issues), not to WowUp. If you find it useful,
+> [support the original](#support-wowup-and-the-addon-authors).
 
-## What is on this branch
+## What is different
 
-The Angular 17 renderer was ported to Svelte 5 + SvelteKit 2 in full — 49 components, 25,494 →
-19,235 LOC — and lives alongside the original in [`wowup-electron/renderer-svelte/`](wowup-electron/renderer-svelte/).
-Nothing in `src/` (Angular) was removed; the Electron main process picks a renderer at build time,
-so both are buildable from one tree.
+- **Small.** Built on [Tauri](https://tauri.app) and [Svelte](https://svelte.dev) instead of
+  Electron and Angular, it uses the webview your system already has rather than shipping its own
+  browser. Downloads are 11–15 MB, against about 130 MB for the Electron build.
+- **A colour for each WoW version.** Retail, Classic, Anniversary, the PTRs and the rest each get
+  their own colour, taken from their logos: the addon lists are framed in it, and the version list
+  marks each one, so you always know which game you are looking at. Pick your own in Options →
+  Clients.
+- **Filter by provider.** Right-click a column header on My Addons or Get Addons to show only
+  CurseForge, only Wago, or any mix.
+- **Night look**, with light animations that can be turned off in Options → Application.
+- **Updates itself** from this repository's releases on all three systems. If an update goes
+  wrong, right-click the update button in the footer to go back to an earlier build.
+
+Everything else is WowUp: CurseForge, Wago, WowInterface, GitHub and its other addon sources,
+search and categories, several WoW installations at once, automatic updates, WTF backups and the
+[companion addon](https://github.com/WowUp/WowUp.Addon).
+
+## Download
+
+From the [latest release](https://github.com/alijohnzy/WowUpNight/releases/latest):
+
+| System | File |
+|---|---|
+| Windows 10 and 11 | `WowUpNight_…_x64-setup.exe`, or `WowUpNight-…-portable.zip` to run without installing |
+| macOS, Apple Silicon (M1 and newer) | `WowUpNight_…_aarch64.dmg` |
+| Linux | `WowUpNight_…_amd64.AppImage`, or the `.deb` |
+
+None of the builds are signed by a paid certificate, so the first launch needs one extra step:
+
+- **Windows:** SmartScreen says "Windows protected your PC". Click **More info → Run anyway**.
+- **macOS:** drag WowUpNight to Applications and open it. macOS refuses it the first time; go to
+  **System Settings → Privacy & Security** and click **Open Anyway**. Or, once, in Terminal:
+  `xattr -dr com.apple.quarantine /Applications/WowUpNight.app`
+- **Linux:** the app uses the system's WebKitGTK 4.1. If it is missing:
+  `sudo pacman -S webkit2gtk-4.1` (Arch, Manjaro), `sudo apt install libwebkit2gtk-4.1-0`
+  (Debian, Ubuntu) or `sudo dnf install webkit2gtk4.1` (Fedora).
+
+**Already using WowUp?** On its first start WowUpNight copies your WoW installations and addon
+list from an existing WowUp install on the same computer. The two keep separate settings after
+that, and can be installed side by side.
+
+## Support WowUp and the addon authors
+
+WowUpNight exists because WowUp does. If it saves you time, please support the people who made
+it:
+
+- [WowUp on Patreon](https://www.patreon.com/jliddev) — the **Sponsor** button at the top of this
+  page goes there too
+- [WowUp on Discord](https://discord.gg/rk4F5aD) and [wowup.io](https://wowup.io)
+
+The Wago and CurseForge panel in the app is what those services ask for in return for letting
+WowUp use them, and it helps pay the addon authors. The authors of your favourite addons often
+take donations as well — it is usually on their addon's page.
+
+## Building
+
+You need Node.js 24, Rust (stable), and on Linux the WebKitGTK development packages
+([Tauri's prerequisites](https://tauri.app/start/prerequisites/)).
 
 ```bash
-cd wowup-electron
-npm run svelte:start        # dev: Vite + Electron
-npm run svelte:package      # package for the current platform (AppImage / exe / dmg)
-npm start                   # the Angular original, unchanged
+cd wowup-lib && npm install && npm run build
+cd ../wowup-electron && npm install
+cd renderer-svelte && npm install && cd ..
+npm run tauri:dev      # run it
+npm run tauri:build    # installers in src-tauri/target/release/bundle/
 ```
 
-## Results
+Where things are:
 
-Measured on Manjaro x64, packaged AppImages built from this tree on the same Electron 43, same
-198 addons, same seeded profile. Five runs each, alternating, first discarded, medians. The two
-main-process rows are **identical code in both builds** — they are the control that says the runs
-were comparable.
-
-| metric | Angular | Svelte | delta |
-|---|---:|---:|---:|
-| App ready (main process) | 173 ms | 173 ms | **+0.0%** ← control |
-| Loading app URL (main process) | 240 ms | 239 ms | **−0.4%** ← control |
-| Renderer first app code | 762 ms | 655 ms | **−14.0%** |
-| Renderer locale loaded | 795 ms | 673 ms | −15.3% |
-| Addon providers constructed | 762 ms | 678 ms | −11.0% |
-| Memory (PSS, process tree) | 636 MB | 589 MB | −7.4% |
-| AppImage size | 131 MB | 130 MB | −0.8% |
-| Renderer JS shipped | 4.4 MB / 3 files | 2.5 MB / 47 files | **−43%** |
-
-**A 43% smaller renderer bundle buys ~14% of renderer startup — about 107 ms, once, on an app
-that stays open for hours.** The AppImage barely moves because Electron is ~120 MB of it. This is
-the number that matters and it is much smaller than the bundle figure implies: parsing less
-JavaScript is one term in a sum that also includes Electron init, window creation and IPC, none of
-which a framework migration touches.
-
-### Dependencies removed
-
-`@angular/*` (11 packages), `@angular/material` + `cdk`, `rxjs` (75 files → 0), `zone.js`,
-`@ngx-translate/*`, `ng-gallery`, `@angular/forms`. `ag-grid` stayed — it is a genuine widget, not
-a framework workaround.
-
-Most Angular Material usage was replaced by the platform rather than by another library:
-`<mat-dialog>` → `<dialog showModal()>`, `<mat-menu>` → a positioned div, `<mat-slide-toggle>` → a
-styled checkbox. **697 KB → 72 KB of `bits-ui`.**
-
-### How the assessment scored
-
-Nine predictions: 3 right, 4 partly right, 2 badly wrong. It under-predicted the bundle saving by
-5× (it priced Angular Material as a library swap), and the axis it explicitly flagged as
-*unmeasured* — bootstrap execution, as opposed to parse — turned out to be where the real win was.
-
-**The verdict survived being wrong about the numbers**, because it never rested on them: this
-renderer loads from local disk, so bundle size is disk and parse, not transfer. The same migration
-on a web deployment would have flipped it, and the assessment said so.
-
-### What this cost that the plan did not model
-
-- **47.8 KB of stylesheets** nobody counted — the app's entire appearance lived in four SCSS files
-  and the HTML shell, none of which a component-by-component plan mentions.
-- **20 defects** found by a systematic audit *after* the port passed every test, via four
-  mechanical lenses (i18n keys, IPC channels, template event bindings, dead emitters).
-- **Three whole subsystems missing** — native menu bar, system tray, background auto-update — that
-  no lens caught, because a dropped call has no key, no channel and no handler.
-- **Defects cluster in failure paths.** The port's snackbar rendered every queued message instead
-  of one; correct for the one-off successes it was built against, catastrophic on a provider
-  outage.
-
-## Reading order
-
-| file | |
+| | |
 |---|---|
-| [`migration/svelte5-assessment.md`](wowup-electron/migration/svelte5-assessment.md) | the original assessment and its "do not migrate" verdict |
-| [`migration/phase1-results.md`](wowup-electron/migration/phase1-results.md) | pilot slice, predictions vs first measurements |
-| [`migration/full-migration-results.md`](wowup-electron/migration/full-migration-results.md) | the full write-up: bundles, benchmarks, every defect and why it was missed |
+| [`wowup-electron/src-tauri/`](wowup-electron/src-tauri/) | the app itself, in Rust: files, addon installs, the WoW client detection, updates |
+| [`wowup-electron/renderer-svelte/`](wowup-electron/renderer-svelte/) | the interface, in Svelte 5 |
+| [`wowup-lib/`](wowup-lib/) | WowUp's shared addon library |
+| [`.github/workflows/tauri-build.yml`](.github/workflows/tauri-build.yml) | builds and publishes the releases |
 
-## Status
+The Electron and Angular code from WowUp is still in the tree, unused by WowUpNight, so that
+WowUp's own changes keep merging in cleanly.
 
-Functional and packaged, with 90 unit and 76 end-to-end tests. **Not production quality** — it was
-built to be measured, not shipped, and the write-up above is candid about what four rounds of
-visual defects and a post-hoc audit had to fix. Treat it as evidence about the migration, not as a
-replacement for the Angular client.
+## Keeping up with WowUp
 
----
+The `master` branch is a copy of [WowUp/WowUp](https://github.com/WowUp/WowUp). Their changes are
+merged into `main`, and the parts this fork rewrote are ported by hand.
 
-## Upstream README
-
-## WowUp
-
-![image](https://user-images.githubusercontent.com/20467484/150164985-673d02da-e7ec-42aa-b77d-655c8e3117ff.png)
-
-WowUp is the community centered World of Warcraft addon updater. We attempt to bring the addon community together in an easy to use updater application. We have an ever growing list of supported features.
-
-- Support for all major addon sources
-- Discover or find new addons across addon sources
-- Handle all your different World of Warcraft clients
-- Auto updates
-- [Companion addon](https://github.com/WowUp/WowUp.Addon)
-
-## Installing
-
-### Latest Releases
-
-The latest WowUp release is always available on our website [wowup.io](https://wowup.io)
-
-### Beta Releases
-
-If you feel like helping us test the latest and greatest changes beta builds are available on [GitHub](https://github.com/WowUp/WowUp/releases)
-
-### Community Support Alternatives
-
-#### [WinGet](https://learn.microsoft.com/en-us/windows/package-manager/winget/)
-
-Ships with Windows 10 and 11.  You can install WowUp With Wago using:
-
-```cmd
-winget install wowup.wowup
-```
-
-Or Wowup with CurseForge with:
-
-```cmd
-winget install wowup.cf
-```
-
-#### [Chocolatey](https://chocolatey.org)
-
-You can also install the latest version via Chocolatey package manager:
-
-```cmd
-choco install wowup
-```
-
-## Contributing
-
-We welcome any and all contributions from translations to feature pull requests.
-
-Please read our [contribution guide](https://github.com/WowUp/WowUp/blob/master/CONTRIBUTING.md) to get started.
-
-## Feedback
-
-If you have a question, comment, or request we have several ways you can communicate them.
-
-- Create a [bug or feature request](https://github.com/WowUp/WowUp/issues)
-- Contact us on [Discord](https://discord.gg/rk4F5aD)
-
-## Related Projects
-
-We have a couple companion projects that are related to WowUp
-
-- [Companion Addon](https://github.com/WowUp/WowUp.Addon)
-- [App Updater](https://github.com/WowUp/WowUpUpdater) (Deprecated)
-
-## Code of Conduct
-
-Please read and understand our [Code of Coduct](https://github.com/WowUp/WowUp/blob/master/CODE_OF_CONDUCT.md) when submitting a bug or feature request here or on Discord.
+WowUpNight began as an experiment in measuring a framework migration on a real app; the
+measurements and write-ups are in [`wowup-electron/migration/`](wowup-electron/migration/).
 
 ## License
 
-Copyright (c) WowUp LLC. All rights reserved.
+[GNU General Public License v3.0](LICENSE), the same as WowUp. The original work is copyright
+WowUp LLC; this fork's changes are released under the same license.
 
-Licensed under the [GNU General Public License v3.0](https://github.com/WowUp/WowUp/blob/master/LICENSE) license.
+WowUpNight is not affiliated with or endorsed by WowUp LLC, Blizzard Entertainment, CurseForge or
+Wago. World of Warcraft is a trademark of Blizzard Entertainment.
