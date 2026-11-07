@@ -64,6 +64,7 @@
 	import { wowUpAddon } from '$lib/services/wowup-addon';
 	import { dialogs } from '$lib/state/dialogs.svelte';
 	import { session } from '$lib/state/session.svelte';
+	import { clientColor } from '$lib/utils/client-color';
 	import { snackbar } from '$lib/state/snackbar.svelte';
 	import { wowup } from '$lib/state/wowup.svelte';
 	import { warcraftInstallations } from '$lib/state/warcraft-installation.svelte';
@@ -994,7 +995,11 @@
 		<div class="no-addons-container text-1"><h1>{t('COMMON.SEARCH.NO_ADDONS')}</h1></div>
 	{/if}
 
-	<div class="grid-area" class:hidden={hideGrid}>
+	<div
+		class="grid-area client-frame"
+		class:hidden={hideGrid}
+		style:--client-color={clientColor(session.selectedWowInstallationLive)}
+	>
 		<AgGrid options={gridOptions} {rowData} onGridReady={(api) => (gridApi = api)} />
 	</div>
 </div>

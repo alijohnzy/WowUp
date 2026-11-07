@@ -35,4 +35,6 @@ export interface WowInstallation {
   ignoredCompatibilityVersion?: string;
   /** Tauri app: the tray's Update All also updates this client when another one is selected */
   updateFromTray?: boolean;
+  /** Svelte renderer: "#rrggbb" marking this client's addon tables; absent = its client type's default */
+  color?: string;
 }

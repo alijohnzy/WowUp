@@ -49,6 +49,7 @@
 	import { addonProviders } from '$lib/state/addon-providers.svelte';
 	import { dialogs } from '$lib/state/dialogs.svelte';
 	import { session } from '$lib/state/session.svelte';
+	import { clientColor } from '$lib/utils/client-color';
 	import { snackbar } from '$lib/state/snackbar.svelte';
 	import { wowup } from '$lib/state/wowup.svelte';
 
@@ -510,7 +511,10 @@
 		</div>
 	</div>
 
-	<div class="grid-area bg-secondary-2">
+	<div
+		class="grid-area client-frame bg-secondary-2"
+		style:--client-color={clientColor(session.selectedWowInstallationLive)}
+	>
 		{#if !showTable}
 			<div class="spinner-container"><ProgressSpinner /></div>
 		{:else}

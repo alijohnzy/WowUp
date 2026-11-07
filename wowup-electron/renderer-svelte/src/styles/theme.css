@@ -285,6 +285,15 @@
  *
  * Measured before the fix: --ag-background-color resolved to "#fff" and .ag-row to
  * rgb(255,255,255) on a dark theme. */
+/* The selected client's color around its addon table, so the table says which client it
+ * belongs to (lib/utils/client-color.ts). Without a color the border is still there, invisible,
+ * so the table does not shift when one is set. */
+.client-frame {
+	border: 2px solid var(--client-color, transparent);
+	border-radius: 6px;
+	overflow: hidden;
+}
+
 .ag-theme-material.ag-theme-material {
 	/* Aligns the first column's content with the toolbar above it. */
 	--ag-cell-horizontal-padding: var(--list-gutter);

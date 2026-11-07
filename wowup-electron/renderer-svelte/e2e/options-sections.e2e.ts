@@ -196,6 +196,39 @@ test('the tray setting is not offered outside the Tauri app', async ({ page }) =
 	await expect(page.getByText('Update from Tray')).toHaveCount(0);
 });
 
+// The client's color frames its addon tables. The default is stored as no color at all, so a
+// client keeps following its type's default rather than a copy of it.
+test('a color picked for a client frames its addon table', async ({ page }) => {
+	await stubPreload(page);
+	await openOptionsTab(page, 'Clients');
+	const card = page.locator('.installation-card');
+	const storedColor = async () =>
+		((await store(page))['wow_installations'] as { color?: string }[])[0].color;
+
+	// Like every card setting, only editable in edit mode.
+	const gold = card.getByRole('button', { name: 'World of Warcraft Classic' });
+	await expect(gold).toBeDisabled();
+
+	await card.getByRole('button', { name: 'Edit' }).click();
+	await gold.click();
+	await expect(gold).toHaveAttribute('aria-pressed', 'true');
+	await card.getByRole('button', { name: 'Save' }).click();
+	await expect.poll(storedColor).toBe('#e3b02a');
+
+	await page.getByRole('link', { name: 'My Addons' }).click();
+	await expect(page.locator('.client-frame')).toHaveCSS('border-top-color', 'rgb(227, 176, 42)');
+	await expect(page.locator('.select-trigger .client-dot')).toHaveCSS(
+		'background-color',
+		'rgb(227, 176, 42)'
+	);
+
+	await page.getByRole('link', { name: 'Options' }).click();
+	await card.getByRole('button', { name: 'Edit' }).click();
+	await card.getByRole('button', { name: 'Default' }).click();
+	await card.getByRole('button', { name: 'Save' }).click();
+	await expect.poll(storedColor).toBeUndefined();
+});
+
 test('a client card enters edit mode and reveals save / cancel', async ({ page }) => {
 	await stubPreload(page);
 	await openOptionsTab(page, 'Clients');

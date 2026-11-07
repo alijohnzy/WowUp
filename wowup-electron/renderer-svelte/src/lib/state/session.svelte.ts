@@ -193,6 +193,19 @@ class Session {
 	}
 
 	getSelectedWowInstallation = (): WowInstallation | undefined => this.selectedWowInstallation;
+
+	/**
+	 * The selected client as it is stored now. `selectedWowInstallation` stays the object the
+	 * client was selected as — My Addons reloads whenever that changes, so editing the client in
+	 * Options does not replace it — and its name and color are out of date until another client
+	 * is picked. What shows them reads this instead.
+	 */
+	get selectedWowInstallationLive(): WowInstallation | undefined {
+		const id = this.selectedWowInstallation?.id;
+		return (
+			warcraftInstallations.installations.find((i) => i.id === id) ?? this.selectedWowInstallation
+		);
+	}
 }
 
 export const session = new Session();

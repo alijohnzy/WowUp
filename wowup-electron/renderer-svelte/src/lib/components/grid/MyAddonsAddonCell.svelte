@@ -20,6 +20,7 @@
 	import { t, i18n } from '$lib/i18n.svelte';
 	import * as addonUtils from '$lib/utils/addon';
 	import Icon from '$lib/components/common/Icon.svelte';
+	import ClientDots from '$lib/components/common/ClientDots.svelte';
 	import type { IconName } from '$lib/icons';
 	import AddonThumbnail from '$lib/components/addons/AddonThumbnail.svelte';
 	import FundingButton from '$lib/components/addons/FundingButton.svelte';
@@ -71,14 +72,10 @@
 
 	// The user's other WoW installations that also have this addon — the ones "Copy settings
 	// from" offers on right-click.
-	let alsoInstalledIn = $derived(
-		item?.addon
-			? addonFlavors
-					.installedIn(item.addon, item.addon.installationId)
-					.map((i) => i.displayName)
-					.join(', ')
-			: ''
+	let alsoInstalledClients = $derived(
+		item?.addon ? addonFlavors.installedIn(item.addon, item.addon.installationId) : []
 	);
+	let alsoInstalledIn = $derived(alsoInstalledClients.map((i) => i.displayName).join(', '));
 
 	let showUpdateVersion = $derived(session.myAddonsCompactVersion && item?.needsUpdate());
 
@@ -149,6 +146,7 @@
 					title={i18n.t('PAGES.MY_ADDONS.ALSO_INSTALLED_TOOLTIP', { clients: alsoInstalledIn })}
 				>
 					<Icon name="fas:layer-group" />
+					<ClientDots installations={alsoInstalledClients} />
 				</span>
 			{/if}
 
@@ -290,6 +288,9 @@
 	}
 
 	.also-installed {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
 		color: var(--control-color);
 	}
 

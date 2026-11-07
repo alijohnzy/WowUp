@@ -30,6 +30,7 @@ import {
 	faMagnifyingGlass,
 	faMinimize,
 	faNewspaper,
+	faPalette,
 	faPlay,
 	faRotate,
 	faTrash,
@@ -80,6 +81,8 @@ export const ICONS = {
 	'fas:newspaper': faNewspaper,
 	// My Addons: the addon is also installed in another WoW installation.
 	'fas:layer-group': faLayerGroup,
+	// Options → Clients: a client color other than the presets.
+	'fas:palette': faPalette,
 
 	'far:circle-check': farCircleCheck,
 	'far:circle-question': faCircleQuestion,

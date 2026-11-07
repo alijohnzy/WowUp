@@ -13,6 +13,7 @@
 	import { getDependencyType, getLatestFile } from '$lib/utils/search-result';
 	import Icon from '$lib/components/common/Icon.svelte';
 	import AddonThumbnail from '$lib/components/addons/AddonThumbnail.svelte';
+	import ClientDots from '$lib/components/common/ClientDots.svelte';
 	import { addonFlavors } from '$lib/state/addon-flavors.svelte';
 	import { session } from '$lib/state/session.svelte';
 
@@ -53,14 +54,12 @@
 
 	// The user's other flavors that already have this addon. The one on screen is left out: the
 	// status column already says whether it is installed there.
-	let installedIn = $derived(
+	let installedInClients = $derived(
 		addon?.searchResult
-			? addonFlavors
-					.installedIn(addon.searchResult, session.selectedWowInstallation?.id)
-					.map((i) => i.displayName)
-					.join(', ')
-			: ''
+			? addonFlavors.installedIn(addon.searchResult, session.selectedWowInstallation?.id)
+			: []
 	);
+	let installedIn = $derived(installedInClients.map((i) => i.displayName).join(', '));
 </script>
 
 <div class="addon-column">
@@ -100,7 +99,10 @@
 
 		{#if installedIn}
 			<div class="installed-in text-3" title={installedIn}>
-				{i18n.t('PAGES.GET_ADDONS.INSTALLED_IN', { clients: installedIn })}
+				<ClientDots installations={installedInClients} />
+				<span class="installed-in-text">
+					{i18n.t('PAGES.GET_ADDONS.INSTALLED_IN', { clients: installedIn })}
+				</span>
 			</div>
 		{/if}
 	</div>
@@ -145,9 +147,16 @@
 	}
 
 	.installed-in {
-		overflow: hidden;
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
 		font-size: 0.72rem;
 		line-height: 1.2;
+	}
+
+	.installed-in-text {
+		min-width: 0;
+		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}

@@ -24,6 +24,7 @@
 	import { session } from '$lib/state/session.svelte';
 	import { warcraftInstallations } from '$lib/state/warcraft-installation.svelte';
 	import { warcraft } from '$lib/state/warcraft.svelte';
+	import { clientColor, colorSwatches, defaultClientColor } from '$lib/utils/client-color';
 
 	interface Props {
 		installationId: string;
@@ -47,11 +48,23 @@
 	/** Working copy — discarded on cancel, written through on save. */
 	let model = $state<WowInstallation | undefined>(undefined);
 
-	let clientTypeName = $derived(
-		installation
-			? `COMMON.CLIENT_TYPES.${getEnumName(WowClientType, installation.clientType).toUpperCase()}`
-			: ''
-	);
+	const clientTypeKey = (type: WowClientType) =>
+		`COMMON.CLIENT_TYPES.${getEnumName(WowClientType, type).toUpperCase()}`;
+
+	let clientTypeName = $derived(installation ? clientTypeKey(installation.clientType) : '');
+
+	// The color that frames this client's addon tables (utils/client-color.ts). Shown from the
+	// working copy, so the card previews a pick before it is saved.
+	let color = $derived(model ? clientColor(model) : undefined);
+	let swatches = $derived(colorSwatches(installation?.clientType));
+	let customColor = $derived(!!color && !swatches.some((s) => s.color === color));
+
+	function setColor(value: string) {
+		if (!model) return;
+		const picked = value.toLowerCase();
+		// The default is stored as no color, so the client keeps following its type's default.
+		model.color = picked === defaultClientColor(model.clientType) ? undefined : picked;
+	}
 
 	function wowLogoImage(clientType: WowClientType | undefined): string {
 		switch (clientType) {
@@ -161,7 +174,7 @@
 </script>
 
 {#if model}
-	<section class="installation-card">
+	<section class="installation-card" style:--client-color={color}>
 		<div class="wow-install-logo-container">
 			{#if wowLogoImage(installation?.clientType)}
 				<img src={wowLogoImage(installation?.clientType)} alt="" />
@@ -191,6 +204,45 @@
 					})}
 				</small>
 			</label>
+
+			<div class="row color-row">
+				<div class="grow">
+					<p>{t('PAGES.OPTIONS.WOW.COLOR_LABEL')}</p>
+					<small class="text-2">{t('PAGES.OPTIONS.WOW.COLOR_DESCRIPTION')}</small>
+				</div>
+				<div class="swatches" class:editing={editMode}>
+					{#each swatches as swatch, i (swatch.clientType)}
+						{@const label =
+							i === 0 ? t('PAGES.OPTIONS.WOW.COLOR_DEFAULT') : t(clientTypeKey(swatch.clientType))}
+						<button
+							type="button"
+							class="swatch"
+							class:own-default={i === 0}
+							style:background-color={swatch.color}
+							aria-pressed={color === swatch.color}
+							aria-label={label}
+							title={label}
+							disabled={!editMode}
+							onclick={() => setColor(swatch.color)}
+						></button>
+					{/each}
+					<label
+						class="swatch custom"
+						class:chosen={customColor}
+						style:background-color={customColor ? color : undefined}
+						title={t('PAGES.OPTIONS.WOW.COLOR_CUSTOM')}
+					>
+						<input
+							type="color"
+							value={color ?? '#ffffff'}
+							disabled={!editMode}
+							aria-label={t('PAGES.OPTIONS.WOW.COLOR_CUSTOM')}
+							oninput={(e) => setColor(e.currentTarget.value)}
+						/>
+						{#if !customColor}<Icon name="fas:palette" />{/if}
+					</label>
+				</div>
+			</div>
 
 			<div class="row">
 				<p class="grow">{t('PAGES.OPTIONS.WOW.DEFAULT_ADDON_CHANNEL_LABEL')}</p>
@@ -277,6 +329,8 @@
 	.installation-card {
 		position: relative;
 		border-radius: 6px;
+		/* The client's color down the leading edge, as on its addon tables. */
+		border-left: 4px solid var(--client-color, transparent);
 		padding: 1rem;
 		margin-bottom: 1rem;
 		background: var(--background-secondary-4);
@@ -358,6 +412,70 @@
 
 	.grow {
 		flex: 1;
+	}
+
+	.color-row {
+		flex-wrap: wrap;
+	}
+
+	.swatches {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.swatch {
+		position: relative;
+		display: grid;
+		place-items: center;
+		width: 22px;
+		height: 22px;
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		color: var(--text-1);
+		cursor: pointer;
+	}
+
+	/* This client's own default, set apart from the other clients' colors. */
+	.swatch.own-default {
+		margin-right: 6px;
+	}
+
+	.swatch[aria-pressed='true'],
+	.swatch.chosen {
+		outline: 2px solid var(--text-1);
+		outline-offset: 2px;
+	}
+
+	/* Out of edit mode the choice is shown, the rest stay back. */
+	.swatches:not(.editing) .swatch {
+		cursor: default;
+	}
+
+	.swatches:not(.editing) .swatch:not([aria-pressed='true'], .chosen) {
+		opacity: 0.35;
+	}
+
+	.swatch.custom {
+		background: var(--overlay-subtle);
+		border: 1px dashed var(--overlay-border);
+		font-size: 0.7rem;
+	}
+
+	.swatch.custom.chosen {
+		border-style: solid;
+	}
+
+	/* The native picker covers the swatch, so a click anywhere on it opens the dialog. */
+	.swatch.custom input {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		opacity: 0;
+		cursor: inherit;
 	}
 
 	.card-actions {

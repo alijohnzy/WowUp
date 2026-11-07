@@ -11,6 +11,7 @@
 	// `resource` is that pattern: sources in, async fetcher, stale results discarded.
 
 	import { Select } from 'bits-ui';
+	import ClientDots from './ClientDots.svelte';
 	import Icon from './Icon.svelte';
 	import { resource } from 'runed';
 	import { t } from '$lib/i18n.svelte';
@@ -49,8 +50,9 @@
 
 	let totalAvailableUpdateCt = $derived(Object.values(updateCounts).reduce((sum, n) => sum + n, 0));
 
-	let selectedId = $derived(session.selectedWowInstallation?.id ?? '');
-	let selectedLabel = $derived(session.selectedWowInstallation?.displayName ?? '');
+	let selected = $derived(session.selectedWowInstallationLive);
+	let selectedId = $derived(selected?.id ?? '');
+	let selectedLabel = $derived(selected?.displayName ?? '');
 
 	async function onValueChange(value: string) {
 		await session.setSelectedWowInstallation(value);
@@ -69,6 +71,9 @@
 
 	<Select.Root type="single" value={selectedId} {onValueChange} disabled={!session.enableControls}>
 		<Select.Trigger class="select-trigger">
+			{#if selected}
+				<ClientDots installations={[selected]} />
+			{/if}
 			<span class="trigger-label">{selectedLabel}</span>
 			<Icon name="fas:caret-down" />
 		</Select.Trigger>
@@ -81,6 +86,7 @@
 							label={installation.displayName}
 							class="select-item"
 						>
+							<ClientDots installations={[installation]} />
 							<span class="item-label">{installation.displayName}</span>
 							{#if updates && (updateCounts[installation.id] ?? 0) > 0}
 								<span class="update-badge">{updateCounts[installation.id]}</span>
