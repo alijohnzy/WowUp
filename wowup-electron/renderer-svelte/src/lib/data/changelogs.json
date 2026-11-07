@@ -1,6 +1,6 @@
 [
 	{
-		"Version": "2.25.4 #next",
+		"Version": "2.25.4 #37",
 		"Night": true,
 		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>A Mac version, for Apple Silicon (M1 and newer). Apple has not notarized it, so the first time it opens, allow it in System Settings &gt; Privacy &amp; Security &gt; Open Anyway</li>\n    </ul>\n    "
 	},
