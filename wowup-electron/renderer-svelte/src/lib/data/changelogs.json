@@ -1,6 +1,6 @@
 [
 	{
-		"Version": "2.25.4 #next",
+		"Version": "2.25.4 #40",
 		"Night": true,
 		"html": "\n    <h4>Changes</h4>\n    <ul>\n    <li>Crashes, and how the app closed, are now written to its log, so a bug report can show what happened</li>\n    </ul>\n    "
 	},
