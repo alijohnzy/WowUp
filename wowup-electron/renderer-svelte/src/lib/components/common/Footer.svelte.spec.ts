@@ -116,7 +116,8 @@ describe('Footer earlier versions', () => {
 		const items = [...document.querySelectorAll('.context-menu .menu-item')].map((b) =>
 			b.textContent?.trim()
 		);
-		expect(items).toEqual(['APP.SYSTEM_TRAY.CHECK_UPDATE', 'v2.25.4+26', 'v2.25.4+25']);
+		// Only earlier versions: checking for updates is the button's left click.
+		expect(items).toEqual(['v2.25.4+26', 'v2.25.4+25']);
 	});
 
 	it('installs the one picked, and closes the menu', async () => {

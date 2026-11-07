@@ -152,16 +152,6 @@
 
 {#if versionsMenu}
 	<ContextMenu x={versionsMenu.x} y={versionsMenu.y} onclose={() => (versionsMenu = undefined)}>
-		<button
-			class="menu-item"
-			onclick={() => {
-				versionsMenu = undefined;
-				onCheckForUpdate();
-			}}
-		>
-			{t('APP.SYSTEM_TRAY.CHECK_UPDATE')}
-		</button>
-		<div class="menu-divider"></div>
 		<div class="menu-header">{t(`${EARLIER_VERSION_KEY}.LABEL`)}</div>
 		{#if earlier?.localBuild}
 			<p class="menu-note text-2">{t(`${EARLIER_VERSION_KEY}.LOCAL_BUILD`)}</p>
