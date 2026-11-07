@@ -7,6 +7,9 @@
 //
 // Two kinds of entry, newest first: WowUpNight's own builds ("2.25.4 #28", Night: true), and
 // upstream WowUp releases as WowUp wrote them (src/app/services/wowup/patch-notes.service.ts).
+//
+// Notes for the build not yet released go under "2.25.4 #next": CI's version stamp replaces
+// #next with the run number (.github/workflows/tauri-build.yml), which is not known before.
 
 import inlineChangeLogs from './changelogs.json';
 import changeLogJson from '../../../../src/assets/changelog.json';

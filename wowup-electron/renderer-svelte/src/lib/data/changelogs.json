@@ -1,6 +1,6 @@
 [
 	{
-		"Version": "2.25.4 #28",
+		"Version": "2.25.4 #next",
 		"Night": true,
 		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>Right-click the update button in the footer to go back to an earlier version</li>\n    <li>The tray menu shows \"Update WowUpNight\" while an update is waiting</li>\n    </ul>\n    <h4>Changes</h4>\n    <ul>\n    <li>Turkish: the Get Addons tab is now \"Eklenti Ara\"</li>\n    </ul>\n    "
 	},

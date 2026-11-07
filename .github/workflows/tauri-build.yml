@@ -243,6 +243,16 @@ jobs:
             c.version = `${c.version.split("+")[0]}+${process.env.GITHUB_RUN_NUMBER}`;
             fs.writeFileSync(f, JSON.stringify(c, null, 2) + "\n");
             console.log(`Building version ${c.version}`);
+
+            // The changelog files the upcoming build's notes under "#next": its number is
+            // only known here, and a cancelled run uses one up.
+            const log = "renderer-svelte/src/lib/data/changelogs.json";
+            const text = fs.readFileSync(log, "utf8");
+            const stamped = text.replace(/ #next"/g, ` #${process.env.GITHUB_RUN_NUMBER}"`);
+            if (stamped !== text) {
+              fs.writeFileSync(log, stamped);
+              console.log(`Changelog entry stamped #${process.env.GITHUB_RUN_NUMBER}`);
+            }
           '
 
       # tauri:build runs the renderer build itself, through beforeBuildCommand, in the tauri
