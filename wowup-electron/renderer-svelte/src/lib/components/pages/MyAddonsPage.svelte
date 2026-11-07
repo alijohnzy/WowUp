@@ -67,6 +67,8 @@
 	import { snackbar } from '$lib/state/snackbar.svelte';
 	import { wowup } from '$lib/state/wowup.svelte';
 	import { warcraftInstallations } from '$lib/state/warcraft-installation.svelte';
+	import { addonFlavors } from '$lib/state/addon-flavors.svelte';
+	import { copyAddonSettings } from '$lib/services/copy-addon-settings';
 
 	// ---- state ----------------------------------------------------------------------
 
@@ -396,6 +398,8 @@
 				: [clicked];
 
 		rowMenu = { x: mouse?.clientX ?? 0, y: mouse?.clientY ?? 0, items };
+		// For "Copy settings from": which other flavors have this addon right now.
+		void addonFlavors.refresh();
 	}
 
 	const closeMenus = () => {
@@ -677,6 +681,14 @@
 		} catch (e) {
 			console.error(e);
 		}
+	}
+
+	async function onCopySettingsFrom(item: AddonViewModel, source: WowInstallation) {
+		closeMenus();
+		const addon = item.addon;
+		const target = warcraftInstallations.getWowInstallation(addon?.installationId);
+		if (!addon || !target) return;
+		await copyAddonSettings(addon, source, target);
 	}
 
 	async function onSelectedProviderChange(item: AddonViewModel, providerName: string) {
@@ -1055,6 +1067,9 @@
 {#if rowMenu}
 	{@const items = rowMenu.items}
 	{@const single = items.length === 1 ? items[0] : undefined}
+	{@const settingsSources = single?.addon
+		? addonFlavors.installedIn(single.addon, single.addon.installationId)
+		: []}
 
 	<ContextMenu x={rowMenu.x} y={rowMenu.y} onclose={closeMenus}>
 		{#if single}
@@ -1141,6 +1156,17 @@
 			{#each single.addon?.installedFolderList ?? [] as folder (folder)}
 				<button class="menu-item indent" onclick={() => void onShowFolder(single.addon!, folder)}>
 					{folder}
+				</button>
+			{/each}
+		{/if}
+
+		{#if single && settingsSources.length > 0}
+			<div class="submenu-label">
+				{t('PAGES.MY_ADDONS.ADDON_CONTEXT_MENU.COPY_SETTINGS_FROM')}
+			</div>
+			{#each settingsSources as source (source.id)}
+				<button class="menu-item indent" onclick={() => void onCopySettingsFrom(single, source)}>
+					{source.displayName}
 				</button>
 			{/each}
 		{/if}

@@ -71,3 +71,15 @@ export function getRelativeDateFormat(
 
 	return ['COMMON.DATES.JUST_NOW', undefined];
 }
+
+const HTML_ESCAPES: Record<string, string> = {
+	'&': '&amp;',
+	'<': '&lt;',
+	'>': '&gt;',
+	'"': '&quot;',
+	"'": '&#39;'
+};
+
+/** For text placed into HTML, such as the messages of dialogs.confirm and dialogs.alert. */
+export const escapeHtml = (value: string): string =>
+	value.replace(/[&<>"']/g, (c) => HTML_ESCAPES[c]);

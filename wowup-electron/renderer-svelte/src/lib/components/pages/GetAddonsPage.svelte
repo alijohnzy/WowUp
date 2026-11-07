@@ -43,7 +43,9 @@
 	import ProgressSpinner from '$lib/components/common/ProgressSpinner.svelte';
 	import InstallFromUrlDialog from '$lib/components/addons/InstallFromUrlDialog.svelte';
 
-	import { addonService } from '$lib/state/addon.svelte';
+	import { addonService, onAddonInstalled } from '$lib/state/addon.svelte';
+	import { addonFlavors } from '$lib/state/addon-flavors.svelte';
+	import { AddonInstallState } from '$lib/models/addon-install-state';
 	import { addonProviders } from '$lib/state/addon-providers.svelte';
 	import { dialogs } from '$lib/state/dialogs.svelte';
 	import { session } from '$lib/state/session.svelte';
@@ -397,6 +399,20 @@
 	});
 
 	$effect(() => addonService.addonRemoved.subscribe(() => onRefresh()));
+
+	// "Installed in: …" under each result names the user's other flavors that have it. Re-read
+	// whenever an install finishes or an addon is removed, on this page or another.
+	$effect(() => {
+		void addonFlavors.refresh();
+		const offInstalled = onAddonInstalled((evt) => {
+			if (evt.installState === AddonInstallState.Complete) void addonFlavors.refresh();
+		});
+		const offRemoved = addonService.addonRemoved.subscribe(() => void addonFlavors.refresh());
+		return () => {
+			offInstalled();
+			offRemoved();
+		};
+	});
 
 	$effect(() =>
 		addonService.searchError.subscribe((error) => {
