@@ -739,11 +739,15 @@ class AddonService {
 
 	async syncClient(installation: WowInstallation): Promise<void> {
 		console.debug('syncClient', installation.displayName);
-		await this.#syncBatchProviders([installation]);
 		try {
+			await this.#syncBatchProviders([installation]);
 			await this.#syncStandardProviders([installation]);
 		} catch (e) {
 			console.error(e);
+		} finally {
+			// As syncAllClients does. The tray's update count and the app badge are redone on
+			// this, so without it a check found updates the tray never showed.
+			this.addonAction.emit({ type: 'sync' });
 		}
 	}
 

@@ -115,6 +115,9 @@ async function stubPreload(
 			// How many times the grid has re-read the database — the cost a needless refresh pays.
 			let listFetches = 0;
 			(window as never as Record<string, unknown>)['__listFetches'] = () => listFetches;
+			// Which installations' addons were read, in order.
+			const installationReads: string[] = [];
+			(window as never as Record<string, unknown>)['__installationReads'] = () => installationReads;
 
 			(window as never as Record<string, unknown>)['wowup'] = {
 				rendererInvoke: (channel: string, ...args: unknown[]) => {
@@ -131,6 +134,9 @@ async function stubPreload(
 						case 'addons-get-all':
 						case 'addons-get-all-for-installation':
 							listFetches += 1;
+							if (channel === 'addons-get-all-for-installation') {
+								installationReads.push(args[0] as string);
+							}
 							return Promise.resolve(rows);
 						case 'addons-get-available-for-update':
 							return Promise.resolve(
@@ -444,6 +450,34 @@ test('the app checks for its own update on a timer', async ({ page }) => {
 
 // Switching clients reloads the list. A quick reload just swaps the rows: the busy overlay — a
 // modal, which also hides the ad panel — comes up only for work that takes a while.
+// Check Updates covers every WoW version, not just the selected one — the version list's update
+// badges can only be right for versions that were checked. The unselected version's addons
+// being read is the visible trace of that (every source is disabled in this stub, so the
+// check itself makes no requests).
+test('Check Updates checks every WoW version', async ({ page }) => {
+	const classic = {
+		...INSTALLATION,
+		id: 'inst-2',
+		label: 'Classic',
+		displayName: 'Classic',
+		selected: false,
+		location: '/games/wow/_classic_/WowClassic.exe'
+	};
+	await stubPreload(page, ADDONS, { wow_installations: [INSTALLATION, classic] });
+	await openMyAddons(page);
+
+	const reads = () =>
+		page.evaluate(() =>
+			(window as never as { __installationReads: () => string[] }).__installationReads()
+		);
+	const before = (await reads()).length;
+
+	await page.getByRole('button', { name: 'Check Updates' }).click();
+
+	await expect.poll(async () => (await reads()).slice(before)).toContain('inst-2');
+	await expect(page.getByRole('button', { name: 'Check Updates' })).toBeEnabled();
+});
+
 test('switching clients does not flash the busy overlay', async ({ page }) => {
 	const classic = {
 		...INSTALLATION,

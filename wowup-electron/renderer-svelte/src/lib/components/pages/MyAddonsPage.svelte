@@ -562,14 +562,16 @@
 		await updateAllWithSpinner(...installations);
 	}
 
+	// Checks every WoW version, not only the selected one: the badges in the version list say
+	// which have updates, and they can only say so for versions that were checked. The batch
+	// providers ask once for all versions together, so this costs little more than one.
 	const onRefresh = async () => {
-		const installation = session.getSelectedWowInstallation();
-		if (!installation) return;
+		if (!session.getSelectedWowInstallation()) return;
 
 		isLoading = true;
 		session.setEnableControls(false);
 		try {
-			await addonService.syncClient(installation);
+			await addonService.syncAllClients();
 			// Rewrite wowup_data_addon/data.lua, which is what the in-game "Addon Update
 			// Notifications" addon reads on /reload. Without this the file is only current
 			// after a boot, an install, or the hourly auto-update tick — so checking for
@@ -578,7 +580,7 @@
 			// Not allowed to fail the refresh: a companion problem must not cost the user
 			// their addon list. The Angular original wrapped the whole handler in one catch.
 			await wowUpAddon
-				.updateForInstallation(installation)
+				.updateForAllClientTypes()
 				.catch((e: unknown) => console.error('companion addon sync failed', e));
 			await loadAddons();
 		} finally {
