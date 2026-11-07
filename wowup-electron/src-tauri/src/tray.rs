@@ -272,6 +272,7 @@ fn rebuild_with_app_update(app: &AppHandle, version: Option<String>) -> Result<(
     if inputs.app_update == version {
         return Ok(());
     }
+    log::info!("tray: app update {version:?}");
     inputs.app_update = version;
     if let (Some(tray), Some(config)) = (tray.as_ref(), config) {
         tray.set_menu(Some(build_menu(app, &config, &inputs)?))

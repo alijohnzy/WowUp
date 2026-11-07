@@ -134,8 +134,13 @@ mod tests {
 
     /// The override path is what makes this testable at all — the real search reads the
     /// user's home directory.
+    /// Both override tests set WOWUP_IMPORT_FROM, a process-wide variable, and tests run in
+    /// parallel: unserialised, one would sometimes see the other's directory.
+    static ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
     #[test]
     fn override_is_ignored_when_it_holds_no_preferences_file() {
+        let _env = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let dir = std::env::temp_dir().join("wowup-import-empty");
         std::fs::create_dir_all(&dir).unwrap();
         let _ = std::fs::remove_file(dir.join("preferences.json"));
@@ -152,6 +157,7 @@ mod tests {
 
     #[test]
     fn override_is_used_when_it_holds_a_preferences_file() {
+        let _env = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let dir = std::env::temp_dir().join("wowup-import-real");
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(dir.join("preferences.json"), r#"{"a":"b"}"#).unwrap();
