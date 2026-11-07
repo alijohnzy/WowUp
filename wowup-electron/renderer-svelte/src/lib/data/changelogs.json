@@ -2,6 +2,11 @@
 	{
 		"Version": "2.25.4 #next",
 		"Night": true,
+		"html": "\n    <h4>Fixes</h4>\n    <ul>\n    <li>Check Updates on My Addons checks every WoW version, not only the selected one, so the update counts in the version list are right for all of them</li>\n    <li>Updates found by Check Updates show on the system tray straight away, instead of at the next hourly check</li>\n    </ul>\n    "
+	},
+	{
+		"Version": "2.25.4 #41",
+		"Night": true,
 		"html": "\n    <h4>Changes</h4>\n    <ul>\n    <li>Mac: with Minimize on Close or Start Minimized, WowUpNight now lives in the menu bar alone while its window is closed, without a Dock icon. Click the menu bar icon, or open WowUpNight again, to bring the window back</li>\n    </ul>\n    "
 	},
 	{
