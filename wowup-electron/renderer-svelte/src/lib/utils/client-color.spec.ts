@@ -4,11 +4,13 @@
 import { describe, expect, it } from 'vitest';
 import { getEnumList, WowClientType } from 'wowup-lib-core';
 import {
+	accentStyle,
 	clientColor,
 	colorSwatches,
 	DEFAULT_CLIENT_COLORS,
 	defaultClientColor,
-	isClientColor
+	isClientColor,
+	textOnColor
 } from './client-color';
 
 const clientTypes = (getEnumList(WowClientType) as WowClientType[]).filter(
@@ -54,5 +56,27 @@ describe('clientColor', () => {
 
 	it('has none without an installation', () => {
 		expect(clientColor(undefined)).toBeUndefined();
+	});
+});
+
+describe('buttons in the client color', () => {
+	it('labels them in whichever of white and near-black reads better', () => {
+		expect(textOnColor('#e3b02a')).not.toBe('#ffffff'); // Classic's gold
+		expect(textOnColor('#7cc63a')).not.toBe('#ffffff'); // fel green
+		expect(textOnColor('#3e3fd3')).toBe('#ffffff'); // Night's own button blue
+		expect(textOnColor('#000000')).toBe('#ffffff');
+		expect(textOnColor('#ffffff')).not.toBe('#ffffff');
+	});
+
+	it("redefines the theme's accents in the color", () => {
+		const style = accentStyle('#e3b02a')!;
+		expect(style).toContain('--background-primary: #e3b02a');
+		expect(style).toContain('--control-color: #e3b02a');
+		expect(style).toContain(`--text-on-primary: ${textOnColor('#e3b02a')}`);
+	});
+
+	it('leaves the theme alone without a color', () => {
+		expect(accentStyle(undefined)).toBeUndefined();
+		expect(accentStyle('red; color: x')).toBeUndefined();
 	});
 });

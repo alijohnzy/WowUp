@@ -49,7 +49,8 @@
 	import { addonProviders } from '$lib/state/addon-providers.svelte';
 	import { dialogs } from '$lib/state/dialogs.svelte';
 	import { session } from '$lib/state/session.svelte';
-	import { clientColor } from '$lib/utils/client-color';
+	import { accentStyle, clientColor } from '$lib/utils/client-color';
+	import { theme } from '$lib/state/theme.svelte';
 	import { snackbar } from '$lib/state/snackbar.svelte';
 	import { wowup } from '$lib/state/wowup.svelte';
 
@@ -104,6 +105,13 @@
 	let selectedCategory = $state<CategoryItem>(categories[0]);
 
 	let selectedInstallation = $derived(session.selectedWowInstallation);
+
+	// The selected client's color frames the table, and with the Options → Application setting
+	// on, repaints the page's buttons and highlights too (utils/client-color.ts).
+	let clientFrameColor = $derived(clientColor(session.selectedWowInstallationLive));
+	let clientAccents = $derived(
+		theme.clientColorButtons ? accentStyle(clientFrameColor) : undefined
+	);
 	let defaultAddonChannel = $derived(selectedInstallation?.defaultAddonChannelType);
 
 	function buildCategories(): CategoryItem[] {
@@ -440,7 +448,7 @@
 	});
 </script>
 
-<div class="tab-container">
+<div class="tab-container" style={clientAccents}>
 	<div class="control-container bg-secondary-2">
 		<div class="select-container"><ClientSelector /></div>
 
@@ -511,10 +519,7 @@
 		</div>
 	</div>
 
-	<div
-		class="grid-area client-frame bg-secondary-2"
-		style:--client-color={clientColor(session.selectedWowInstallationLive)}
-	>
+	<div class="grid-area client-frame bg-secondary-2" style:--client-color={clientFrameColor}>
 		{#if !showTable}
 			<div class="spinner-container"><ProgressSpinner /></div>
 		{:else}

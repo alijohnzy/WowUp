@@ -609,6 +609,8 @@
         "APP_RELEASE_CHANNEL_DESCRIPTION": "Passa dalle release Beta a quelle Stabili dell'applicazione e viceversa",
         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "Canale",
         "APP_RELEASE_CHANNEL_LABEL": "Canale di Rilascio dell'Applicazione",
+        "CLIENT_COLOR_BUTTONS_DESCRIPTION": "In I Miei Addons e Ottieni Addons, pulsanti ed evidenziazioni usano il colore del client selezionato (Opzioni > Clients) invece di quello del tema.",
+        "CLIENT_COLOR_BUTTONS_LABEL": "Pulsanti nel colore del client",
         "CURRENT_LANGUAGE_LABEL": "Lingua Corrente",
         "CURSE_PROTOCOL_DESCRIPTION": "Quando si scaricano addons dal sito Web CurseForge, WowUp ne gestirà l'installazione",
         "CURSE_PROTOCOL_LABEL": "Gestisci i link dei downloads da CurseForge",

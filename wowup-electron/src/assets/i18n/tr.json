@@ -609,6 +609,8 @@
         "APP_RELEASE_CHANNEL_DESCRIPTION": "Uygulamanın Beta ve Stabil sürümleri arasında geçiş yapın",
         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "Kanal",
         "APP_RELEASE_CHANNEL_LABEL": "Uygulama Yayın Kanalı",
+        "CLIENT_COLOR_BUTTONS_DESCRIPTION": "Eklentilerim ve Eklenti Ara sayfalarında düğmeler ve vurgular temanın rengi yerine seçili oyunun rengini (Seçenekler > Oyun Versiyonları) alır.",
+        "CLIENT_COLOR_BUTTONS_LABEL": "Düğmeler oyunun renginde",
         "CURRENT_LANGUAGE_LABEL": "Mevcut Dil",
         "CURSE_PROTOCOL_DESCRIPTION": "CurseForge web sitesinden eklenti indirirken WowUp kurulumu halledecektir",
         "CURSE_PROTOCOL_LABEL": "CurseForge indirme bağlantılarını işle",

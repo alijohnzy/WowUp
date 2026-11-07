@@ -609,6 +609,8 @@
         "APP_RELEASE_CHANNEL_DESCRIPTION": "Přepínání mezi beta a stabilními verzemi aplikace",
         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "Kanál",
         "APP_RELEASE_CHANNEL_LABEL": "Kanál vydání aplikace",
+        "CLIENT_COLOR_BUTTONS_DESCRIPTION": "Na stránkách Moje addony a Stáhnout nové addony mají tlačítka a zvýraznění barvu vybraného clienta (Nastavení > WoW klienti) místo barvy motivu.",
+        "CLIENT_COLOR_BUTTONS_LABEL": "Tlačítka v barvě clienta",
         "CURRENT_LANGUAGE_LABEL": "Jazyk",
         "CURSE_PROTOCOL_DESCRIPTION": "Při stahování addonů z webu CurseForge se o instalaci postará WowUp",
         "CURSE_PROTOCOL_LABEL": "Zpracovávat odkazy ke stažení z CurseForge",

@@ -229,6 +229,32 @@ test('a color picked for a client frames its addon table', async ({ page }) => {
 	await expect.poll(storedColor).toBeUndefined();
 });
 
+// Off by default: the theme colors the buttons. On, the selected client's color does, with
+// whichever label color reads on it — dark on the stub client's jade.
+test('buttons can take the client color instead of the theme', async ({ page }) => {
+	await stubPreload(page);
+	await page.route(/^https?:\/\/(?!localhost|127\.0\.0\.1)/, (route) => route.abort());
+	await openOptionsTab(page, 'Application');
+	const jade = 'rgb(34, 184, 154)';
+	const button = page.getByRole('button', { name: 'Install from URL' });
+
+	await page.getByRole('link', { name: 'Get Addons' }).click();
+	await expect(button).toBeVisible();
+	await expect(button).not.toHaveCSS('background-color', jade);
+
+	await page.getByRole('link', { name: 'Options' }).click();
+	await optionsRail(page).getByRole('tab', { name: 'Application' }).click();
+	await page
+		.locator('.setting', { hasText: "Buttons in the client's color" })
+		.getByRole('switch')
+		.click();
+	await expect.poll(async () => (await store(page))['client_color_buttons']).toBe(true);
+
+	await page.getByRole('link', { name: 'Get Addons' }).click();
+	await expect(button).toHaveCSS('background-color', jade);
+	await expect(button).toHaveCSS('color', 'rgb(20, 20, 28)');
+});
+
 test('a client card enters edit mode and reveals save / cancel', async ({ page }) => {
 	await stubPreload(page);
 	await openOptionsTab(page, 'Clients');
@@ -260,7 +286,7 @@ test('toggling a simple Application setting persists it', async ({ page }) => {
 	const before = await store(page);
 	expect(before['collapse_to_tray']).toBeUndefined();
 
-	await page.locator('.container .switch-root').first().click();
+	await page.locator('.setting', { hasText: 'Minimize on Close' }).locator('.switch-root').click();
 
 	await expect.poll(async () => (await store(page))['collapse_to_tray']).toBe(true);
 });

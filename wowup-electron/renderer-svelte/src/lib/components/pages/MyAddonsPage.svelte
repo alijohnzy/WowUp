@@ -64,7 +64,8 @@
 	import { wowUpAddon } from '$lib/services/wowup-addon';
 	import { dialogs } from '$lib/state/dialogs.svelte';
 	import { session } from '$lib/state/session.svelte';
-	import { clientColor } from '$lib/utils/client-color';
+	import { accentStyle, clientColor } from '$lib/utils/client-color';
+	import { theme } from '$lib/state/theme.svelte';
 	import { snackbar } from '$lib/state/snackbar.svelte';
 	import { wowup } from '$lib/state/wowup.svelte';
 	import { warcraftInstallations } from '$lib/state/warcraft-installation.svelte';
@@ -200,6 +201,13 @@
 	);
 
 	let hasSelectedInstallation = $derived(session.selectedWowInstallation !== undefined);
+
+	// The selected client's color frames the table, and with the Options → Application setting
+	// on, repaints the page's buttons and highlights too (utils/client-color.ts).
+	let clientFrameColor = $derived(clientColor(session.selectedWowInstallationLive));
+	let clientAccents = $derived(
+		theme.clientColorButtons ? accentStyle(clientFrameColor) : undefined
+	);
 
 	// ---- grid --------------------------------------------------------------------------
 
@@ -915,7 +923,7 @@
 	});
 </script>
 
-<div class="tab-container">
+<div class="tab-container" style={clientAccents}>
 	<div class="control-container bg-secondary-2">
 		<div class="select-container"><ClientSelector updates /></div>
 
@@ -998,7 +1006,7 @@
 	<div
 		class="grid-area client-frame"
 		class:hidden={hideGrid}
-		style:--client-color={clientColor(session.selectedWowInstallationLive)}
+		style:--client-color={clientFrameColor}
 	>
 		<AgGrid options={gridOptions} {rowData} onGridReady={(api) => (gridApi = api)} />
 	</div>

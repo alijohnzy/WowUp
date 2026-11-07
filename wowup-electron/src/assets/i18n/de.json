@@ -609,6 +609,8 @@
         "APP_RELEASE_CHANNEL_DESCRIPTION": "Wechseln zwischen der Beta- und Stabilen-Versionen der Anwendung",
         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "Kanal",
         "APP_RELEASE_CHANNEL_LABEL": "App-Release-Kanal",
+        "CLIENT_COLOR_BUTTONS_DESCRIPTION": "Unter „Meine Addons“ und „Addons installieren“ übernehmen Schaltflächen und Hervorhebungen die Farbe des ausgewählten Clients (Einstellungen > Clients) statt der des Designs.",
+        "CLIENT_COLOR_BUTTONS_LABEL": "Schaltflächen in der Client-Farbe",
         "CURRENT_LANGUAGE_LABEL": "Aktuelle Sprache",
         "CURSE_PROTOCOL_DESCRIPTION": "Beim Herunterladen von Addons von der CurseForge-Website übernimmt WowUp die Installation",
         "CURSE_PROTOCOL_LABEL": "CurseForge-Download-Links verarbeiten",

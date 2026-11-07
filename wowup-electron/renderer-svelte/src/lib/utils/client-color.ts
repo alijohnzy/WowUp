@@ -7,6 +7,10 @@
 // grayscale watermarks, so these come from the official logos rather than those files. Test
 // clients share their game's logo but get a hue of their own: a PTR framed like the live
 // client would defeat the point. The user can pick any color per client in Options → Clients.
+//
+// Optionally (Options → Application) the pages' buttons and highlights take the color too —
+// off by default, because a red or orange client would make every button look like a warning,
+// and it sets the chosen theme's own button color aside.
 
 import { WowClientType, type WowInstallation } from 'wowup-lib-core';
 
@@ -54,6 +58,45 @@ export function isClientColor(value: unknown): value is string {
 
 export function defaultClientColor(clientType: WowClientType | undefined): string | undefined {
 	return clientType === undefined ? undefined : DEFAULT_CLIENT_COLORS[clientType];
+}
+
+const DARK_TEXT = '#14141c';
+const LIGHT_TEXT = '#ffffff';
+
+function luminance(hex: string): number {
+	const [r, g, b] = [1, 3, 5].map((i) => {
+		const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+		return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+	});
+	return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+const contrast = (a: number, b: number) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+
+/**
+ * White or near-black, whichever reads better on `color` by WCAG contrast. A custom color can
+ * be anything, and even the defaults split: white on Classic's gold is unreadable.
+ */
+export function textOnColor(color: string): string {
+	const l = luminance(color);
+	return contrast(l, luminance(LIGHT_TEXT)) >= contrast(l, luminance(DARK_TEXT))
+		? LIGHT_TEXT
+		: DARK_TEXT;
+}
+
+/**
+ * The theme's accent properties, redefined so everything under the element that carries them
+ * draws in `color`: buttons (with a hover shade and readable text), badges, highlights.
+ */
+export function accentStyle(color: string | undefined): string | undefined {
+	if (!isClientColor(color)) return undefined;
+	return [
+		`--background-primary: ${color}`,
+		`--background-primary-2: color-mix(in srgb, ${color} 80%, black)`,
+		`--background-primary-3: color-mix(in srgb, ${color} 60%, black)`,
+		`--control-color: ${color}`,
+		`--text-on-primary: ${textOnColor(color)}`
+	].join('; ');
 }
 
 /** The installation's chosen color, else its client type's default. */

@@ -24,7 +24,8 @@
 
 	&.wu-btn-primary {
 		background-color: var(--background-primary);
-		color: var(--text-1);
+		/* Set where the buttons take a client's color, which may need dark text. */
+		color: var(--text-on-primary, var(--text-1));
 
 		&:hover {
 			background-color: var(--background-primary-2);
@@ -32,6 +33,7 @@
 
 		&[disabled] {
 			background-color: grey;
+			color: var(--text-1);
 			cursor: not-allowed;
 		}
 

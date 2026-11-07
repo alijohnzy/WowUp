@@ -609,6 +609,8 @@
         "APP_RELEASE_CHANNEL_DESCRIPTION": "Veksle mellom beta- og stabilutgivelsene av applikasjonen",
         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "Kanal",
         "APP_RELEASE_CHANNEL_LABEL": "Apputgivelseskanal",
+        "CLIENT_COLOR_BUTTONS_DESCRIPTION": "På Mine utvidelser og Finn utvidelser får knapper og markeringer fargen til den valgte klienten (Alternativer > Klienter) i stedet for temaets.",
+        "CLIENT_COLOR_BUTTONS_LABEL": "Knapper i klientens farge",
         "CURRENT_LANGUAGE_LABEL": "Nåværende språk",
         "CURSE_PROTOCOL_DESCRIPTION": "Når du laster ned utvidelser fra CurseForge-nettstedet, vil WowUp håndtere installasjonen",
         "CURSE_PROTOCOL_LABEL": "Håndter CurseForge-nedlastingslenker",

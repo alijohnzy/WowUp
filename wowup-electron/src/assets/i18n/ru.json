@@ -609,6 +609,8 @@
         "APP_RELEASE_CHANNEL_DESCRIPTION": "Переключение между бета-версией и стабильной версией приложения",
         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "Канал",
         "APP_RELEASE_CHANNEL_LABEL": "Канал выпуска приложения",
+        "CLIENT_COLOR_BUTTONS_DESCRIPTION": "На страницах «Мои модификации» и «Получить модификации» кнопки и выделения окрашиваются в цвет выбранного клиента (Настройки > Клиенты), а не темы.",
+        "CLIENT_COLOR_BUTTONS_LABEL": "Кнопки в цвете клиента",
         "CURRENT_LANGUAGE_LABEL": "Текущий язык",
         "CURSE_PROTOCOL_DESCRIPTION": "При загрузке модификаций с сайта CurseForge, WowUp будет брать установку на себя.",
         "CURSE_PROTOCOL_LABEL": "Обрабатывать ссылки на установку с CurseForge",

@@ -609,6 +609,8 @@
         "APP_RELEASE_CHANNEL_DESCRIPTION": "切换此应用程序的稳定版和 Beta 通道",
         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "更新通道",
         "APP_RELEASE_CHANNEL_LABEL": "应用程序更新通道",
+        "CLIENT_COLOR_BUTTONS_DESCRIPTION": "在“我的插件”和“获取插件”页面中，按钮和高亮使用所选客户端的颜色（选项 > 客户端），而不是主题颜色。",
+        "CLIENT_COLOR_BUTTONS_LABEL": "按钮使用客户端颜色",
         "CURRENT_LANGUAGE_LABEL": "当前语言",
         "CURSE_PROTOCOL_DESCRIPTION": "从 CurseForge 网站下载插件时，WowUp 将会接管安装过程",
         "CURSE_PROTOCOL_LABEL": "接管 CurseForge 下载链接",

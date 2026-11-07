@@ -118,7 +118,7 @@
 
 	.update-badge {
 		background: var(--control-color);
-		color: #fff;
+		color: var(--text-on-primary, #fff);
 		border-radius: 999px;
 		padding: 0 0.45rem;
 		font-size: 0.7rem;

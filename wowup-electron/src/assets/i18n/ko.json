@@ -609,6 +609,8 @@
         "APP_RELEASE_CHANNEL_DESCRIPTION": "애플리케이션의 베타 릴리즈와 안정 릴리즈 간에 전환합니다",
         "APP_RELEASE_CHANNEL_DROPDOWN_LABEL": "채널",
         "APP_RELEASE_CHANNEL_LABEL": "애플리케이션 릴리즈 채널",
+        "CLIENT_COLOR_BUTTONS_DESCRIPTION": "내 애드온과 애드온 찾기에서 버튼과 강조 표시가 테마 색상 대신 선택한 클라이언트의 색상(설정 > 클라이언트)을 사용합니다.",
+        "CLIENT_COLOR_BUTTONS_LABEL": "클라이언트 색상 버튼",
         "CURRENT_LANGUAGE_LABEL": "현재 언어",
         "CURSE_PROTOCOL_DESCRIPTION": "CurseForge 웹사이트에서 애드온을 다운로드할 때 WowUp이 설치를 처리합니다",
         "CURSE_PROTOCOL_LABEL": "CurseForge 다운로드 링크 처리",

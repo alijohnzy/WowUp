@@ -350,6 +350,18 @@
 
 	<div class="setting">
 		<div class="grow">
+			<div>{t('PAGES.OPTIONS.APPLICATION.CLIENT_COLOR_BUTTONS_LABEL')}</div>
+			<small class="text-2">{t('PAGES.OPTIONS.APPLICATION.CLIENT_COLOR_BUTTONS_DESCRIPTION')}</small
+			>
+		</div>
+		<Toggle
+			checked={theme.clientColorButtons}
+			onCheckedChange={(on) => void theme.setClientColorButtons(on).catch(console.error)}
+		/>
+	</div>
+
+	<div class="setting">
+		<div class="grow">
 			<div>{t('PAGES.OPTIONS.APPLICATION.SET_LANGUAGE_LABEL')}</div>
 			<small class="text-2">{t('PAGES.OPTIONS.APPLICATION.SET_LANGUAGE_DESCRIPTION')}</small>
 		</div>
