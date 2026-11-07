@@ -11,8 +11,8 @@
 
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
-import { SELECTED_DETAILS_TAB_KEY } from '$common/constants';
-import { invoke } from '$lib/ipc';
+import { IPC_GET_BUILD_COMMIT, SELECTED_DETAILS_TAB_KEY } from '$common/constants';
+import { invoke, isTauri } from '$lib/ipc';
 import { href, ROUTES, tabIndexForRoute } from '$lib/routes';
 import type { ColumnState } from '$lib/models/column-state';
 import { preferenceStorage } from '$lib/services/storage';
@@ -50,6 +50,8 @@ class Session {
 	myAddonsCompactVersion = $state(false);
 	editingWowInstallationId = $state('');
 	appVersion = $state<string | undefined>(undefined);
+	/** The commit a Tauri build was made from; shown for local builds. */
+	buildCommit = $state('');
 
 	// The Angular default was `false`; My Addons flipped it true once its first load
 	// finished, and both addon pages toggle it off around long operations. Until those pages
@@ -110,6 +112,9 @@ class Session {
 	}
 
 	async loadAppVersion(): Promise<void> {
+		// Before the version: the footer shows them together, and the version arriving first
+		// would flash a local build without its commit.
+		if (isTauri()) this.buildCommit = await invoke<string>(IPC_GET_BUILD_COMMIT).catch(() => '');
 		this.appVersion = await invoke<string>(IPC_GET_APP_VERSION);
 	}
 

@@ -115,6 +115,9 @@
     },
     "UPDATES_ON_HOLD_NOTIFICATION_BODY": "Algunas actualizaciones de addons requieren una versión de World of Warcraft más reciente que la instalada. Abre WowUp para revisarlas.",
     "UPDATES_ON_HOLD_NOTIFICATION_TITLE": "Actualizaciones en espera",
+    "VERSION": {
+      "LOCAL_BUILD_TOOLTIP": "Compilado localmente desde el commit {commit}"
+    },
     "WINDOW_TITLE": "WowUp.io",
     "WINDOW_TITLE_CF": "WowUp.io CF",
     "WINDOW_TITLE_FULLSCREEN": "WowUp.io - Pantalla completa",

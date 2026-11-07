@@ -7,7 +7,8 @@
 
 	import { AppUpdateState } from '$common/wowup/models';
 	import { AppConfig } from '$config/environment';
-	import { t } from '$lib/i18n.svelte';
+	import { i18n, t } from '$lib/i18n.svelte';
+	import { versionLabel } from '$lib/utils/app-version';
 	import { isTauri } from '$lib/ipc';
 	import { openExternalLink } from '$lib/services/links';
 	import Icon from './Icon.svelte';
@@ -64,6 +65,8 @@
 		// UpdateAvailable shows its button; errors already get a snackbar from the layout.
 	});
 
+	let version = $derived(versionLabel(session.appVersion ?? '', session.buildCommit));
+
 	$effect(() => {
 		if (session.appVersion === undefined) {
 			session.loadAppVersion().catch((e: unknown) => console.error('app version failed', e));
@@ -75,7 +78,14 @@
 	<p class="text-1 status">{session.statusText}</p>
 	<div class="spacer"></div>
 	<p class="context">{session.pageContextText}</p>
-	<p>v{session.appVersion ?? ''} {AppConfig.curseforge.enabled ? 'CF' : ''}</p>
+	<p
+		title={version.localCommit
+			? i18n.t('APP.VERSION.LOCAL_BUILD_TOOLTIP', { commit: version.localCommit })
+			: undefined}
+	>
+		v{version.text}
+		{AppConfig.curseforge.enabled ? 'CF' : ''}
+	</p>
 
 	<div class="update-slot">
 		{#if updateState === AppUpdateState.CheckingForUpdate}

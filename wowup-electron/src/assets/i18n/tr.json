@@ -115,6 +115,9 @@
     },
     "UPDATES_ON_HOLD_NOTIFICATION_BODY": "Bazı eklenti güncellemeleri, yüklü olandan daha yeni bir World of Warcraft sürümü gerektiriyor. İncelemek için WowUp'ı açın.",
     "UPDATES_ON_HOLD_NOTIFICATION_TITLE": "Güncellemeler beklemede",
+    "VERSION": {
+      "LOCAL_BUILD_TOOLTIP": "{commit} commit'inden yerel olarak derlendi"
+    },
     "WINDOW_TITLE": "WowUp.io",
     "WINDOW_TITLE_CF": "WowUp.io CF",
     "WINDOW_TITLE_FULLSCREEN": "WowUp.io - Tam Ekran",

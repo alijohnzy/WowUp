@@ -115,6 +115,9 @@
     },
     "UPDATES_ON_HOLD_NOTIFICATION_BODY": "Některé aktualizace addonů vyžadují novější verzi World of Warcraft, než je nainstalovaná. Otevřete WowUp a zkontrolujte je.",
     "UPDATES_ON_HOLD_NOTIFICATION_TITLE": "Aktualizace pozastaveny",
+    "VERSION": {
+      "LOCAL_BUILD_TOOLTIP": "Sestaveno lokálně z commitu {commit}"
+    },
     "WINDOW_TITLE": "WowUp.io",
     "WINDOW_TITLE_CF": "WowUp.io CF",
     "WINDOW_TITLE_FULLSCREEN": "WowUp.io - Celá obrazovka",

@@ -16,6 +16,7 @@
 	import { externalLink } from '$lib/attachments/external-link';
 	import AppName from '$lib/components/common/AppName.svelte';
 	import { changeLogs } from '$lib/data/changelogs';
+	import { versionLabel } from '$lib/utils/app-version';
 
 	$effect(() => {
 		if (session.appVersion === undefined) {
@@ -29,7 +30,9 @@
 		<div class="header text-1">
 			<img class="logo" loading="lazy" src="./assets/wowup_logo_purple.png" alt="" />
 			<h2><AppName /></h2>
-			<div class="version text-2">v{session.appVersion ?? ''}</div>
+			<div class="version text-2">
+				v{versionLabel(session.appVersion ?? '', session.buildCommit).text}
+			</div>
 			<div class="link-container">
 				<a class="wu-btn wu-btn-flat" href="https://wowup.io" {@attach externalLink()}>
 					{t('PAGES.ABOUT.WEBSITE_LINK_LABEL')}

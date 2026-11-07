@@ -129,6 +129,13 @@ fn get_app_version(app: tauri::AppHandle) -> String {
     app.package_info().version.to_string()
 }
 
+/// The git commit this binary was built from (see build.rs). The footer shows it for local
+/// builds, which have no CI build number to tell them apart. Empty if git was unavailable.
+#[tauri::command]
+fn get_build_commit() -> &'static str {
+    env!("WOWUP_BUILD_COMMIT")
+}
+
 use tauri::Manager;
 
 const WEBKIT_DMABUF_VAR: &str = "WEBKIT_DISABLE_DMABUF_RENDERER";
@@ -217,6 +224,7 @@ pub fn run() {
         .manage(updater::PendingUpdate::default())
         .invoke_handler(tauri::generate_handler![
             get_app_version,
+            get_build_commit,
             get_app_paths,
             files::path_exists,
             files::read_file,
