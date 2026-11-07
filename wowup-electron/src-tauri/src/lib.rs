@@ -157,6 +157,8 @@ fn should_disable_dmabuf(
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    log_panics();
+
     // Before GTK and WebKit initialise, and before any other thread exists to race set_var.
     #[cfg(target_os = "linux")]
     if should_disable_dmabuf(
@@ -358,6 +360,16 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|_app, _event| {
+            // How the app ends, which the log otherwise never said: a report of "it quit" could
+            // not be told apart from a crash, or from the user quitting.
+            match &_event {
+                tauri::RunEvent::ExitRequested { code, .. } => {
+                    log::info!("exit requested (code {code:?})")
+                }
+                tauri::RunEvent::Exit => log::info!("exiting"),
+                _ => {}
+            }
+
             // macOS: clicking the Dock icon, or opening the app again from Applications or
             // Spotlight, reaches the running copy as Reopen rather than as a second launch, so
             // the single-instance handler above never sees it. With the window closed to the
@@ -379,6 +391,26 @@ pub fn run() {
                 }
             }
         });
+}
+
+/// Panics go to the log file, with where they happened.
+///
+/// Rust prints a panic to stderr, which nobody sees when the app is started from a launcher.
+/// On macOS that hid the cause of the app quitting outright: tao catches a panic in its event
+/// handling, stops the app and exits with 101 — no crash report, nothing in the log. (The log
+/// plugin is not running yet when this is installed; panics before it starts still reach
+/// stderr through the default hook.)
+fn log_panics() {
+    let default_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        let thread = std::thread::current();
+        log::error!(
+            "panic on thread {}: {info}\n{}",
+            thread.name().unwrap_or("<unnamed>"),
+            std::backtrace::Backtrace::force_capture()
+        );
+        default_hook(info);
+    }));
 }
 
 #[cfg(test)]

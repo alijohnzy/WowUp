@@ -255,6 +255,9 @@ pub fn forward_window_events(window: &WebviewWindow) {
                     emit(IPC_WINDOW_MINIMIZED);
                 }
             }
+            // The window going away for good, which ends the app when it is the only one.
+            // Logged because close-to-tray depends on it never happening.
+            tauri::WindowEvent::Destroyed => log::info!("main window destroyed"),
             _ => {}
         }
     });
