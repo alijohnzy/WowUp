@@ -1,6 +1,6 @@
 [
 	{
-		"Version": "2.25.4 #next",
+		"Version": "2.25.4 #43",
 		"Night": true,
 		"html": "\n    <h4>Fixes</h4>\n    <ul>\n    <li>Windows: WowUpNight no longer freezes as soon as it opens, with the tabs greyed out and an empty page. It had done so since build 19, when the Wago ad moved into a view of its own. A copy that is stuck cannot update itself, so download this build from the releases page</li>\n    </ul>\n    "
 	},
