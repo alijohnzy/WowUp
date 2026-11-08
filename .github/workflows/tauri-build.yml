@@ -484,7 +484,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      # For scripts/tauri-updater-manifest.mts, which is TypeScript run directly.
+      # For scripts/tauri-updater-manifest.mts and release-notes.mts, TypeScript run directly.
       - name: Use Node.js
         uses: actions/setup-node@v5
         with:
@@ -525,7 +525,13 @@ jobs:
           # tag that already exists and never silently replaces a published release.
           [ -n "$tag" ] || tag="tauri-v${version}-${GITHUB_RUN_NUMBER}"
 
-          notes=$(printf '%s\n' \
+          # What the build changed, from its in-app changelog entry (still "#next" in this
+          # checkout), above the downloads. Left out when the build has no entry.
+          whatsnew=$(node wowup-electron/scripts/release-notes.mts --build "${GITHUB_RUN_NUMBER}" --next)
+
+          download=$(printf '%s\n' \
+            "## Download" \
+            "" \
             "WowUpNight build from \`${GITHUB_REF_NAME}\` @ \`${GITHUB_SHA::8}\`." \
             "" \
             "| platform | file |" \
@@ -549,6 +555,8 @@ jobs:
             "The Linux AppImage and .deb use the WebKitGTK 4.1 already on the system rather than bundling a browser engine. If it is missing: \`sudo pacman -S webkit2gtk-4.1\` (Arch, Manjaro), \`sudo apt install libwebkit2gtk-4.1-0\` (Debian, Ubuntu), \`sudo dnf install webkit2gtk4.1\` (Fedora)." \
             "" \
             "Built by [run ${GITHUB_RUN_NUMBER}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}).")
+          notes="$download"
+          [ -z "$whatsnew" ] || notes="${whatsnew}"$'\n\n'"${download}"
 
           flags=(--title "WowUpNight ${version} (build ${GITHUB_RUN_NUMBER})" --notes "$notes" --target "${GITHUB_SHA}")
           # A full release is marked Latest explicitly: GitHub's own choice goes by tag order,

@@ -33,15 +33,26 @@
   their own colour, taken from their logos: the addon lists are framed in it, and the version list
   marks each one, so you always know which game you are looking at. Pick your own in Options →
   Clients.
-- **Filter by provider.** Right-click a column header on My Addons or Get Addons to show only
-  CurseForge, only Wago, or any mix.
+- **Set up one WoW version from another.** Get Addons marks the addons you already have in
+  your other WoW versions, and right-click the Addon column header → **Missing from this client**
+  lists only the ones the selected version lacks. On My Addons, right-click an addon → **Copy
+  settings from** to bring its settings over from another version; your interface settings are
+  backed up first.
+- **Filter by provider.** Right-click the Provider column header on My Addons or Get Addons to
+  show only CurseForge, only Wago, or any mix.
 - **Night look**, with light animations that can be turned off in Options → Application.
 - **Updates itself** from this repository's releases on all three systems. If an update goes
   wrong, right-click the update button in the footer to go back to an earlier build.
+- **Stays out of the way.** With Minimize on Close it waits in the system tray, and on a Mac in
+  the menu bar alone, without a Dock icon.
 
 Everything else is WowUp: CurseForge, Wago, WowInterface, GitHub and its other addon sources,
 search and categories, several WoW installations at once, automatic updates, WTF backups and the
 [companion addon](https://github.com/WowUp/WowUp.Addon).
+
+What each build changed is at the top of its
+[release page](https://github.com/alijohnzy/WowUpNight/releases), and in the app under
+Options → About.
 
 ## Download
 
