@@ -101,14 +101,21 @@ class WowUpAddonService {
 		await this.syncCompanionAddon(addons, installation);
 	}
 
+	/**
+	 * Lists wowup_data_addon in My Addons, or refreshes its row, from the folder on disk.
+	 *
+	 * The Angular original only refreshed a row that a full rescan had already made, and saved
+	 * that row back unchanged. So when the notifications addon was installed into a version that
+	 * had already been scanned, the data addon written for it stayed out of the list until a
+	 * rescan, and a listed one kept the version it had when it was first scanned.
+	 */
 	private async syncCompanionAddon(addons: Addon[], installation: WowInstallation): Promise<void> {
-		const companionAddon = this.getCompanionAddon(addons);
-		if (!companionAddon) {
+		const addonFolderPath = warcraft.getAddonFolderPath(installation);
+		if (!(await fileService.pathExists(path.join(addonFolderPath, WOWUP_DATA_ADDON_FOLDER_NAME)))) {
 			console.debug(`No wow companion found: ${installation.displayName}`);
 			return;
 		}
 
-		const addonFolderPath = warcraft.getAddonFolderPath(installation);
 		const addonFolder = await warcraft.getAddonFolder(
 			addonFolderPath,
 			WOWUP_DATA_ADDON_FOLDER_NAME
@@ -120,11 +127,12 @@ class WowUpAddonService {
 
 		const provider = new WowUpCompanionAddonProvider();
 		await provider.scan(installation, AddonChannelType.Stable, [addonFolder]);
+		// Unset when the folder has that name but WowUp did not write it.
+		const scanned = addonFolder.matchingAddon;
+		if (!scanned) return;
 
-		if (companionAddon) {
-			const updatedCompanion: Addon = { ...companionAddon };
-			await addonService.saveAddon(updatedCompanion);
-		}
+		const listed = this.getCompanionAddon(addons);
+		await addonService.saveAddon({ ...scanned, id: listed?.id ?? scanned.id, externalIds: [] });
 	}
 
 	private async persistUpdateInformationToWowUpAddon(
