@@ -79,4 +79,20 @@ export class AddonFlavorIndex {
 	findIn(addon: AddonIdentity, installationId: string): Addon | undefined {
 		return this.matches(addon).find((a) => a.installationId === installationId);
 	}
+
+	/**
+	 * Whether another of `installations` has `addon` and `installationId` does not — the rows
+	 * Get Addons' "installed elsewhere, not here" filter keeps.
+	 */
+	missingFrom(
+		addon: AddonIdentity,
+		installations: WowInstallation[],
+		installationId: string
+	): boolean {
+		const ids = new Set(this.matches(addon).map((a) => a.installationId));
+		return (
+			!ids.has(installationId) &&
+			installations.some((i) => i.id !== installationId && ids.has(i.id))
+		);
+	}
 }

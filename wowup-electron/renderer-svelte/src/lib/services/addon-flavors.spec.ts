@@ -81,4 +81,33 @@ describe('AddonFlavorIndex', () => {
 		);
 		expect(index.findIn({ installedFolderList: ['DBM-Core'] }, 'classic')).toBeUndefined();
 	});
+
+	describe('missingFrom', () => {
+		it('is true when another flavor has the addon and this one does not', () => {
+			// Curse 2 is in Era only.
+			expect(index.missingFrom({ providerName: 'Curse', externalId: '2' }, ALL, 'retail')).toBe(
+				true
+			);
+		});
+
+		it('is false when this flavor has it, even under another provider', () => {
+			// Classic has Curse 1 as Wago w1, with Curse 1 among its alternative ids.
+			expect(index.missingFrom({ providerName: 'Curse', externalId: '1' }, ALL, 'classic')).toBe(
+				false
+			);
+		});
+
+		it('is false for an addon installed nowhere', () => {
+			expect(index.missingFrom({ providerName: 'Curse', externalId: '99' }, ALL, 'retail')).toBe(
+				false
+			);
+		});
+
+		it('only counts the flavors the user still has', () => {
+			// Era has Curse 2, but Era is no longer one of the user's installations.
+			expect(
+				index.missingFrom({ providerName: 'Curse', externalId: '2' }, [RETAIL, CLASSIC], 'retail')
+			).toBe(false);
+		});
+	});
 });

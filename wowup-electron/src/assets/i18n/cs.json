@@ -419,6 +419,11 @@
       "ADDON_CATEGORIES_SELECTED_TITLE": "Kategorie: {category}",
       "ADDON_CATEGORIES_TOOLTIP": "Procházet různé kategorie",
       "CLIENT_TYPE_SELECT_LABEL": "World of Warcraft",
+      "ELSEWHERE_FILTER": {
+        "ACTIVE_TOOLTIP": "Zobrazují se jen addony nainstalované v jiném clientovi, ale ne v tomto. Klikněte pro změnu.",
+        "LABEL": "Nainstalováno jinde, tady ne",
+        "TITLE": "Filtrovat addony"
+      },
       "INSTALLED_IN": "Nainstalováno v: {clients}",
       "INSTALL_FROM_URL_BUTTON": "Instalovat z URL adresy",
       "INSTALL_FROM_URL_TOOLTIP": "Install and addon from a URL",

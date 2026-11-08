@@ -47,6 +47,7 @@
 
 	import { addonService, onAddonInstalled } from '$lib/state/addon.svelte';
 	import { addonFlavors } from '$lib/state/addon-flavors.svelte';
+	import { warcraftInstallations } from '$lib/state/warcraft-installation.svelte';
 	import { AddonInstallState } from '$lib/models/addon-install-state';
 	import { addonProviders } from '$lib/state/addon-providers.svelte';
 	import { dialogs } from '$lib/state/dialogs.svelte';
@@ -114,15 +115,25 @@
 		{ name: 'status', display: 'PAGES.GET_ADDONS.TABLE.STATUS_COLUMN_HEADER', visible: true }
 	]);
 
-	// Right-click a header to hide providers (state/provider-filter.svelte.ts).
-	void providerFilter.load();
-	const providerOf = (row: GetAddonListItem) => row.providerName;
-	let shownRows = $derived(providerFilter.apply(rowData, providerOf));
-
 	const categories: CategoryItem[] = buildCategories();
 	let selectedCategory = $state<CategoryItem>(categories[0]);
 
 	let selectedInstallation = $derived(session.selectedWowInstallation);
+
+	// Right-click a header to hide providers (state/provider-filter.svelte.ts).
+	void providerFilter.load();
+	const providerOf = (row: GetAddonListItem) => row.providerName;
+	let providerRows = $derived(providerFilter.apply(rowData, providerOf));
+
+	// ...or to keep only what another of the user's clients has and this one lacks, to fill in
+	// a client from the others. Not saved: coming back to a nearly empty list later would read
+	// as a broken search. Kept across client switches, which is how it gets used.
+	let onlyElsewhere = $state(false);
+	let canFilterElsewhere = $derived(warcraftInstallations.installations.length > 1);
+	const isElsewhereOnly = (row: GetAddonListItem) =>
+		!!selectedInstallation && addonFlavors.missingFrom(row.searchResult, selectedInstallation.id);
+	let elsewhereRows = $derived(providerRows.filter(isElsewhereOnly));
+	let shownRows = $derived(onlyElsewhere && canFilterElsewhere ? elsewhereRows : providerRows);
 
 	// The selected client's color frames the table, and with the Options → Application setting
 	// on, repaints the page's buttons and highlights too (utils/client-color.ts).
@@ -194,7 +205,12 @@
 					cellRenderer: svelteCellRenderer(PotentialAddonCell as never),
 					cellRendererParams: { channel: defaultAddonChannel, onViewDetails: openDetailDialog },
 					valueGetter: (params) => (params.data as GetAddonListItem)?.canonicalName,
-					...base
+					...base,
+					headerComponentParams: {
+						onHeaderContext,
+						filtered: () => onlyElsewhere && canFilterElsewhere,
+						filteredTitle: t('PAGES.GET_ADDONS.ELSEWHERE_FILTER.ACTIVE_TOOLTIP')
+					}
 				},
 				{
 					field: 'downloadCount',
@@ -611,6 +627,20 @@
 			</label>
 		{/each}
 		<ProviderFilterMenu filter={providerFilter} rows={rowData} {providerOf} />
+		{#if canFilterElsewhere}
+			<div class="menu-divider"></div>
+			<div class="menu-header">{t('PAGES.GET_ADDONS.ELSEWHERE_FILTER.TITLE')}</div>
+			<div class="menu-divider"></div>
+			<label class="menu-item elsewhere-option">
+				<input
+					type="checkbox"
+					checked={onlyElsewhere}
+					onchange={(e) => (onlyElsewhere = e.currentTarget.checked)}
+				/>
+				<span class="option-name">{t('PAGES.GET_ADDONS.ELSEWHERE_FILTER.LABEL')}</span>
+				<span class="option-count">{elsewhereRows.length}</span>
+			</label>
+		{/if}
 	</ContextMenu>
 {/if}
 
@@ -619,6 +649,16 @@
 {/if}
 
 <style>
+	/* As ProviderFilterMenu's rows: the label takes the room, the count sits at the end. */
+	.option-name {
+		flex: 1;
+	}
+
+	.option-count {
+		opacity: 0.6;
+		font-variant-numeric: tabular-nums;
+	}
+
 	.tab-container {
 		display: flex;
 		flex-direction: column;

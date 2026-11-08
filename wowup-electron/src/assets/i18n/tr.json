@@ -419,6 +419,11 @@
       "ADDON_CATEGORIES_SELECTED_TITLE": "Kategori: {category}",
       "ADDON_CATEGORIES_TOOLTIP": "Çeşitli kategorilere göz atın",
       "CLIENT_TYPE_SELECT_LABEL": "World of Warcraft",
+      "ELSEWHERE_FILTER": {
+        "ACTIVE_TOOLTIP": "Yalnızca başka bir oyunda yüklü olup bu oyunda olmayan eklentiler gösteriliyor. Değiştirmek için tıklayın.",
+        "LABEL": "Başka oyunda yüklü, burada değil",
+        "TITLE": "Eklentileri Filtrele"
+      },
       "INSTALLED_IN": "Yüklü: {clients}",
       "INSTALL_FROM_URL_BUTTON": "URL'den Yükle",
       "INSTALL_FROM_URL_TOOLTIP": "Bir URL'den eklenti yükleyin",

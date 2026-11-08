@@ -419,6 +419,11 @@
       "ADDON_CATEGORIES_SELECTED_TITLE": "Категория: {category}",
       "ADDON_CATEGORIES_TOOLTIP": "Просматривайте различные категории",
       "CLIENT_TYPE_SELECT_LABEL": "World of Warcraft",
+      "ELSEWHERE_FILTER": {
+        "ACTIVE_TOOLTIP": "Показаны только модификации, установленные в другом клиенте, но не в этом. Нажмите, чтобы изменить.",
+        "LABEL": "Установлены в другом клиенте, но не здесь",
+        "TITLE": "Фильтр модификаций"
+      },
       "INSTALLED_IN": "Установлено в: {clients}",
       "INSTALL_FROM_URL_BUTTON": "Установить по ссылке",
       "INSTALL_FROM_URL_TOOLTIP": "Установить модификацию по ссылке",

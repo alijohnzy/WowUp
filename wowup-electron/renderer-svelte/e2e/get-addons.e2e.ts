@@ -17,6 +17,16 @@ const INSTALLATION = {
 	defaultAutoUpdate: false
 };
 
+const CLASSIC = {
+	...INSTALLATION,
+	id: 'inst-2',
+	clientType: 2,
+	label: 'Classic',
+	displayName: 'Classic',
+	location: '/games/wow/_classic_/Wow.exe',
+	selected: false
+};
+
 function searchResult(name: string, author: string, downloads: number) {
 	return {
 		externalId: `ext-${name}`,
@@ -72,9 +82,25 @@ const DISABLED_PROVIDERS = [
 	'CurseV2'
 ].map((name) => ({ providerName: name.toLowerCase(), enabled: false, canEdit: true }));
 
-async function stubPreload(page: Page, featured: unknown[] = FEATURED) {
+interface StubOptions {
+	featured?: unknown[];
+	installations?: unknown[];
+	/** What `addons-get-all` returns: the user's installed addons, across every client. */
+	installed?: unknown[];
+	providers?: unknown[];
+}
+
+async function stubPreload(
+	page: Page,
+	{
+		featured = FEATURED,
+		installations = [INSTALLATION],
+		installed = [],
+		providers = DISABLED_PROVIDERS
+	}: StubOptions = {}
+) {
 	await page.addInitScript(
-		({ installs, addons, providers }) => {
+		({ installs, addons, installedAddons, providers }) => {
 			// Consent is a first-run gate that blocks bootstrap until answered — seed it as
 			// already-answered so suites land on the page under test.
 			const store: Record<string, unknown> = {
@@ -103,6 +129,7 @@ async function stubPreload(page: Page, featured: unknown[] = FEATURED) {
 							store[args[1] as string] = args[2];
 							return Promise.resolve();
 						case 'addons-get-all':
+							return Promise.resolve(installedAddons);
 						case 'addons-get-available-for-update':
 						case 'addons-get-auto-update-enabled':
 							return Promise.resolve([]);
@@ -119,7 +146,7 @@ async function stubPreload(page: Page, featured: unknown[] = FEATURED) {
 				openPath: () => Promise.resolve('')
 			};
 		},
-		{ installs: [INSTALLATION], addons: featured, providers: DISABLED_PROVIDERS }
+		{ installs: installations, addons: featured, installedAddons: installed, providers }
 	);
 
 	// Belt and braces: nothing should reach the network, and if something does it must not
@@ -184,6 +211,103 @@ test('right-clicking a header opens the column picker', async ({ page }) => {
 	await expect(page.locator('.context-menu .column-option')).toHaveCount(3);
 	// No rows, so no providers to filter.
 	await expect(page.locator('.context-menu .provider-option')).toHaveCount(0);
+	// One client, so nothing can be installed elsewhere.
+	await expect(page.locator('.context-menu .elsewhere-option')).toHaveCount(0);
+});
+
+test('with two clients, the header menu can keep only addons installed elsewhere', async ({
+	page
+}) => {
+	await stubPreload(page, { installations: [INSTALLATION, CLASSIC] });
+	await openGetAddons(page);
+
+	const addonHeader = page.locator('.ag-header-cell[col-id="name"]');
+	await expect(addonHeader.locator('.filter-icon')).toHaveCount(0);
+
+	await addonHeader.locator('.ag-header-cell-text').click({ button: 'right' });
+	const option = page.locator('.context-menu .elsewhere-option');
+	await expect(option).toContainText('Installed elsewhere, not here');
+	await option.locator('input').check();
+
+	// The Addon header shows the filter is on, as the Provider header does for providers.
+	await expect(addonHeader.locator('.filter-icon')).toBeVisible();
+});
+
+// A WowUpHub addon as its featured list returns it: one release, for every game type, so it
+// lists whichever client is selected.
+function hubAddon(id: number, name: string) {
+	const gameTypes = ['retail', 'classic', 'burningCrusade', 'wotlk', 'cata', 'mists', 'forever'];
+	return {
+		id,
+		repository_name: name,
+		owner_name: 'author',
+		total_download_count: 1000 * id,
+		description: `${name} summary`,
+		image_url: '',
+		releases: [
+			{
+				id: id * 10,
+				tag_name: '1.0.0',
+				download_url: `https://example.com/${name}.zip`,
+				published_at: '2026-01-01T00:00:00Z',
+				prerelease: false,
+				body: '',
+				game_versions: gameTypes.map((game_type) => ({
+					game_type,
+					interface: 110000,
+					version: '1.0.0',
+					title: name,
+					authors: 'author'
+				}))
+			}
+		]
+	};
+}
+
+test('the installed-elsewhere filter keeps what another client has and this one lacks', async ({
+	page
+}) => {
+	await stubPreload(page, {
+		installations: [INSTALLATION, CLASSIC],
+		providers: DISABLED_PROVIDERS.filter((p) => p.providerName !== 'wowuphub'),
+		// Classic has Alpha and Beta; Beta is in Retail, the client on screen, too.
+		installed: [
+			{
+				id: 'a',
+				name: 'Alpha',
+				installationId: 'inst-2',
+				providerName: 'WowUpHub',
+				externalId: '1'
+			},
+			{
+				id: 'b',
+				name: 'Beta',
+				installationId: 'inst-2',
+				providerName: 'WowUpHub',
+				externalId: '2'
+			},
+			{ id: 'c', name: 'Beta', installationId: 'inst-1', providerName: 'WowUpHub', externalId: '2' }
+		]
+	});
+	await page.route('**/addons/featured/**', (route) =>
+		route.fulfill({
+			json: { addons: [hubAddon(1, 'Alpha'), hubAddon(2, 'Beta'), hubAddon(3, 'Gamma')] }
+		})
+	);
+	await openGetAddons(page);
+
+	const rows = page.locator('.ag-center-cols-container .ag-row');
+	await expect(rows).toHaveCount(3);
+
+	await page
+		.locator('.ag-header-cell[col-id="name"] .ag-header-cell-text')
+		.click({ button: 'right' });
+	await expect(page.locator('.context-menu .elsewhere-option .option-count')).toHaveText('1');
+	await page.locator('.context-menu .elsewhere-option input').check();
+
+	await expect(rows).toHaveCount(1);
+	await expect(rows.first()).toContainText('Alpha');
+	await expect(page.locator('footer')).toContainText('1 result');
 });
 
 test('Install From URL opens its dialog', async ({ page }) => {

@@ -419,6 +419,11 @@
       "ADDON_CATEGORIES_SELECTED_TITLE": "Categoria: {category}",
       "ADDON_CATEGORIES_TOOLTIP": "Esplora varie categorie",
       "CLIENT_TYPE_SELECT_LABEL": "World of Warcraft",
+      "ELSEWHERE_FILTER": {
+        "ACTIVE_TOOLTIP": "Sono mostrati solo gli addon installati in un altro client ma non in questo. Clicca per cambiare.",
+        "LABEL": "Installato altrove, non qui",
+        "TITLE": "Filtra addon"
+      },
       "INSTALLED_IN": "Installato in: {clients}",
       "INSTALL_FROM_URL_BUTTON": "Installa da URL",
       "INSTALL_FROM_URL_TOOLTIP": "Installa un addon da un URL",

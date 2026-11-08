@@ -419,6 +419,11 @@
       "ADDON_CATEGORIES_SELECTED_TITLE": "類別: {category}",
       "ADDON_CATEGORIES_TOOLTIP": "瀏覽插件類別",
       "CLIENT_TYPE_SELECT_LABEL": "魔獸世界",
+      "ELSEWHERE_FILTER": {
+        "ACTIVE_TOOLTIP": "僅顯示已在其他客戶端安裝、但未在此客戶端安裝的插件。點擊以變更。",
+        "LABEL": "已在其他客戶端安裝，此處未安裝",
+        "TITLE": "篩選插件"
+      },
       "INSTALLED_IN": "已安裝於：{clients}",
       "INSTALL_FROM_URL_BUTTON": "從 URL 安裝",
       "INSTALL_FROM_URL_TOOLTIP": "從 URL 安裝插件",

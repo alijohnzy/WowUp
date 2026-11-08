@@ -419,6 +419,11 @@
       "ADDON_CATEGORIES_SELECTED_TITLE": "Kategori: {category}",
       "ADDON_CATEGORIES_TOOLTIP": "Bla gjennom ulike kategorier",
       "CLIENT_TYPE_SELECT_LABEL": "World of Warcraft",
+      "ELSEWHERE_FILTER": {
+        "ACTIVE_TOOLTIP": "Viser bare utvidelser som er installert i en annen klient, men ikke i denne. Klikk for å endre.",
+        "LABEL": "Installert andre steder, ikke her",
+        "TITLE": "Filtrer utvidelser"
+      },
       "INSTALLED_IN": "Installert i: {clients}",
       "INSTALL_FROM_URL_BUTTON": "Installer fra URL",
       "INSTALL_FROM_URL_TOOLTIP": "Installer en utvidelse fra en URL",

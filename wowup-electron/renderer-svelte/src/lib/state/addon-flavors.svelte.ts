@@ -31,6 +31,10 @@ class AddonFlavors {
 
 	findIn = (addon: AddonIdentity, installationId: string) =>
 		this.index.findIn(addon, installationId);
+
+	/** Whether another of the user's installations has `addon` and `installationId` does not. */
+	missingFrom = (addon: AddonIdentity, installationId: string) =>
+		this.index.missingFrom(addon, warcraftInstallations.installations, installationId);
 }
 
 export const addonFlavors = new AddonFlavors();
