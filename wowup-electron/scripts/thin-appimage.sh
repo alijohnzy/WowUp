@@ -8,9 +8,10 @@
 # thing a Tauri app exists to avoid, and those bundled copies were also behind the gray
 # window and the Wayland/EGL failures on newer distros.
 #
-# What is kept: the binary (stripped), its desktop entry and icons. The binary is taken from
-# Tauri's AppImage rather than built separately because the bundler marks it as the AppImage
-# build, which is how the updater knows to replace an AppImage.
+# What is kept: the binary (stripped), its desktop entry and icons, and tauri.conf.json's
+# bundle.resources (usr/lib/<productName>). The binary is taken from Tauri's AppImage rather
+# than built separately because the bundler marks it as the AppImage build, which is how the
+# updater knows to replace an AppImage.
 #
 # The trade-off: WebKitGTK 4.1 has to be installed. AppRun checks for it and, if anything is
 # missing, says what to install instead of failing silently.
@@ -68,6 +69,17 @@ mkdir -p "$dst/usr/bin"
 cp "$src/usr/bin/wowup" "$dst/usr/bin/wowup"
 strip "$dst/usr/bin/wowup"
 [ -d "$src/usr/share" ] && cp -a "$src/usr/share" "$dst/usr/"
+# The bundled resources. The binary looks for them in ../lib/<productName> beside itself
+# (Tauri's resource_dir), the same place the .deb installs them. Builds 27 to 45 left them out,
+# so the WowUp data addon templates were missing and the in-game Addon Update Notifications
+# list was never written again.
+product="$(sed -n 's/^ *"productName": *"\([^"]*\)".*/\1/p' "$root/src-tauri/tauri.conf.json" | head -1)"
+if [ -z "$product" ] || [ ! -d "$src/usr/lib/$product" ]; then
+  echo "No bundled resources at usr/lib/${product:-<productName>} in $app" >&2
+  exit 1
+fi
+mkdir -p "$dst/usr/lib"
+cp -a "$src/usr/lib/$product" "$dst/usr/lib/"
 # Top-level desktop entry and icons, which appimagetool requires. -L: some are symlinks into
 # usr/share, which keep their meaning only inside the old tree.
 for f in "$src"/*.desktop "$src"/*.png "$src"/*.svg; do

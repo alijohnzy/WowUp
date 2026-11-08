@@ -1,5 +1,10 @@
 [
 	{
+		"Version": "2.25.4 #next",
+		"Night": true,
+		"html": "\n    <h4>Fixes</h4>\n    <ul>\n    <li>Linux AppImage: the in-game Addon Update Notifications addon shows your available updates again. Since build 27 the AppImage was missing the files WowUpNight writes that list from, so in game it stayed empty or out of date. The Windows, macOS and .deb builds were not affected</li>\n    <li>My Addons lists Addon Update Notifications (WowUp Data) as soon as WowUpNight writes it, without a rescan, and shows the version that is on disk</li>\n    </ul>\n    "
+	},
+	{
 		"Version": "2.25.4 #45",
 		"Night": true,
 		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>Get Addons: right-click the Addon column header and tick Missing from this client to see only the addons another of your WoW versions has and the selected one does not, so you can fill in a version from the others</li>\n    </ul>\n    <h4>Changes</h4>\n    <ul>\n    <li>A table header's right-click menu now offers what belongs to that column: the provider list is on the Provider header, and the column list on every header</li>\n    </ul>\n    "
