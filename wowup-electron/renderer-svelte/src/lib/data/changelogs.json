@@ -1,6 +1,6 @@
 [
 	{
-		"Version": "2.25.4 #next",
+		"Version": "2.25.4 #46",
 		"Night": true,
 		"html": "\n    <h4>Fixes</h4>\n    <ul>\n    <li>Linux AppImage: the in-game Addon Update Notifications addon shows your available updates again. Since build 27 the AppImage was missing the files WowUpNight writes that list from, so in game it stayed empty or out of date. The Windows, macOS and .deb builds were not affected</li>\n    <li>My Addons lists Addon Update Notifications (WowUp Data) as soon as WowUpNight writes it, without a rescan, and shows the version that is on disk</li>\n    </ul>\n    "
 	},
