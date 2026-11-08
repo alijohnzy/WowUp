@@ -22,10 +22,9 @@
 //!
 //! # Platforms
 //!
-//! Windows and macOS: a child webview positioned with `set_bounds`. (Not yet seen running on
-//! macOS: added with the first Mac build, by analogy with Windows — wry implements
-//! `build_as_child` on both, and Tauri's own multi-webview windows rely on it there. The
-//! storage directory is ignored on macOS, so the ad shares the app's cookies.) Linux: Tauri
+//! Windows and macOS: a child webview positioned with `set_bounds`. (The storage directory is
+//! ignored on macOS, so the ad shares the app's cookies.) On Windows it must be created from
+//! a queued main-thread event, never inline in a command — see `later_on_main_thread`. Linux: Tauri
 //! 2.11 puts child webviews in the window's vertical box, which stacks them under the page
 //! instead of over it (tauri-apps/tauri#10420), so `install_overlay` wraps that box in a
 //! `gtk::Overlay` at startup, and the ad lives in a holder on the overlay layer. Elsewhere there
@@ -209,7 +208,7 @@ mod native {
                     log::info!("[ad] the ad navigated the view away; restoring it");
                     let _ = load_app.emit(EVT_LINK, url);
                     // Not from inside the load signal that is reporting this navigation.
-                    let _ = load_app.run_on_main_thread(|| {
+                    super::later_on_main_thread(&load_app, || {
                         VIEW.with(|v| {
                             if let Some(view) = v.borrow().as_ref() {
                                 let _ = view.webview.load_url(AD_URL);
@@ -325,6 +324,26 @@ mod native {
 #[cfg(target_os = "linux")]
 pub use native::install_overlay;
 
+/// Runs `f` on the main thread as a queued event, never inline.
+///
+/// `run_on_main_thread` runs `f` on the spot when it is called on the main thread, and both a
+/// synchronous command and a wry callback are. On Windows that put the ad view's creation
+/// inside WebView2's handler for the `ad-view-set-bounds` request, and WebView2 does not
+/// finish creating a webview while one of its own event handlers is running: the new view
+/// never appeared, and the app's page stopped getting any answer from here — no IPC, no
+/// route chunks — on its first paint, while the window and tray still reacted and Quit never
+/// finished (builds 19 to 42). Asking from another thread queues `f` on the event loop, where
+/// Tauri creates its own webviews.
+#[cfg(any(target_os = "linux", windows, target_os = "macos"))]
+fn later_on_main_thread<F: FnOnce() + Send + 'static>(app: &AppHandle, f: F) {
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        if let Err(e) = app.run_on_main_thread(f) {
+            log::error!("[ad] could not reach the main thread: {e}");
+        }
+    });
+}
+
 /// Port of the Electron `wago-ads` controller's bounds channel: the renderer reports the ad
 /// slot's rectangle (and whether a dialog is covering it) whenever it changes.
 #[tauri::command]
@@ -332,12 +351,12 @@ pub fn ad_view_set_bounds(app: AppHandle, bounds: AdBounds) -> Result<(), String
     #[cfg(any(target_os = "linux", windows, target_os = "macos"))]
     {
         let handle = app.clone();
-        app.run_on_main_thread(move || {
+        later_on_main_thread(&app, move || {
             if let Err(e) = native::apply(&handle, bounds) {
                 log::error!("[ad] could not place the ad view: {e}");
             }
-        })
-        .map_err(|e| e.to_string())
+        });
+        Ok(())
     }
     #[cfg(not(any(target_os = "linux", windows, target_os = "macos")))]
     {
@@ -351,8 +370,8 @@ pub fn ad_view_set_bounds(app: AppHandle, bounds: AdBounds) -> Result<(), String
 pub fn ad_view_reload(app: AppHandle) -> Result<(), String> {
     #[cfg(any(target_os = "linux", windows, target_os = "macos"))]
     {
-        app.run_on_main_thread(native::reload)
-            .map_err(|e| e.to_string())
+        later_on_main_thread(&app, native::reload);
+        Ok(())
     }
     #[cfg(not(any(target_os = "linux", windows, target_os = "macos")))]
     {
