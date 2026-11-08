@@ -421,7 +421,7 @@
       "CLIENT_TYPE_SELECT_LABEL": "월드 오브 워크래프트",
       "ELSEWHERE_FILTER": {
         "ACTIVE_TOOLTIP": "다른 클라이언트에는 설치되어 있지만 이 클라이언트에는 없는 애드온만 표시합니다. 클릭하여 변경하세요.",
-        "LABEL": "다른 곳에 설치됨, 여기에는 없음",
+        "LABEL": "이 클라이언트에 없는 애드온",
         "TITLE": "애드온 필터"
       },
       "INSTALLED_IN": "설치된 곳: {clients}",

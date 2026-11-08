@@ -421,7 +421,7 @@
       "CLIENT_TYPE_SELECT_LABEL": "World of Warcraft",
       "ELSEWHERE_FILTER": {
         "ACTIVE_TOOLTIP": "Viser bare utvidelser som er installert i en annen klient, men ikke i denne. Klikk for å endre.",
-        "LABEL": "Installert andre steder, ikke her",
+        "LABEL": "Mangler i denne klienten",
         "TITLE": "Filtrer utvidelser"
       },
       "INSTALLED_IN": "Installert i: {clients}",

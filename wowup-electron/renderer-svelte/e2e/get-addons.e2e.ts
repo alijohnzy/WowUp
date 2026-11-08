@@ -226,7 +226,7 @@ test('with two clients, the header menu can keep only addons installed elsewhere
 
 	await addonHeader.locator('.ag-header-cell-text').click({ button: 'right' });
 	const option = page.locator('.context-menu .elsewhere-option');
-	await expect(option).toContainText('Installed elsewhere, not here');
+	await expect(option).toContainText('Missing from this client');
 	await option.locator('input').check();
 
 	// The Addon header shows the filter is on, as the Provider header does for providers.
@@ -299,9 +299,19 @@ test('the installed-elsewhere filter keeps what another client has and this one 
 	const rows = page.locator('.ag-center-cols-container .ag-row');
 	await expect(rows).toHaveCount(3);
 
+	// The Provider header has the provider list, not this filter...
+	await page
+		.locator('.ag-header-cell[col-id="providerName"] .ag-header-cell-text')
+		.click({ button: 'right' });
+	await expect(page.locator('.context-menu .provider-option')).toHaveCount(1);
+	await expect(page.locator('.context-menu .elsewhere-option')).toHaveCount(0);
+	await page.keyboard.press('Escape');
+
+	// ...and the Addon header the other way round.
 	await page
 		.locator('.ag-header-cell[col-id="name"] .ag-header-cell-text')
 		.click({ button: 'right' });
+	await expect(page.locator('.context-menu .provider-option')).toHaveCount(0);
 	await expect(page.locator('.context-menu .elsewhere-option .option-count')).toHaveText('1');
 	await page.locator('.context-menu .elsewhere-option input').check();
 

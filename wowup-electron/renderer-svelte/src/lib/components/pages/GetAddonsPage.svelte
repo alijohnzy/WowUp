@@ -173,12 +173,14 @@
 		return (a as number) > (b as number) ? 1 : -1;
 	}
 
-	function onHeaderContext(event: MouseEvent) {
+	// Every header offers the column picker; the Provider header adds the provider filter and
+	// the Addon header the installed-elsewhere one.
+	function onHeaderContext(event: MouseEvent, columnId: string) {
 		event.preventDefault();
-		showColumnMenuAt = { x: event.clientX, y: event.clientY };
+		showColumnMenuAt = { x: event.clientX, y: event.clientY, columnId };
 	}
 
-	let showColumnMenuAt = $state<{ x: number; y: number } | undefined>(undefined);
+	let showColumnMenuAt = $state<{ x: number; y: number; columnId: string } | undefined>(undefined);
 
 	let columnDefs = $derived<ColDef[]>(
 		(() => {
@@ -626,8 +628,10 @@
 				{t(column.display)}
 			</label>
 		{/each}
-		<ProviderFilterMenu filter={providerFilter} rows={rowData} {providerOf} />
-		{#if canFilterElsewhere}
+		{#if showColumnMenuAt.columnId === 'providerName'}
+			<ProviderFilterMenu filter={providerFilter} rows={rowData} {providerOf} />
+		{/if}
+		{#if showColumnMenuAt.columnId === 'name' && canFilterElsewhere}
 			<div class="menu-divider"></div>
 			<div class="menu-header">{t('PAGES.GET_ADDONS.ELSEWHERE_FILTER.TITLE')}</div>
 			<div class="menu-divider"></div>

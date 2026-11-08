@@ -421,7 +421,7 @@
       "CLIENT_TYPE_SELECT_LABEL": "World of Warcraft",
       "ELSEWHERE_FILTER": {
         "ACTIVE_TOOLTIP": "Mostrando apenas addons instalados em outro cliente, mas não neste. Clique para alterar.",
-        "LABEL": "Instalado em outro cliente, não aqui",
+        "LABEL": "Faltando neste cliente",
         "TITLE": "Filtrar addons"
       },
       "INSTALLED_IN": "Instalado em: {clients}",

@@ -421,7 +421,7 @@
       "CLIENT_TYPE_SELECT_LABEL": "魔獸世界",
       "ELSEWHERE_FILTER": {
         "ACTIVE_TOOLTIP": "僅顯示已在其他客戶端安裝、但未在此客戶端安裝的插件。點擊以變更。",
-        "LABEL": "已在其他客戶端安裝，此處未安裝",
+        "LABEL": "此客戶端缺少的插件",
         "TITLE": "篩選插件"
       },
       "INSTALLED_IN": "已安裝於：{clients}",

@@ -624,6 +624,8 @@ const PROVIDER_MIX = [
 
 const providerOption = (page: Page, name: string) =>
 	page.locator('.context-menu .provider-option').filter({ hasText: name });
+const providerHeader = (page: Page) =>
+	page.locator('.ag-header-cell[col-id="providerName"] .ag-header-cell-text');
 const providerHeaderFilterIcon = (page: Page) =>
 	page.locator('.ag-header-cell[col-id="providerName"] .filter-icon');
 const storedHiddenProviders = (page: Page) =>
@@ -637,7 +639,7 @@ test('the header menu lists each provider with its addon count', async ({ page }
 	await stubPreload(page, PROVIDER_MIX);
 	await openMyAddons(page);
 
-	await page.locator('.ag-header-cell-text').first().click({ button: 'right' });
+	await providerHeader(page).click({ button: 'right' });
 
 	await expect(page.locator('.context-menu').getByText('Show Providers')).toBeVisible();
 	await expect(page.locator('.context-menu .provider-option')).toHaveCount(2);
@@ -646,12 +648,30 @@ test('the header menu lists each provider with its addon count', async ({ page }
 	await expect(providerOption(page, 'Wago').locator('input')).toBeChecked();
 });
 
+test('only the Provider header offers the providers, unless that column is hidden', async ({
+	page
+}) => {
+	await stubPreload(page, PROVIDER_MIX);
+	await openMyAddons(page);
+
+	await page.locator('.ag-header-cell-text').first().click({ button: 'right' });
+	await expect(page.locator('.context-menu .column-option')).toHaveCount(7);
+	await expect(page.locator('.context-menu .provider-option')).toHaveCount(0);
+
+	// Hiding the Provider column would leave no header to reach a saved filter from.
+	await page
+		.locator('.context-menu .column-option')
+		.filter({ hasText: /^\s*Provider\s*$/ })
+		.click();
+	await expect(page.locator('.context-menu .provider-option')).toHaveCount(2);
+});
+
 test('unticking a provider hides its addons, and Show All brings them back', async ({ page }) => {
 	await stubPreload(page, PROVIDER_MIX);
 	await openMyAddons(page);
 	await expect(providerHeaderFilterIcon(page)).toHaveCount(0);
 
-	await page.locator('.ag-header-cell-text').first().click({ button: 'right' });
+	await providerHeader(page).click({ button: 'right' });
 	await providerOption(page, 'Wago').locator('input').uncheck();
 
 	await expect(page.locator('.ag-row')).toHaveCount(1);

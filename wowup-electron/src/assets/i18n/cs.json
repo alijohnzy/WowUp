@@ -421,7 +421,7 @@
       "CLIENT_TYPE_SELECT_LABEL": "World of Warcraft",
       "ELSEWHERE_FILTER": {
         "ACTIVE_TOOLTIP": "Zobrazují se jen addony nainstalované v jiném clientovi, ale ne v tomto. Klikněte pro změnu.",
-        "LABEL": "Nainstalováno jinde, tady ne",
+        "LABEL": "Chybí v tomto clientovi",
         "TITLE": "Filtrovat addony"
       },
       "INSTALLED_IN": "Nainstalováno v: {clients}",

@@ -96,7 +96,7 @@
 	let lastSelection: IRowNode[] = [];
 
 	let rowMenu = $state<{ x: number; y: number; items: AddonViewModel[] } | undefined>(undefined);
-	let columnMenu = $state<{ x: number; y: number } | undefined>(undefined);
+	let columnMenu = $state<{ x: number; y: number; columnId: string } | undefined>(undefined);
 	let pageActionsMenu = $state<{ x: number; y: number } | undefined>(undefined);
 	let showManageDialog = $state(false);
 	let showBackupDialog = $state(false);
@@ -254,10 +254,15 @@
 		return na > nb ? 1 : -1;
 	}
 
-	const onHeaderContext = (event: MouseEvent) => {
+	// Every header offers the column picker; the Provider header adds the provider filter.
+	const onHeaderContext = (event: MouseEvent, columnId: string) => {
 		event.preventDefault();
-		columnMenu = { x: event.clientX, y: event.clientY };
+		columnMenu = { x: event.clientX, y: event.clientY, columnId };
 	};
+
+	// ...and so does every header while the Provider column is hidden, or a saved filter could
+	// hide addons with no way left to undo it.
+	let providerColumnHidden = $derived(!columns.find((c) => c.name === 'providerName')?.visible);
 
 	let columnDefs = $derived.by<ColDef[]>(() => {
 		const base = {
@@ -1102,12 +1107,14 @@
 				{t(column.display)}
 			</label>
 		{/each}
-		<ProviderFilterMenu
-			filter={providerFilter}
-			rows={textFilteredRows}
-			{providerOf}
-			label={getProviderName}
-		/>
+		{#if columnMenu.columnId === 'providerName' || providerColumnHidden}
+			<ProviderFilterMenu
+				filter={providerFilter}
+				rows={textFilteredRows}
+				{providerOf}
+				label={getProviderName}
+			/>
+		{/if}
 	</ContextMenu>
 {/if}
 

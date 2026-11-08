@@ -8,7 +8,8 @@
 	import Icon from '$lib/components/common/Icon.svelte';
 
 	export interface ContextHeaderParams extends IHeaderParams {
-		onHeaderContext: (event: MouseEvent) => void;
+		/** `columnId` is the header's column, so the menu can offer what belongs to it. */
+		onHeaderContext: (event: MouseEvent, columnId: string) => void;
 		/** True while a filter hides some rows by this column: shows a filter icon, which
 		 *  opens the same menu as a right-click. */
 		filtered?: () => boolean;
@@ -52,13 +53,13 @@
 
 	function onContextMenu(event: MouseEvent) {
 		event.preventDefault();
-		params.onHeaderContext(event);
+		params.onHeaderContext(event, params.column.getColId());
 	}
 
 	function onFilterClick(event: MouseEvent) {
 		// Not a sort.
 		event.stopPropagation();
-		params.onHeaderContext(event);
+		params.onHeaderContext(event, params.column.getColId());
 	}
 </script>
 

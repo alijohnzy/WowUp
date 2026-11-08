@@ -421,7 +421,7 @@
       "CLIENT_TYPE_SELECT_LABEL": "World of Warcraft",
       "ELSEWHERE_FILTER": {
         "ACTIVE_TOOLTIP": "Yalnızca başka bir oyunda yüklü olup bu oyunda olmayan eklentiler gösteriliyor. Değiştirmek için tıklayın.",
-        "LABEL": "Başka oyunda yüklü, burada değil",
+        "LABEL": "Bu oyunda eksik olanlar",
         "TITLE": "Eklentileri Filtrele"
       },
       "INSTALLED_IN": "Yüklü: {clients}",
