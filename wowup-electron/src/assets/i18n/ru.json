@@ -101,6 +101,7 @@
       "ADDON_SCAN_UPDATE": "Сканируется {count} {count, plural, one{папка} few{папки} other{папок}}..."
     },
     "SYSTEM_TRAY": {
+      "CHECKING_UPDATES": "Проверка обновлений…",
       "CHECK_UPDATE": "Проверить наличие обновлений",
       "QUIT_ACTION": "Выход",
       "SHOW_ACTION": "Показать",
@@ -744,7 +745,7 @@
         "RESCAN_CLIENTS_LABEL": "Повторно найти установленные продукты World of Warcraft",
         "SAVE_WOW_DIRECTORY_SELECT_BUTTON": "Сохранить",
         "TITLE": "World of Warcraft",
-        "UPDATE_FROM_TRAY_DESCRIPTION": "«Обновить всё» в области уведомлений обновляет и этот клиент, даже если выбран другой клиент.",
+        "UPDATE_FROM_TRAY_DESCRIPTION": "«Обновить всё» в области уведомлений обновляет и этот клиент, даже если выбран другой клиент. Когда обновлять нечего, «Проверить обновления» там проверяет и его.",
         "UPDATE_FROM_TRAY_LABEL": "Обновлять из области уведомлений"
       },
       "WTF_EXPLORER": {

@@ -101,6 +101,7 @@
       "ADDON_SCAN_UPDATE": "正在掃描 {count} 個資料夾..."
     },
     "SYSTEM_TRAY": {
+      "CHECKING_UPDATES": "正在檢查更新…",
       "CHECK_UPDATE": "檢查更新...",
       "QUIT_ACTION": "退出",
       "SHOW_ACTION": "顯示",
@@ -744,7 +745,7 @@
         "RESCAN_CLIENTS_LABEL": "重新掃描已安裝的《魔獸世界》客戶端",
         "SAVE_WOW_DIRECTORY_SELECT_BUTTON": "儲存",
         "TITLE": "魔獸世界",
-        "UPDATE_FROM_TRAY_DESCRIPTION": "即使選取了其他客戶端，系統托盤中的「全部更新」也會更新此客戶端。",
+        "UPDATE_FROM_TRAY_DESCRIPTION": "即使選取了其他客戶端，系統托盤中的「全部更新」也會更新此客戶端。沒有可更新的內容時，托盤中的「檢查更新」也會檢查此客戶端。",
         "UPDATE_FROM_TRAY_LABEL": "從系統托盤更新"
       },
       "WTF_EXPLORER": {

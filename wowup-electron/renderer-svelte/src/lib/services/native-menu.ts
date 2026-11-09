@@ -69,9 +69,9 @@ export async function createSystemTray(): Promise<void> {
 	// default. The key exists and is translated everywhere, so it is resolved here too.
 	const config: SystemTrayConfig = {
 		quitLabel: t('APP.SYSTEM_TRAY.QUIT_ACTION'),
-		checkUpdateLabel: t('APP.SYSTEM_TRAY.CHECK_UPDATE'),
+		checkUpdateLabel: t('PAGES.MY_ADDONS.CHECK_UPDATES_BUTTON'),
 		showLabel: t('APP.SYSTEM_TRAY.SHOW_ACTION'),
-		updateAllLabel: updateAllLabel(0),
+		updateAllLabel: t('PAGES.MY_ADDONS.UPDATE_ALL_BUTTON'),
 		appUpdateLabel: t('APP.SYSTEM_TRAY.UPDATE_APP')
 	};
 
@@ -84,10 +84,14 @@ export async function createSystemTray(): Promise<void> {
 	}
 }
 
-/** "Update All" while there is nothing to do, "Update All (4)" when there is. */
-function updateAllLabel(count: number): string {
-	const label = t('PAGES.MY_ADDONS.UPDATE_ALL_BUTTON');
-	return count > 0 ? `${label} (${count})` : label;
+/**
+ * The tray's addon item: "Update All (4)" while something is pending, and otherwise the in-app
+ * Check Updates, which it then runs (src-tauri/src/tray.rs picks the action by the count).
+ */
+function addonItemLabel(count: number): string {
+	if (checking) return t('APP.SYSTEM_TRAY.CHECKING_UPDATES');
+	if (count > 0) return `${t('PAGES.MY_ADDONS.UPDATE_ALL_BUTTON')} (${count})`;
+	return t('PAGES.MY_ADDONS.CHECK_UPDATES_BUTTON');
 }
 
 /** What the badge is saying, which decides its colour. Mirrors BadgeState in tray.rs. */
@@ -111,12 +115,22 @@ export function trayInstallations(): WowInstallation[] {
 }
 
 /**
+ * The colour an update run gives the badge, while it lasts. Every addon that finishes redoes the
+ * count, and each of those redraws went out as 'pending', so the badge turned back to red after
+ * the first addon and the run only showed as a count going down.
+ */
+let runState: TrayBadgeState | undefined;
+let runStateTimer: ReturnType<typeof setTimeout> | undefined;
+/** The tray's Check Updates is running; its item says so and cannot be clicked again. */
+let checking = false;
+
+/**
  * Show the number of pending updates on the tray icon and in its menu, across
- * trayInstallations().
+ * trayInstallations(), coloured by the update run in progress if there is one.
  *
  * Electron's tray has no such item, so this is a no-op there rather than a missing channel.
  */
-export async function syncTrayUpdateCount(state: TrayBadgeState = 'pending'): Promise<void> {
+export async function syncTrayUpdateCount(): Promise<void> {
 	if (!isTauri()) return;
 
 	try {
@@ -145,11 +159,13 @@ export async function syncTrayUpdateCount(state: TrayBadgeState = 'pending'): Pr
 			);
 		}
 
+		// Read after the awaits above: a refresh started by the last addon of a run can finish
+		// after the run has turned the badge green, and must not paint it amber again.
 		await invoke(
 			IPC_SET_TRAY_UPDATE_COUNT,
 			pending.length,
-			updateAllLabel(pending.length),
-			state,
+			addonItemLabel(pending.length),
+			runState ?? 'pending',
 			names
 		);
 	} catch (e) {
@@ -163,18 +179,46 @@ export async function syncTrayUpdateCount(state: TrayBadgeState = 'pending'): Pr
  * so the badge clears itself.
  */
 export async function withTrayRunState<T>(run: () => Promise<T>): Promise<T> {
-	await syncTrayUpdateCount('running');
+	// A run started while the last one's green is showing must not be turned red by its timer.
+	clearTimeout(runStateTimer);
+	runState = 'running';
+	await syncTrayUpdateCount();
 	try {
 		const result = await run();
-		await syncTrayUpdateCount('done');
+		runState = 'done';
+		await syncTrayUpdateCount();
 		// Long enough to register as "that worked" without lingering as a status light.
-		setTimeout(() => void syncTrayUpdateCount(), DONE_BADGE_MS);
+		runStateTimer = setTimeout(() => {
+			runState = undefined;
+			void syncTrayUpdateCount();
+		}, DONE_BADGE_MS);
 		return result;
 	} catch (e) {
 		// Back to pending: the run failed, so whatever is left really is still waiting.
+		runState = undefined;
 		await syncTrayUpdateCount();
 		throw e;
 	}
 }
 
 const DONE_BADGE_MS = 4000;
+
+/**
+ * The tray's Check Updates, for the duration of the check: the item reads "Checking for
+ * updates…" and is disabled, then turns into Update All if anything was found — that and the
+ * badge appearing are the answer, since the window stays hidden. No green at the end: a check
+ * that found updates has left them pending, not done.
+ */
+export async function withTrayCheck<T>(run: () => Promise<T>): Promise<T> {
+	clearTimeout(runStateTimer);
+	checking = true;
+	runState = 'running';
+	await syncTrayUpdateCount();
+	try {
+		return await run();
+	} finally {
+		checking = false;
+		runState = undefined;
+		await syncTrayUpdateCount();
+	}
+}

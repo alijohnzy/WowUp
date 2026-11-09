@@ -16,6 +16,10 @@ use tauri::{AppHandle, Emitter, Manager, State, Wry};
 /// in-app button does; the work cannot happen here because it is all renderer-side.
 const IPC_TRAY_UPDATE_ALL: &str = "tray-update-all";
 
+/// Emitted when the tray's Check Updates is chosen, which is what Update All becomes while
+/// nothing is pending. The renderer runs the in-app Check Updates over the tray's clients.
+const IPC_TRAY_CHECK_UPDATES: &str = "tray-check-updates";
+
 /// Emitted when the tray's "Update WowUpNight" is chosen; the renderer installs the update the
 /// last check found (src/lib/services/app-update.ts), as the footer button does.
 const IPC_TRAY_APP_UPDATE: &str = "tray-app-update";
@@ -26,8 +30,8 @@ const IPC_TRAY_APP_UPDATE: &str = "tray-app-update";
 pub struct SystemTrayConfig {
     pub show_label: String,
     pub quit_label: String,
-    /// Present in the contract but unused: the Electron build commented the entry out
-    /// ("per discussion with zak") and this keeps the payload shape identical.
+    /// What the addon item says while nothing is pending, until the renderer sends its own
+    /// label. (The Electron build commented its entry out, "per discussion with zak".)
     #[serde(default)]
     pub check_update_label: String,
     /// Already carries the count, e.g. "Update All (4)" — the renderer owns both the
@@ -49,10 +53,50 @@ struct MenuInputs {
     update_all_label: String,
     /// The available app update, as shown: "v2.25.4 #28".
     app_update: Option<String>,
+    /// An update run or a check is in progress, so the addon item cannot start another.
+    busy: bool,
+}
+
+/// What the addon item does: update what is pending, or, with nothing pending, check for more.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum AddonAction {
+    UpdateAll,
+    CheckUpdates,
+}
+
+impl AddonAction {
+    fn for_count(count: u32) -> Self {
+        if count > 0 {
+            Self::UpdateAll
+        } else {
+            Self::CheckUpdates
+        }
+    }
+
+    /// The menu item id, which is what the click handler dispatches on.
+    fn id(self) -> &'static str {
+        match self {
+            Self::UpdateAll => "update-all",
+            Self::CheckUpdates => "check-updates",
+        }
+    }
+}
+
+/// The renderer's label ("Update All (4)", "Check Updates", "Checking for updates…"), or, before
+/// it has sent one, the configured label for what the item will do.
+fn addon_item_label<'a>(config: &'a SystemTrayConfig, inputs: &'a MenuInputs) -> &'a str {
+    let fallback = match AddonAction::for_count(inputs.count) {
+        AddonAction::UpdateAll => nonempty(&config.update_all_label, "Update All"),
+        AddonAction::CheckUpdates => nonempty(&config.check_update_label, "Check Updates"),
+    };
+    nonempty(&inputs.update_all_label, fallback)
 }
 
 /// Holds the tray so it is not dropped — a `TrayIcon` unregisters itself when freed, which
 /// is what makes a naive implementation flash an icon and then lose it.
+/// What the tray last showed: count, badge colour, the addon item's label, the listed addons.
+type Shown = (u32, BadgeState, String, Vec<String>);
+
 #[derive(Default)]
 pub struct TrayState {
     tray: Mutex<Option<TrayIcon>>,
@@ -62,7 +106,8 @@ pub struct TrayState {
     ///
     /// Keyed on the state as well as the count: a run starting does not change how many
     /// updates there are, only their colour, and memoising on the count alone would drop it.
-    shown: Mutex<Option<(u32, BadgeState, Vec<String>)>>,
+    /// The label is part of the key too: a check starting and ending changes only the label.
+    shown: Mutex<Option<Shown>>,
     /// The translated labels, kept so the menu can be rebuilt when the addon list changes
     /// without asking the renderer to send them again.
     config: Mutex<Option<SystemTrayConfig>>,
@@ -118,14 +163,11 @@ fn build_menu(
         .build(app)
         .map_err(|e| e.to_string())?;
     let update_all = MenuItemBuilder::with_id(
-        "update-all",
-        nonempty(
-            &inputs.update_all_label,
-            nonempty(&config.update_all_label, "Update All"),
-        ),
+        AddonAction::for_count(count).id(),
+        addon_item_label(config, inputs),
     )
-    // Nothing to update means nothing to click.
-    .enabled(count > 0)
+    // Not while a run or a check is going; the label says which.
+    .enabled(!inputs.busy)
     .build(app)
     .map_err(|e| e.to_string())?;
     let quit = MenuItemBuilder::with_id("quit", nonempty(&config.quit_label, "Quit"))
@@ -213,6 +255,13 @@ pub fn create_tray_menu(
                 // and the badge going down is the confirmation.
                 if let Err(e) = app.emit(IPC_TRAY_UPDATE_ALL, ()) {
                     log::error!("could not forward the tray update-all: {e}");
+                }
+            }
+            "check-updates" => {
+                // Hidden too, as Update All: a check that finds something turns the item
+                // into Update All with the addons listed under it, and the badge appears.
+                if let Err(e) = app.emit(IPC_TRAY_CHECK_UPDATES, ()) {
+                    log::error!("could not forward the tray check-updates: {e}");
                 }
             }
             "quit" => {
@@ -316,6 +365,28 @@ mod tests {
         assert_eq!(nonempty("", "Show"), "Show");
         assert_eq!(nonempty("   ", "Quit"), "Quit");
         assert_eq!(nonempty("Anzeigen", "Show"), "Anzeigen");
+    }
+
+    #[test]
+    fn the_addon_item_updates_what_is_pending_and_checks_when_nothing_is() {
+        assert_eq!(AddonAction::for_count(3), AddonAction::UpdateAll);
+        assert_eq!(AddonAction::for_count(0), AddonAction::CheckUpdates);
+        assert_eq!(AddonAction::UpdateAll.id(), "update-all");
+        assert_eq!(AddonAction::CheckUpdates.id(), "check-updates");
+    }
+
+    #[test]
+    fn the_addon_item_names_what_it_will_do_when_the_renderer_sends_no_label() {
+        let cfg: SystemTrayConfig = serde_json::from_str(
+            r#"{"showLabel":"Show","quitLabel":"Quit","checkUpdateLabel":"Güncellemeleri Denetle","updateAllLabel":"Tümünü Güncelle"}"#,
+        )
+        .unwrap();
+        let mut inputs = MenuInputs::default();
+        assert_eq!(addon_item_label(&cfg, &inputs), "Güncellemeleri Denetle");
+        inputs.count = 2;
+        assert_eq!(addon_item_label(&cfg, &inputs), "Tümünü Güncelle");
+        inputs.update_all_label = "Tümünü Güncelle (2)".into();
+        assert_eq!(addon_item_label(&cfg, &inputs), "Tümünü Güncelle (2)");
     }
 
     #[test]
@@ -741,7 +812,8 @@ pub fn set_tray_update_count(
     let mut shown = tray_state.shown.lock().map_err(|e| e.to_string())?;
     // The list is part of the key: the same number of updates can be a different set of
     // addons, and the menu has to follow.
-    if shown.as_ref() == Some(&(count, state, addons.clone())) {
+    let key = (count, state, label.clone(), addons.clone());
+    if shown.as_ref() == Some(&key) {
         return Ok(());
     }
 
@@ -751,7 +823,8 @@ pub fn set_tray_update_count(
         let mut inputs = tray_state.menu_inputs.lock().map_err(|e| e.to_string())?;
         inputs.count = count;
         inputs.addons = addons.clone();
-        inputs.update_all_label = label.clone();
+        inputs.update_all_label = label;
+        inputs.busy = state == BadgeState::Running;
         if let Some(config) = config {
             let menu = build_menu(&app, &config, &inputs)?;
             tray.set_menu(Some(menu)).map_err(|e| e.to_string())?;
@@ -764,7 +837,7 @@ pub fn set_tray_update_count(
             .map_err(|e| e.to_string())?;
     }
 
-    *shown = Some((count, state, addons));
+    *shown = Some(key);
     log::debug!("tray update count {count} ({state:?})");
     Ok(())
 }

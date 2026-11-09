@@ -101,6 +101,7 @@
       "ADDON_SCAN_UPDATE": "正在扫描 {count} 个文件夹..."
     },
     "SYSTEM_TRAY": {
+      "CHECKING_UPDATES": "正在检查更新…",
       "CHECK_UPDATE": "检查更新...",
       "QUIT_ACTION": "退出",
       "SHOW_ACTION": "显示",
@@ -744,7 +745,7 @@
         "RESCAN_CLIENTS_LABEL": "重新扫描已安装的《魔兽世界》客户端",
         "SAVE_WOW_DIRECTORY_SELECT_BUTTON": "保存",
         "TITLE": "魔兽世界",
-        "UPDATE_FROM_TRAY_DESCRIPTION": "即使选中了其他客户端，系统托盘中的“全部更新”也会更新此客户端。",
+        "UPDATE_FROM_TRAY_DESCRIPTION": "即使选中了其他客户端，系统托盘中的“全部更新”也会更新此客户端。没有可更新的内容时，托盘中的“检查更新”也会检查此客户端。",
         "UPDATE_FROM_TRAY_LABEL": "从系统托盘更新"
       },
       "WTF_EXPLORER": {

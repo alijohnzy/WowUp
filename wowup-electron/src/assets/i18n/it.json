@@ -101,6 +101,7 @@
       "ADDON_SCAN_UPDATE": "Scansionando {count, plural, one{una cartella} other{{count} cartelle}}..."
     },
     "SYSTEM_TRAY": {
+      "CHECKING_UPDATES": "Ricerca di aggiornamenti…",
       "CHECK_UPDATE": "Controlla Aggiornamenti",
       "QUIT_ACTION": "Chiudi",
       "SHOW_ACTION": "Mostra",
@@ -744,7 +745,7 @@
         "RESCAN_CLIENTS_LABEL": "Riscansiona i prodotti World of Warcraft installati",
         "SAVE_WOW_DIRECTORY_SELECT_BUTTON": "Salva",
         "TITLE": "World of Warcraft",
-        "UPDATE_FROM_TRAY_DESCRIPTION": "«Aggiorna Tutto» nell'area di notifica aggiorna anche questo client, anche quando è selezionato un altro client.",
+        "UPDATE_FROM_TRAY_DESCRIPTION": "«Aggiorna Tutto» nell'area di notifica aggiorna anche questo client, anche quando è selezionato un altro client. Quando non c'è nulla da aggiornare, «Controlla Aggiornamenti» controlla anche questo.",
         "UPDATE_FROM_TRAY_LABEL": "Aggiorna dall'area di notifica"
       },
       "WTF_EXPLORER": {

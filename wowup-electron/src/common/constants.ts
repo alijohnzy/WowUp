@@ -50,6 +50,7 @@ export const IPC_CREATE_TRAY_MENU_CHANNEL = "create-tray-menu";
 export const IPC_SET_TRAY_UPDATE_COUNT = "set-tray-update-count";
 /** Tauri only: the tray's Update All was chosen. */
 export const IPC_TRAY_UPDATE_ALL = "tray-update-all";
+export const IPC_TRAY_CHECK_UPDATES = "tray-check-updates";
 /** Tauri: the tray's "Update WowUpNight" was chosen. */
 export const IPC_TRAY_APP_UPDATE = "tray-app-update";
 /**

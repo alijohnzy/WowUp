@@ -101,6 +101,7 @@
       "ADDON_SCAN_UPDATE": "{count} Ordner werden gescannt..."
     },
     "SYSTEM_TRAY": {
+      "CHECKING_UPDATES": "Suche nach Updates…",
       "CHECK_UPDATE": "Auf Updates prüfen...",
       "QUIT_ACTION": "Beenden",
       "SHOW_ACTION": "Öffnen",
@@ -744,7 +745,7 @@
         "RESCAN_CLIENTS_LABEL": "Installierte World of Warcraft-Produkte erneut durchsuchen",
         "SAVE_WOW_DIRECTORY_SELECT_BUTTON": "Speichern",
         "TITLE": "World of Warcraft",
-        "UPDATE_FROM_TRAY_DESCRIPTION": "„Alle aktualisieren“ im Benachrichtigungsbereich aktualisiert auch diesen Client, selbst wenn ein anderer Client ausgewählt ist.",
+        "UPDATE_FROM_TRAY_DESCRIPTION": "„Alle aktualisieren“ im Benachrichtigungsbereich aktualisiert auch diesen Client, selbst wenn ein anderer Client ausgewählt ist. Gibt es nichts zu aktualisieren, prüft „Auf Updates prüfen“ dort auch ihn.",
         "UPDATE_FROM_TRAY_LABEL": "Über den Benachrichtigungsbereich aktualisieren"
       },
       "WTF_EXPLORER": {

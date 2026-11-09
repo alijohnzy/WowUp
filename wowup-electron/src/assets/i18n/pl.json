@@ -101,6 +101,7 @@
       "ADDON_SCAN_UPDATE": "Skanowanie {count} folderów..."
     },
     "SYSTEM_TRAY": {
+      "CHECKING_UPDATES": "Sprawdzanie aktualizacji…",
       "CHECK_UPDATE": "Sprawdź aktualizacje...",
       "QUIT_ACTION": "Wyjdź",
       "SHOW_ACTION": "Pokaż",
@@ -744,7 +745,7 @@
         "RESCAN_CLIENTS_LABEL": "Ponowne skanowanie zainstalowanych klientów World of Warcraft",
         "SAVE_WOW_DIRECTORY_SELECT_BUTTON": "Zapisz",
         "TITLE": "World of Warcraft",
-        "UPDATE_FROM_TRAY_DESCRIPTION": "„Aktualizuj wszystko” w obszarze powiadomień aktualizuje także ten klient, nawet gdy wybrany jest inny klient.",
+        "UPDATE_FROM_TRAY_DESCRIPTION": "„Aktualizuj wszystko” w obszarze powiadomień aktualizuje także ten klient, nawet gdy wybrany jest inny klient. Gdy nie ma nic do aktualizacji, „Sprawdź aktualizacje” sprawdza także jego.",
         "UPDATE_FROM_TRAY_LABEL": "Aktualizuj z obszaru powiadomień"
       },
       "WTF_EXPLORER": {

@@ -101,6 +101,7 @@
       "ADDON_SCAN_UPDATE": "Skanner {count} mapper..."
     },
     "SYSTEM_TRAY": {
+      "CHECKING_UPDATES": "Ser etter oppdateringer…",
       "CHECK_UPDATE": "Se etter oppdateringer...",
       "QUIT_ACTION": "Avslutt",
       "SHOW_ACTION": "Åpne",
@@ -744,7 +745,7 @@
         "RESCAN_CLIENTS_LABEL": "Skann installerte World of Warcraft-produkter på nytt",
         "SAVE_WOW_DIRECTORY_SELECT_BUTTON": "Lagre",
         "TITLE": "World of Warcraft",
-        "UPDATE_FROM_TRAY_DESCRIPTION": "«Oppdater alle» i varselområdet oppdaterer også denne klienten, selv når en annen klient er valgt.",
+        "UPDATE_FROM_TRAY_DESCRIPTION": "«Oppdater alle» i varselområdet oppdaterer også denne klienten, selv når en annen klient er valgt. Når det ikke er noe å oppdatere, sjekker «Se etter oppdateringer» der også denne.",
         "UPDATE_FROM_TRAY_LABEL": "Oppdater fra varselområdet"
       },
       "WTF_EXPLORER": {

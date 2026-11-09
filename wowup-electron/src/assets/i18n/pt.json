@@ -101,6 +101,7 @@
       "ADDON_SCAN_UPDATE": "Escaneando {count} pastas..."
     },
     "SYSTEM_TRAY": {
+      "CHECKING_UPDATES": "Verificando atualizações…",
       "CHECK_UPDATE": "Buscar Atualizações...",
       "QUIT_ACTION": "Sair",
       "SHOW_ACTION": "Mostrar",
@@ -744,7 +745,7 @@
         "RESCAN_CLIENTS_LABEL": "Reescanear clientes World of Warcraft instalados",
         "SAVE_WOW_DIRECTORY_SELECT_BUTTON": "Salvar",
         "TITLE": "World of Warcraft",
-        "UPDATE_FROM_TRAY_DESCRIPTION": "“Atualizar todos” na bandeja do sistema também atualiza este cliente, mesmo quando outro cliente estiver selecionado.",
+        "UPDATE_FROM_TRAY_DESCRIPTION": "“Atualizar todos” na bandeja do sistema também atualiza este cliente, mesmo quando outro cliente estiver selecionado. Quando não há nada para atualizar, “Verificar Atualizações” na bandeja também o verifica.",
         "UPDATE_FROM_TRAY_LABEL": "Atualizar pela bandeja do sistema"
       },
       "WTF_EXPLORER": {

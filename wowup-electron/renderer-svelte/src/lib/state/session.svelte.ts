@@ -96,6 +96,8 @@ class Session {
 	 * spinner and reloads the grid — so the tray asks rather than reimplementing it.
 	 */
 	readonly updateAllRequested = new Emitter<boolean>();
+	/** The tray's Check Updates was chosen; My Addons runs its own Check Updates, as above. */
+	readonly checkUpdatesRequested = new Emitter<boolean>();
 
 	#selectedDetailTabType: DetailsTabType = 'description';
 	#initialized = false;
@@ -139,6 +141,7 @@ class Session {
 	notifyAddonsChanged = (): void => this.addonsChanged.emit(true);
 	rescanCompleted = (): void => this.rescanComplete.emit(true);
 	requestUpdateAll = (): void => this.updateAllRequested.emit(true);
+	requestCheckUpdates = (): void => this.checkUpdatesRequested.emit(true);
 	autoUpdateComplete = (): void => void (this.autoUpdateCompleteAt = Date.now());
 
 	// ---- details tab --------------------------------------------------------------------

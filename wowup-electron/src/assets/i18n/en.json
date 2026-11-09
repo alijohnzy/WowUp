@@ -101,6 +101,7 @@
       "ADDON_SCAN_UPDATE": "Scanning {count} folders..."
     },
     "SYSTEM_TRAY": {
+      "CHECKING_UPDATES": "Checking for updates…",
       "CHECK_UPDATE": "Check for Updates...",
       "QUIT_ACTION": "Quit",
       "SHOW_ACTION": "Show",
@@ -744,7 +745,7 @@
         "RESCAN_CLIENTS_LABEL": "Rescan installed World of Warcraft products",
         "SAVE_WOW_DIRECTORY_SELECT_BUTTON": "Save",
         "TITLE": "World of Warcraft",
-        "UPDATE_FROM_TRAY_DESCRIPTION": "The tray's Update All updates this client too, even when another client is selected.",
+        "UPDATE_FROM_TRAY_DESCRIPTION": "The tray's Update All updates this client too, even when another client is selected. When there is nothing to update, the tray's Check Updates checks it too.",
         "UPDATE_FROM_TRAY_LABEL": "Update from Tray"
       },
       "WTF_EXPLORER": {

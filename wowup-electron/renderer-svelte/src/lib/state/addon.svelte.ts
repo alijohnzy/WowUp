@@ -722,9 +722,12 @@ class AddonService {
 
 	async syncAllClients(): Promise<void> {
 		console.debug('syncAllClients');
-		this.syncing = true;
+		await this.syncClients(await warcraftInstallations.getWowInstallationsAsync());
+	}
 
-		const installations = await warcraftInstallations.getWowInstallationsAsync();
+	/** Check these clients for updates, as syncAllClients does for every one of them. */
+	async syncClients(installations: WowInstallation[]): Promise<void> {
+		this.syncing = true;
 
 		try {
 			await this.#syncBatchProviders(installations);

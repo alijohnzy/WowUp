@@ -79,8 +79,10 @@ class WowUpAddonService {
 	}
 
 	public async updateForAllClientTypes(): Promise<void> {
-		const installations = await warcraftInstallations.getWowInstallationsAsync();
+		await this.updateForInstallations(await warcraftInstallations.getWowInstallationsAsync());
+	}
 
+	public async updateForInstallations(installations: WowInstallation[]): Promise<void> {
 		for (const installation of installations) {
 			try {
 				await this.updateForInstallation(installation);

@@ -1,5 +1,10 @@
 [
 	{
+		"Version": "2.25.4 #next",
+		"Night": true,
+		"html": "\n    <h4>Features</h4>\n    <ul>\n    <li>When nothing is waiting to update, the tray's Update All becomes Check Updates: it checks the same WoW versions as Update All (the selected one, plus any set to Update from Tray in Options → Clients) without opening the window. If it finds anything, the badge and the Update All list appear</li>\n    </ul>\n    <h4>Fixes</h4>\n    <ul>\n    <li>The tray badge stays amber for the whole of an Update All, counting down as each addon finishes, and turns green when it is done. It turned back to red after the first addon</li>\n    </ul>\n    "
+	},
+	{
 		"Version": "2.25.4 #46",
 		"Night": true,
 		"html": "\n    <h4>Fixes</h4>\n    <ul>\n    <li>Linux AppImage: the in-game Addon Update Notifications addon shows your available updates again. Since build 27 the AppImage was missing the files WowUpNight writes that list from, so in game it stayed empty or out of date. The Windows, macOS and .deb builds were not affected</li>\n    <li>My Addons lists Addon Update Notifications (WowUp Data) as soon as WowUpNight writes it, without a rescan, and shows the version that is on disk</li>\n    </ul>\n    "

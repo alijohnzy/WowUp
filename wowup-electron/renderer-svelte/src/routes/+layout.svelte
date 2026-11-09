@@ -15,6 +15,7 @@
 		IPC_POWER_MONITOR_RESUME,
 		IPC_POWER_MONITOR_UNLOCK,
 		IPC_TRAY_UPDATE_ALL,
+		IPC_TRAY_CHECK_UPDATES,
 		IPC_TRAY_APP_UPDATE
 	} from '$common/constants';
 	import { goto } from '$app/navigation';
@@ -223,6 +224,10 @@
 			// a run the user started from outside the window.
 			on(IPC_TRAY_UPDATE_ALL, () => {
 				void goto(href(ROUTES.myAddons)).then(() => session.requestUpdateAll());
+			}),
+			// What Update All becomes while nothing is pending. Routed the same way.
+			on(IPC_TRAY_CHECK_UPDATES, () => {
+				void goto(href(ROUTES.myAddons)).then(() => session.requestCheckUpdates());
 			}),
 			// The tray's "Update WowUpNight": the window is already back up (src-tauri/src/tray.rs),
 			// so progress, or the portable zip's download dialog, is on screen.

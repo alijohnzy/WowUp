@@ -101,6 +101,7 @@
       "ADDON_SCAN_UPDATE": "Escaneando {count} carpetas..."
     },
     "SYSTEM_TRAY": {
+      "CHECKING_UPDATES": "Buscando actualizaciones…",
       "CHECK_UPDATE": "Buscar actualizaciones de WowUp",
       "QUIT_ACTION": "Salir",
       "SHOW_ACTION": "Mostrar",
@@ -744,7 +745,7 @@
         "RESCAN_CLIENTS_LABEL": "Volver a escanear los productos de World of Warcraft instalados",
         "SAVE_WOW_DIRECTORY_SELECT_BUTTON": "Guardar",
         "TITLE": "World of Warcraft",
-        "UPDATE_FROM_TRAY_DESCRIPTION": "«Actualizar todo» en la bandeja del sistema también actualiza este cliente, aunque haya otro cliente seleccionado.",
+        "UPDATE_FROM_TRAY_DESCRIPTION": "«Actualizar todo» en la bandeja del sistema también actualiza este cliente, aunque haya otro cliente seleccionado. Cuando no hay nada que actualizar, «Buscar actualizaciones» en la bandeja también lo comprueba.",
         "UPDATE_FROM_TRAY_LABEL": "Actualizar desde la bandeja"
       },
       "WTF_EXPLORER": {

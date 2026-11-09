@@ -37,7 +37,7 @@
 	import { invoke } from '$lib/ipc';
 	import * as addonUtils from '$lib/utils/addon';
 	import { updateAllTooltipText } from '$lib/utils/update-tooltip';
-	import { trayInstallations, withTrayRunState } from '$lib/services/native-menu';
+	import { trayInstallations, withTrayCheck, withTrayRunState } from '$lib/services/native-menu';
 	import { stringIncludes } from '$lib/utils/string';
 	import { join } from '$lib/utils/path';
 
@@ -570,13 +570,17 @@
 	// Checks every WoW version, not only the selected one: the badges in the version list say
 	// which have updates, and they can only say so for versions that were checked. The batch
 	// providers ask once for all versions together, so this costs little more than one.
-	const onRefresh = async () => {
+	//
+	// The tray's Check Updates passes the versions its Update All covers instead.
+	const onRefresh = async (installations?: WowInstallation[]) => {
 		if (!session.getSelectedWowInstallation()) return;
 
 		isLoading = true;
 		session.setEnableControls(false);
 		try {
-			await addonService.syncAllClients();
+			await (installations
+				? addonService.syncClients(installations)
+				: addonService.syncAllClients());
 			// Rewrite wowup_data_addon/data.lua, which is what the in-game "Addon Update
 			// Notifications" addon reads on /reload. Without this the file is only current
 			// after a boot, an install, or the hourly auto-update tick — so checking for
@@ -584,9 +588,11 @@
 			//
 			// Not allowed to fail the refresh: a companion problem must not cost the user
 			// their addon list. The Angular original wrapped the whole handler in one catch.
-			await wowUpAddon
-				.updateForAllClientTypes()
-				.catch((e: unknown) => console.error('companion addon sync failed', e));
+			await (
+				installations
+					? wowUpAddon.updateForInstallations(installations)
+					: wowUpAddon.updateForAllClientTypes()
+			).catch((e: unknown) => console.error('companion addon sync failed', e));
 			await loadAddons();
 		} finally {
 			isLoading = false;
@@ -900,6 +906,12 @@
 	// tray's clients: the selected one plus any set to update from the tray.
 	$effect(() =>
 		session.updateAllRequested.subscribe(() => void updateAllWithSpinner(...trayInstallations()))
+	);
+	// The tray's Check Updates, over the same clients as its Update All.
+	$effect(() =>
+		session.checkUpdatesRequested.subscribe(
+			() => void withTrayCheck(() => onRefresh(trayInstallations()))
+		)
 	);
 	$effect(() => session.targetFileInstallComplete.subscribe(() => void onRefresh()));
 

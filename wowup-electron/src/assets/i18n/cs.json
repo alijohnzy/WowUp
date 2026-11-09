@@ -101,6 +101,7 @@
       "ADDON_SCAN_UPDATE": "Prohledávám {count} {count, plural, =1{složku} =2{složky} =3{složky} =4{složky} other{složek}}..."
     },
     "SYSTEM_TRAY": {
+      "CHECKING_UPDATES": "Hledání aktualizací…",
       "CHECK_UPDATE": "Zjistit aktualizace...",
       "QUIT_ACTION": "Konec",
       "SHOW_ACTION": "Ukázat",
@@ -744,7 +745,7 @@
         "RESCAN_CLIENTS_LABEL": "Pokusí se znovu vyhledat všechny instalace hry World of Warcraft",
         "SAVE_WOW_DIRECTORY_SELECT_BUTTON": "Uložit",
         "TITLE": "World of Warcraft",
-        "UPDATE_FROM_TRAY_DESCRIPTION": "„Aktualizovat vše“ v liště aktualizuje i tohoto clienta, i když je vybrán jiný client.",
+        "UPDATE_FROM_TRAY_DESCRIPTION": "„Aktualizovat vše“ v liště aktualizuje i tohoto clienta, i když je vybrán jiný client. Když není co aktualizovat, „Zkontrolovat aktualizace“ v liště kontroluje i jeho.",
         "UPDATE_FROM_TRAY_LABEL": "Aktualizovat z lišty"
       },
       "WTF_EXPLORER": {

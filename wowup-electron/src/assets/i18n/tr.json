@@ -101,6 +101,7 @@
       "ADDON_SCAN_UPDATE": "{count} klasör taranıyor..."
     },
     "SYSTEM_TRAY": {
+      "CHECKING_UPDATES": "Güncellemeler denetleniyor…",
       "CHECK_UPDATE": "Güncellemeleri Denetle...",
       "QUIT_ACTION": "Çıkış Yap",
       "SHOW_ACTION": "Göster",
@@ -744,7 +745,7 @@
         "RESCAN_CLIENTS_LABEL": "Kurulu World of Warcraft ürünlerini yeniden tara",
         "SAVE_WOW_DIRECTORY_SELECT_BUTTON": "Kaydet",
         "TITLE": "World of Warcraft",
-        "UPDATE_FROM_TRAY_DESCRIPTION": "Sistem tepsisindeki Tümünü Güncelle, başka bir oyun seçili olsa bile bu oyunu da günceller.",
+        "UPDATE_FROM_TRAY_DESCRIPTION": "Sistem tepsisindeki Tümünü Güncelle, başka bir oyun seçili olsa bile bu oyunu da günceller. Güncellenecek bir şey yokken tepsideki Güncellemeleri Denetle bu oyunu da denetler.",
         "UPDATE_FROM_TRAY_LABEL": "Sistem Tepsisinden Güncelle"
       },
       "WTF_EXPLORER": {
