@@ -307,11 +307,13 @@ jobs:
           fi
 
       # Tauri has no portable target, but it does not need one: the executable plus the
-      # `assets/` directory the build stages next to it is a working copy, because
-      # `resource_dir()` on Windows is the executable's own directory.
+      # resources laid out beside it is a working copy, because `resource_dir()` on Windows
+      # is the executable's own directory.
       #
-      # Assembled from target/release rather than from the repo, so the contents follow
-      # bundle.resources automatically instead of drifting from it.
+      # The resources are copied from bundle.resources by scripts/stage-tauri-resources.mjs,
+      # so the contents follow the config instead of drifting from it. Not from the copy the
+      # build stages in target/release: since Cargo 1.100 tauri-build puts that one in
+      # target/release/build, and run 48 failed here looking for it.
       - name: Assemble the portable zip
         if: steps.gate.outputs.run == 'true' && matrix.key == 'windows' && steps.build.outcome == 'success'
         run: |
@@ -336,12 +338,14 @@ jobs:
           mkdir -p "$stage"
           # Renamed to the product name, so the portable copy looks like an installed one.
           cp "${exes[0]}" "$stage/${name}.exe"
-          # Absent only if bundle.resources is emptied; the app would then fail to write the
-          # companion addon at runtime, which is worth failing the build over.
-          if [ -d "$release/assets" ]; then
-            cp -r "$release/assets" "$stage/"
-          else
-            echo "::error::No $release/assets — resources were not staged, so the portable build would be broken."
+          # Fails if any listed resource is missing, or if there are none: the app would then
+          # fail to write the companion addon at runtime, which is worth failing the build over.
+          if ! node scripts/stage-tauri-resources.mjs "$stage"; then
+            echo "::error::Could not copy bundle.resources, so the portable build would be broken."
+            exit 1
+          fi
+          if [ ! -f "$stage/assets/WowUpAddon/data.lua.hbs" ]; then
+            echo "::error::No assets/WowUpAddon/data.lua.hbs in the portable build."
             exit 1
           fi
 
