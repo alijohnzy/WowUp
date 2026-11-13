@@ -380,8 +380,14 @@ pub fn set_login_item_settings(app: AppHandle, settings: LoginItemSettings) -> R
     use tauri_plugin_autostart::ManagerExt;
     let auto = app.autolaunch();
     if settings.open_at_login {
+        // Rewritten even when present, so it follows the app if its path has changed.
         auto.enable().map_err(|e| e.to_string())
     } else {
-        auto.disable().map_err(|e| e.to_string())
+        // The renderer turns it off on every launch when the preference is off. Windows
+        // reports a missing Run value as an error, where Linux and macOS skip a missing file.
+        auto.disable().or_else(|e| match auto.is_enabled() {
+            Ok(false) => Ok(()),
+            _ => Err(e.to_string()),
+        })
     }
 }

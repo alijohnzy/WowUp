@@ -40,7 +40,8 @@ import {
 	WowClientType,
 	type AddonProviderType
 } from 'wowup-lib-core';
-import { invoke, isElectron, isLinux, isMac, isWin, send } from '$lib/ipc';
+import { dev } from '$app/environment';
+import { invoke, isDesktop, isElectron, isLinux, isMac, isWin, send } from '$lib/ipc';
 import { preferenceStorage } from '$lib/services/storage';
 import { createDirectory, listEntries, remove, showDirectory } from '$lib/services/files';
 import { electron } from '$lib/state/electron.svelte';
@@ -109,12 +110,20 @@ class WowUp {
 
 	/** Replaces three fire-and-forget chains in the Angular constructor. */
 	async init(): Promise<void> {
-		if (!isElectron()) return;
-		await this.setDefaultClientPreferences().catch(console.error);
-		await this.createDownloadDirectory()
-			.then(() => this.cleanupDownloads())
-			.catch((e: unknown) => console.error('Failed to create download directory', e));
-		await this.setAutoStartup().catch((e: unknown) => console.error(e));
+		if (isElectron()) {
+			await this.setDefaultClientPreferences().catch(console.error);
+			await this.createDownloadDirectory()
+				.then(() => this.cleanupDownloads())
+				.catch((e: unknown) => console.error('Failed to create download directory', e));
+		}
+		// Every launch, as Electron did, so the system's entry follows the preference. Under
+		// Tauri this used to wait for the toggle to be flipped, so a preference that arrived
+		// any other way started nothing: one imported from WowUp, or one set before the
+		// rename to WowUpNight, whose entry was still WowUp-CF-Tauri and went with the old
+		// install. Not from `tauri dev`, which would point the entry at the debug binary.
+		if (isDesktop() && !dev) {
+			await this.setAutoStartup().catch((e: unknown) => console.error(e));
+		}
 	}
 
 	async getApplicationVersion(): Promise<string> {
